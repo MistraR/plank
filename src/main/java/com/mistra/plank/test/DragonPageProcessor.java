@@ -7,6 +7,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.processor.PageProcessor;
@@ -48,9 +49,9 @@ public class DragonPageProcessor implements PageProcessor {
 
         CloseableHttpClient aDefault = HttpClients.createDefault();
         HttpGet request = new HttpGet();
-        request.setURI(URI.create("http://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=SZ002466&begin=1637318960367&period=day&type=before&count=-284&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance"));
+        request.setURI(URI.create("https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=SZ002466&begin=1637318960367&period=day&type=before&count=-284&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance"));
         CloseableHttpResponse response = aDefault.execute(request);
-        response.getEntity();
-        System.out.println(response.getEntity().getContent().toString());
+        String result = EntityUtils.toString(response.getEntity());
+        System.out.println(result);
     }
 }
