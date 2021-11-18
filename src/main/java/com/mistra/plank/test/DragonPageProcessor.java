@@ -6,6 +6,7 @@ import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.processor.PageProcessor;
+import us.codecraft.webmagic.processor.example.GithubRepoPageProcessor;
 
 /**
  * 描述
@@ -33,7 +34,8 @@ public class DragonPageProcessor implements PageProcessor {
     }
 
     public static void main(String[] args) {
-        Spider.create(new DragonPageProcessor()).addUrl("http://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112306080694619123275_1635760992000&reportName=RPT_DAILYBILLBOARD_PROFILE&columns=SECURITY_NAME_ABBR%2CCHANGE_RATE%2CTRADE_MARKET_CODE%2CTRADE_DATE%2CSECURITY_CODE&pageNumber=1&pageSize=500&sortTypes=1&sortColumns=SECURITY_CODE&source=WEB&client=WEB&_=1635760992000").thread(1).run();
+//        Spider.create(new DragonPageProcessor()).addUrl("http://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112306080694619123275_1635760992000&reportName=RPT_DAILYBILLBOARD_PROFILE&columns=SECURITY_NAME_ABBR%2CCHANGE_RATE%2CTRADE_MARKET_CODE%2CTRADE_DATE%2CSECURITY_CODE&pageNumber=1&pageSize=500&sortTypes=1&sortColumns=SECURITY_CODE&source=WEB&client=WEB&_=1635760992000").thread(1).run();
 //        Spider.create(new GithubRepoPageProcessor()).addUrl("http://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112306080694619123275_1637229792389&reportName=RPT_DAILYBILLBOARD_PROFILE&columns=SECURITY_NAME_ABBR%2CCHANGE_RATE%2CTRADE_MARKET_CODE%2CTRADE_DATE%2CSECURITY_CODE&pageNumber=1&pageSize=500&sortTypes=1&sortColumns=SECURITY_CODE&source=WEB&client=WEB&_=1637229792390").thread(1).run();
+        Spider.create(new GithubRepoPageProcessor()).addUrl("https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=SZ002466&begin=1637318960367&period=day&type=before&count=-284&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance").thread(1).run();
     }
 }
