@@ -53,7 +53,7 @@ public class DailyRecordProcessor {
 
     public void run() throws Exception {
         logger.info("开始更新股票每日成交数据！");
-        for (Map.Entry<String, String> entry : Spider.STOCK_MAP.entrySet()) {
+        for (Map.Entry<String, String> entry : Barbarossa.STOCK_MAP.entrySet()) {
             executorService.submit(new Runnable() {
                 @SneakyThrows
                 @Override

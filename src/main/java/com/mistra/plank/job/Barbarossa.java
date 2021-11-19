@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class Spider implements CommandLineRunner {
+public class Barbarossa implements CommandLineRunner {
 
     private final StockMapper stockMapper;
     private final DailyRecordMapper dailyRecordMapper;
@@ -61,10 +61,10 @@ public class Spider implements CommandLineRunner {
      */
     public static BigDecimal BALANCE_AVAILABLE = new BigDecimal(1000000);
 
-    public Spider(StockMapper stockMapper, DailyRecordMapper dailyRecordMapper, ClearanceMapper clearanceMapper,
-                  TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
-                  PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor,
-                  DragonListProcessor dragonListProcessor) {
+    public Barbarossa(StockMapper stockMapper, DailyRecordMapper dailyRecordMapper, ClearanceMapper clearanceMapper,
+                      TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
+                      PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor,
+                      DragonListProcessor dragonListProcessor) {
         this.stockMapper = stockMapper;
         this.dailyRecordMapper = dailyRecordMapper;
         this.clearanceMapper = clearanceMapper;
