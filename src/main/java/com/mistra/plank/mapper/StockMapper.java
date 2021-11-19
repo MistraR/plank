@@ -1,7 +1,7 @@
 package com.mistra.plank.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.mistra.plank.pojo.TradeRecord;
+import com.mistra.plank.pojo.Stock;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -11,6 +11,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @date 2021/11/18
  */
 @Mapper
-public interface TradeRecordMapper extends BaseMapper<TradeRecord> {
+public interface StockMapper extends BaseMapper<Stock> {
 
 }
