@@ -7,6 +7,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 描述
@@ -14,6 +18,10 @@ import com.baomidou.mybatisplus.annotation.TableName;
  * @author mistra@future.com
  * @date 2021/11/18
  */
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @TableName(value = "dragon_list", autoResultMap = true)
 public class DragonList {
 
@@ -59,67 +67,4 @@ public class DragonList {
     @TableField(value = "date")
     private Date date;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public Integer getNetBuy() {
-        return netBuy;
-    }
-
-    public void setNetBuy(Integer netBuy) {
-        this.netBuy = netBuy;
-    }
-
-    public Integer getFirstFiveNetBuy() {
-        return firstFiveNetBuy;
-    }
-
-    public void setFirstFiveNetBuy(Integer firstFiveNetBuy) {
-        this.firstFiveNetBuy = firstFiveNetBuy;
-    }
-
-    public Integer getFirstFiveNetSell() {
-        return firstFiveNetSell;
-    }
-
-    public void setFirstFiveNetSell(Integer firstFiveNetSell) {
-        this.firstFiveNetSell = firstFiveNetSell;
-    }
-
-    public BigDecimal getLastFiveDaysRate() {
-        return lastFiveDaysRate;
-    }
-
-    public void setLastFiveDaysRate(BigDecimal lastFiveDaysRate) {
-        this.lastFiveDaysRate = lastFiveDaysRate;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-    }
 }

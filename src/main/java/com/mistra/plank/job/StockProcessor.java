@@ -10,6 +10,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.StockMapper;
 import com.mistra.plank.pojo.Stock;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -29,10 +30,9 @@ import org.springframework.stereotype.Component;
  * @ Github: https://github.com/MistraR
  * @ CSDN: https://blog.csdn.net/axela30w
  */
+@Slf4j
 @Component
 public class StockProcessor {
-
-    Logger logger = Logger.getLogger(StockProcessor.class);
 
     private final StockMapper stockMapper;
     private final PlankConfig plankConfig;
@@ -44,7 +44,7 @@ public class StockProcessor {
 
     @Scheduled(cron = "0 0,30 0,15 ? * ? ")
     public void run() throws Exception {
-        logger.info("开始更新股票每日成交量！");
+        log.info("开始更新股票每日成交量！");
         DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
         HttpGet httpGet = new HttpGet(URI.create(plankConfig.getXueQiuAllStockUrl()));
         httpGet.setHeader("Cookie", plankConfig.getXueQiuCookie());
@@ -73,7 +73,7 @@ public class StockProcessor {
                 }
             }
         }
-        logger.info("更新股票每日成交量完成！");
+        log.info("更新股票每日成交量完成！");
     }
 
 }

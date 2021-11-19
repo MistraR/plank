@@ -3,6 +3,10 @@ package com.mistra.plank.config;
 
 import java.math.BigDecimal;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +19,10 @@ import org.springframework.stereotype.Component;
  * @ Github: https://github.com/MistraR
  * @ CSDN: https://blog.csdn.net/axela30w
  */
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Component
 @ConfigurationProperties(prefix = "plank")
 public class PlankConfig {
@@ -40,7 +48,7 @@ public class PlankConfig {
     private Integer recentDayNumber;
 
     /**
-     * 开始日期
+     * 开始操盘日期
      */
     private Long beginDay;
 
@@ -62,12 +70,22 @@ public class PlankConfig {
     /**
      * 止盈清仓比率
      */
-    private BigDecimal profitRatio;
+    private BigDecimal profitUpperRatio;
+
+    /**
+     * 阶段止盈减半仓比率
+     */
+    private BigDecimal profitQuarterRatio;
 
     /**
      * 阶段止盈减半仓比率
      */
     private BigDecimal profitHalfRatio;
+
+    /**
+     * 阶段止盈回车清仓比率
+     */
+    private BigDecimal profitClearanceRatio;
 
     /**
      * 止损比率
@@ -97,146 +115,16 @@ public class PlankConfig {
     /**
      * 股价上限
      */
-    private Integer stockUpperLimit;
+    private Integer stockPriceUpperLimit;
 
     /**
      * 股价下限
      */
-    private Integer stockLowerLimit;
+    private Integer stockPriceLowerLimit;
 
-    public String getXueQiuCookie() {
-        return xueQiuCookie;
-    }
+    /**
+     * 可打板涨幅比率
+     */
+    private BigDecimal buyPlankRatioLimit;
 
-    public void setXueQiuCookie(String xueQiuCookie) {
-        this.xueQiuCookie = xueQiuCookie;
-    }
-
-    public String getXueQiuAllStockUrl() {
-        return xueQiuAllStockUrl;
-    }
-
-    public void setXueQiuAllStockUrl(String xueQiuAllStockUrl) {
-        this.xueQiuAllStockUrl = xueQiuAllStockUrl;
-    }
-
-    public String getXueQiuStockDetailUrl() {
-        return xueQiuStockDetailUrl;
-    }
-
-    public void setXueQiuStockDetailUrl(String xueQiuStockDetailUrl) {
-        this.xueQiuStockDetailUrl = xueQiuStockDetailUrl;
-    }
-
-    public Integer getRecentDayNumber() {
-        return recentDayNumber;
-    }
-
-    public void setRecentDayNumber(Integer recentDayNumber) {
-        this.recentDayNumber = recentDayNumber;
-    }
-
-    public Integer getFunds() {
-        return funds;
-    }
-
-    public void setFunds(Integer funds) {
-        this.funds = funds;
-    }
-
-    public Integer getFundsPart() {
-        return fundsPart;
-    }
-
-    public void setFundsPart(Integer fundsPart) {
-        this.fundsPart = fundsPart;
-    }
-
-    public Integer getFundsPartLimit() {
-        return fundsPartLimit;
-    }
-
-    public void setFundsPartLimit(Integer fundsPartLimit) {
-        this.fundsPartLimit = fundsPartLimit;
-    }
-
-    public BigDecimal getProfitRatio() {
-        return profitRatio;
-    }
-
-    public void setProfitRatio(BigDecimal profitRatio) {
-        this.profitRatio = profitRatio;
-    }
-
-    public BigDecimal getProfitHalfRatio() {
-        return profitHalfRatio;
-    }
-
-    public void setProfitHalfRatio(BigDecimal profitHalfRatio) {
-        this.profitHalfRatio = profitHalfRatio;
-    }
-
-    public BigDecimal getDeficitRatio() {
-        return deficitRatio;
-    }
-
-    public void setDeficitRatio(BigDecimal deficitRatio) {
-        this.deficitRatio = deficitRatio;
-    }
-
-    public Integer getDeficitMovingAverage() {
-        return deficitMovingAverage;
-    }
-
-    public void setDeficitMovingAverage(Integer deficitMovingAverage) {
-        this.deficitMovingAverage = deficitMovingAverage;
-    }
-
-    public BigDecimal getJoinIncreaseRatioLowerLimit() {
-        return joinIncreaseRatioLowerLimit;
-    }
-
-    public void setJoinIncreaseRatioLowerLimit(BigDecimal joinIncreaseRatioLowerLimit) {
-        this.joinIncreaseRatioLowerLimit = joinIncreaseRatioLowerLimit;
-    }
-
-    public BigDecimal getJoinIncreaseRatioUpperLimit() {
-        return joinIncreaseRatioUpperLimit;
-    }
-
-    public void setJoinIncreaseRatioUpperLimit(BigDecimal joinIncreaseRatioUpperLimit) {
-        this.joinIncreaseRatioUpperLimit = joinIncreaseRatioUpperLimit;
-    }
-
-    public Long getBeginDay() {
-        return beginDay;
-    }
-
-    public void setBeginDay(Long beginDay) {
-        this.beginDay = beginDay;
-    }
-
-    public Integer getStockUpperLimit() {
-        return stockUpperLimit;
-    }
-
-    public void setStockUpperLimit(Integer stockUpperLimit) {
-        this.stockUpperLimit = stockUpperLimit;
-    }
-
-    public Integer getStockLowerLimit() {
-        return stockLowerLimit;
-    }
-
-    public void setStockLowerLimit(Integer stockLowerLimit) {
-        this.stockLowerLimit = stockLowerLimit;
-    }
-
-    public BigDecimal getBuyRatioLimit() {
-        return buyRatioLimit;
-    }
-
-    public void setBuyRatioLimit(BigDecimal buyRatioLimit) {
-        this.buyRatioLimit = buyRatioLimit;
-    }
 }

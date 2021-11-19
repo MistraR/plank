@@ -17,13 +17,13 @@ import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.DailyRecordMapper;
 import com.mistra.plank.pojo.DailyRecord;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 /**
@@ -35,10 +35,9 @@ import org.springframework.stereotype.Component;
  * @ Github: https://github.com/MistraR
  * @ CSDN: https://blog.csdn.net/axela30w
  */
+@Slf4j
 @Component
 public class DailyRecordProcessor {
-
-    Logger logger = Logger.getLogger(DailyRecordProcessor.class);
 
     private final DailyRecordMapper dailyRecordMapper;
     private final PlankConfig plankConfig;
@@ -52,7 +51,7 @@ public class DailyRecordProcessor {
     }
 
     public void run() throws Exception {
-        logger.info("开始更新股票每日成交数据！");
+        log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>开始更新股票每日成交数据！");
         for (Map.Entry<String, String> entry : Barbarossa.STOCK_MAP.entrySet()) {
             executorService.submit(new Runnable() {
                 @SneakyThrows
@@ -87,13 +86,13 @@ public class DailyRecordProcessor {
                             dailyRecord.setIncreaseRate(new BigDecimal(array.getDoubleValue(7)));
                             dailyRecord.setAmount(array.getLongValue(9) / 10000);
                             dailyRecordMapper.insert(dailyRecord);
-                            logger.info("更新" + entry.getValue() + "今日成交数据完成！");
+                            log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>更新[{}]今日成交数据完成！", entry.getValue());
                         }
                     }
                 }
             });
         }
-        logger.info("更新股票每日成交数据完成！");
+        log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>更新股票每日成交数据完成！");
     }
 
 }
