@@ -59,17 +59,6 @@ public class DragonList {
     @TableField(value = "date")
     private Date date;
 
-    public DragonList(Long id, String name, String code, Integer netBuy, Integer firstFiveNetBuy, Integer firstFiveNetSell, BigDecimal lastFiveDaysRate, Date date) {
-        this.id = id;
-        this.name = name;
-        this.code = code;
-        this.netBuy = netBuy;
-        this.firstFiveNetBuy = firstFiveNetBuy;
-        this.firstFiveNetSell = firstFiveNetSell;
-        this.lastFiveDaysRate = lastFiveDaysRate;
-        this.date = date;
-    }
-
     public Long getId() {
         return id;
     }

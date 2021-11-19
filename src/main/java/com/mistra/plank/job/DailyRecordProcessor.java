@@ -24,7 +24,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -52,10 +51,9 @@ public class DailyRecordProcessor {
         this.plankConfig = plankConfig;
     }
 
-    @Scheduled(cron = "0 0,30 0,15 ? * ? ")
     public void run() throws Exception {
         logger.info("开始更新股票每日成交数据！");
-        for (Map.Entry<String, String> entry : StockProcessor.STOCK_MAP.entrySet()) {
+        for (Map.Entry<String, String> entry : Spider.STOCK_MAP.entrySet()) {
             executorService.submit(new Runnable() {
                 @SneakyThrows
                 @Override

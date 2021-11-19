@@ -1,5 +1,8 @@
 package com.mistra.plank.test;
 
+import java.io.IOException;
+import java.net.URI;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import lombok.SneakyThrows;
@@ -17,9 +20,6 @@ import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.processor.PageProcessor;
 
-import java.io.IOException;
-import java.net.URI;
-
 /**
  * 描述
  *
@@ -33,7 +33,6 @@ public class DragonPageProcessor implements PageProcessor {
     @SneakyThrows
     @Override
     public void process(Page page) {
-
         String data = page.getJson().toString();
         data = data.substring(data.indexOf("(") + 1, data.indexOf(")"));
         JSONObject jsonObject = JSON.parseObject(data);

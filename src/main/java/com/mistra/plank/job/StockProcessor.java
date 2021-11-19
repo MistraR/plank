@@ -2,14 +2,11 @@ package com.mistra.plank.job;
 
 import java.net.URI;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.StockMapper;
 import com.mistra.plank.pojo.Stock;
@@ -20,7 +17,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -34,38 +30,16 @@ import org.springframework.stereotype.Component;
  * @ CSDN: https://blog.csdn.net/axela30w
  */
 @Component
-public class StockProcessor implements CommandLineRunner {
+public class StockProcessor {
 
     Logger logger = Logger.getLogger(StockProcessor.class);
 
     private final StockMapper stockMapper;
     private final PlankConfig plankConfig;
-    private final DailyRecordProcessor dailyRecordProcessor;
 
-    public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
-
-    public StockProcessor(StockMapper stockMapper, PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor) {
+    public StockProcessor(StockMapper stockMapper, PlankConfig plankConfig) {
         this.stockMapper = stockMapper;
         this.plankConfig = plankConfig;
-        this.dailyRecordProcessor = dailyRecordProcessor;
-    }
-
-    @Override
-    public void run(String... args) throws Exception {
-        List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
-                .notLike("name", "%ST%")
-                .notLike("name", "%st%")
-                .notLike("name", "%A%")
-                .notLike("name", "%C%")
-                .notLike("name", "%N%")
-                .notLike("name", "%U%")
-                .notLike("name", "%W%")
-                .notLike("code", "%BJ%")
-                .notLike("code", "%688%")
-        );
-        stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
-        logger.info("一共加载 " + stocks.size() + "支股票！");
-        dailyRecordProcessor.run();
     }
 
     @Scheduled(cron = "0 0,30 0,15 ? * ? ")

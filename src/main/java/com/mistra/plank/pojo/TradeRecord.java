@@ -36,7 +36,7 @@ public class TradeRecord {
     private Integer type;
 
     /**
-     * 持股数量
+     * 数量
      */
     @TableField(value = "number")
     private Integer number;
@@ -48,10 +48,16 @@ public class TradeRecord {
     private BigDecimal price;
 
     /**
-     * 利润
+     * 交易金额
      */
-    @TableField(value = "profit")
-    private BigDecimal profit;
+    @TableField(value = "money")
+    private Integer money;
+
+    /**
+     * 账户余额
+     */
+    @TableField(value = "balance")
+    private BigDecimal balance;
 
     /**
      * 日期
@@ -59,16 +65,11 @@ public class TradeRecord {
     @TableField(value = "date")
     private Date date;
 
-    public TradeRecord(Long id, String name, String code, Integer type, Integer number, BigDecimal price, BigDecimal profit, Date date) {
-        this.id = id;
-        this.name = name;
-        this.code = code;
-        this.type = type;
-        this.number = number;
-        this.price = price;
-        this.profit = profit;
-        this.date = date;
-    }
+    /**
+     * 交易原因
+     */
+    @TableField(value = "reason")
+    private String reason;
 
     public Long getId() {
         return id;
@@ -118,12 +119,28 @@ public class TradeRecord {
         this.price = price;
     }
 
-    public BigDecimal getProfit() {
-        return profit;
+    public Integer getMoney() {
+        return money;
     }
 
-    public void setProfit(BigDecimal profit) {
-        this.profit = profit;
+    public void setMoney(Integer money) {
+        this.money = money;
+    }
+
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     public Date getDate() {
