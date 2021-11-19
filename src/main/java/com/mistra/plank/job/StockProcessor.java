@@ -42,7 +42,7 @@ public class StockProcessor implements CommandLineRunner {
     private final PlankConfig plankConfig;
     private final DailyRecordProcessor dailyRecordProcessor;
 
-    public static final HashMap<String, String> stockMap = new HashMap<>();
+    public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
 
     public StockProcessor(StockMapper stockMapper, PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor) {
         this.stockMapper = stockMapper;
@@ -63,7 +63,7 @@ public class StockProcessor implements CommandLineRunner {
                 .notLike("code", "%BJ%")
                 .notLike("code", "%688%")
         );
-        stocks.forEach(stock -> stockMap.put(stock.getCode(), stock.getName()));
+        stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
         logger.info("一共加载 " + stocks.size() + "支股票！");
         dailyRecordProcessor.run();
     }
