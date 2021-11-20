@@ -1,26 +1,15 @@
 package com.mistra.plank.job;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.OptionalDouble;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.config.PlankConfig;
-import com.mistra.plank.mapper.ClearanceMapper;
-import com.mistra.plank.mapper.DailyRecordMapper;
-import com.mistra.plank.mapper.HoldSharesMapper;
-import com.mistra.plank.mapper.StockMapper;
-import com.mistra.plank.mapper.TradeRecordMapper;
-import com.mistra.plank.pojo.Clearance;
-import com.mistra.plank.pojo.DailyRecord;
-import com.mistra.plank.pojo.HoldShares;
-import com.mistra.plank.pojo.Stock;
-import com.mistra.plank.pojo.TradeRecord;
+import com.mistra.plank.mapper.*;
+import com.mistra.plank.pojo.*;
 import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -46,6 +35,7 @@ public class Barbarossa implements CommandLineRunner {
     private final ClearanceMapper clearanceMapper;
     private final TradeRecordMapper tradeRecordMapper;
     private final HoldSharesMapper holdSharesMapper;
+    private final DragonListMapper dragonListMapper;
     private final PlankConfig plankConfig;
     private final DailyRecordProcessor dailyRecordProcessor;
     private final DragonListProcessor dragonListProcessor;
@@ -64,13 +54,14 @@ public class Barbarossa implements CommandLineRunner {
 
     public Barbarossa(StockMapper stockMapper, DailyRecordMapper dailyRecordMapper, ClearanceMapper clearanceMapper,
                       TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
-                      PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor,
+                      DragonListMapper dragonListMapper, PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor,
                       DragonListProcessor dragonListProcessor, StockProcessor stockProcessor) {
         this.stockMapper = stockMapper;
         this.dailyRecordMapper = dailyRecordMapper;
         this.clearanceMapper = clearanceMapper;
         this.tradeRecordMapper = tradeRecordMapper;
         this.holdSharesMapper = holdSharesMapper;
+        this.dragonListMapper = dragonListMapper;
         this.plankConfig = plankConfig;
         this.dailyRecordProcessor = dailyRecordProcessor;
         this.dragonListProcessor = dragonListProcessor;
@@ -105,10 +96,10 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     /**
-     * 巴巴罗萨 工作日
+     * 巴巴罗萨计划
      */
     private void barbarossa() throws Exception {
-        Date date = DateUtils.addMinutes(new Date(plankConfig.getBeginDay()), 10);
+        Date date = new Date(plankConfig.getBeginDay());
         do {
             this.barbarossa(date);
             date = DateUtils.addDays(date, 1);
@@ -118,6 +109,7 @@ public class Barbarossa implements CommandLineRunner {
     private void barbarossa(Date date) {
         int week = DateUtil.dayOfWeek(date);
         if (week < 7 && week > 1) {
+            // 工作日
             List<Stock> stocks = this.checkCanBuyStock(date);
             if (CollectionUtils.isNotEmpty(stocks) && BALANCE_AVAILABLE.intValue() > 10000) {
                 this.buyStock(stocks, date);
@@ -128,13 +120,40 @@ public class Barbarossa implements CommandLineRunner {
 
     /**
      * 检查可以买的票
+     * 首板或者2板  10日涨幅介于10-22%
      *
      * @return List<String>
      */
     private List<Stock> checkCanBuyStock(Date date) {
+        List<DragonList> dragonLists = dragonListMapper.selectList(new QueryWrapper<DragonList>()
+                .ge("date", date).le("date", date).ge("price", 6).le("price", 100));
+        if (CollectionUtils.isEmpty(dragonLists)) {
+            return null;
+        }
+        List<DailyRecord> dailyRecords = new ArrayList<>();
+        for (DragonList dragonList : dragonLists) {
+            Page<DailyRecord> page = dailyRecordMapper.selectPage(new Page<>(1, 30), new QueryWrapper<DailyRecord>()
+                    .eq("code", dragonList.getCode()).le("date", date).ge("date", DateUtils.addDays(date, -30))
+                    .orderByDesc("date"));
+            dailyRecords.addAll(page.getRecords().subList(0, 10));
+        }
+        Map<String, List<DailyRecord>> map = dailyRecords.stream().collect(Collectors.groupingBy(DailyRecord::getCode));
+        List<String> stockCode = new ArrayList<>();
+        for (Map.Entry<String, List<DailyRecord>> entry : map.entrySet()) {
+            BigDecimal bigDecimal = entry.getValue().get(0).getClosePrice().divide(entry.getValue().get(8).getClosePrice(), 2);
+            if (bigDecimal.doubleValue() <= 1.22 && bigDecimal.doubleValue() >= 1.1) {
+                stockCode.add(entry.getKey());
+            }
+        }
+        dragonLists = dragonLists.stream().filter(dragonList -> stockCode.contains(dragonList.getCode())).collect(Collectors.toList());
+        dragonLists = dragonLists.stream().sorted((a, b) -> b.getNetBuy().compareTo(a.getNetBuy())).collect(Collectors.toList());
+        if (dragonLists.size() > plankConfig.getFundsPart()) {
+            dragonLists = dragonLists.subList(0, plankConfig.getFundsPart());
+        }
         List<Stock> result = new ArrayList<>();
-
-
+        for (DragonList dragonList : dragonLists) {
+            result.add(stockMapper.selectOne(new QueryWrapper<Stock>().eq("code", dragonList.getCode())));
+        }
         return result;
     }
 
@@ -142,7 +161,7 @@ public class Barbarossa implements CommandLineRunner {
         for (Stock stock : stocks) {
             Page<DailyRecord> selectPage = dailyRecordMapper.selectPage(new Page<>(1, 5), new QueryWrapper<DailyRecord>()
                     .eq("code", stock.getCode())
-                    .ge("date", date)
+                    .gt("date", DateUtils.addMinutes(date, 1))
                     .le("date", DateUtils.addDays(date, 1))
                     .orderByDesc("date"));
             DailyRecord dailyRecord = selectPage.getRecords().get(0);
