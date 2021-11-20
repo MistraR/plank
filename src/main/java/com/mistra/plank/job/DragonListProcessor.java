@@ -6,7 +6,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.DailyRecordMapper;
 import com.mistra.plank.mapper.DragonListMapper;
-import com.mistra.plank.pojo.DailyRecord;
 import com.mistra.plank.pojo.DragonList;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -23,8 +22,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 抓取每日龙虎榜数据，只取净买入额前20
@@ -37,12 +36,10 @@ import java.util.Objects;
 public class DragonListProcessor implements CommandLineRunner {
 
     private final PlankConfig plankConfig;
-    private final DailyRecordMapper dailyRecordMapper;
     private final DragonListMapper dragonListMapper;
 
-    public DragonListProcessor(PlankConfig plankConfig, DailyRecordMapper dailyRecordMapper, DragonListMapper dragonListMapper) {
+    public DragonListProcessor(PlankConfig plankConfig, DragonListMapper dragonListMapper) {
         this.plankConfig = plankConfig;
-        this.dailyRecordMapper = dailyRecordMapper;
         this.dragonListMapper = dragonListMapper;
     }
 
@@ -73,6 +70,7 @@ public class DragonListProcessor implements CommandLineRunner {
         }
         log.info("抓取{}日龙虎榜数据！", date);
         JSONArray list = data.getJSONArray("data");
+        List<DragonList> dragonLists = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(list)) {
             JSONObject stock = new JSONObject();
             for (Object o : list) {
@@ -91,8 +89,12 @@ public class DragonListProcessor implements CommandLineRunner {
                 dragonList.setMarketValue(stock.getBigDecimal("FREE_MARKET_CAP").longValue());
                 dragonList.setAccumAmount(stock.getBigDecimal("ACCUM_AMOUNT").longValue());
                 dragonList.setChangeRate(stock.getBigDecimal("CHANGE_RATE").setScale(2, BigDecimal.ROUND_HALF_UP));
-                dragonListMapper.insert(dragonList);
+                dragonLists.add(dragonList);
             }
+        }
+        Map<String, List<DragonList>> collect = dragonLists.stream().collect(Collectors.groupingBy(DragonList::getCode));
+        for (Map.Entry<String, List<DragonList>> entry : collect.entrySet()) {
+            dragonListMapper.insert(entry.getValue().get(0));
         }
     }
 
