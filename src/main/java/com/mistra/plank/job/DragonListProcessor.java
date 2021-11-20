@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mistra.plank.config.PlankConfig;
-import com.mistra.plank.mapper.DailyRecordMapper;
 import com.mistra.plank.mapper.DragonListMapper;
 import com.mistra.plank.pojo.DragonList;
 import lombok.extern.slf4j.Slf4j;
