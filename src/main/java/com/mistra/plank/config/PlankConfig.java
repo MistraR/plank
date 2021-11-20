@@ -43,6 +43,11 @@ public class PlankConfig {
     private String xueQiuStockDetailUrl;
 
     /**
+     * 东财 抓取每日龙虎榜数据，只取净买入额前20
+     */
+    private String dragonListUrl;
+
+    /**
      * 雪球 获取某只股票最近多少天的记录
      */
     private Integer recentDayNumber;

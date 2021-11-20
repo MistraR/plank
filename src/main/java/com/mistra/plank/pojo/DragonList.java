@@ -41,25 +41,43 @@ public class DragonList {
      * 净买入(W)
      */
     @TableField(value = "net_buy")
-    private Integer netBuy;
+    private Long netBuy;
 
     /**
-     * 买入前5合计(W)
+     * 买入合计(W)
      */
-    @TableField(value = "first_five_net_buy")
-    private Integer firstFiveNetBuy;
+    @TableField(value = "buy")
+    private Long buy;
 
     /**
-     * 卖出前5合计(W)
+     * 卖出合计(W)
      */
-    @TableField(value = "first_five_net_sell")
-    private Integer firstFiveNetSell;
+    @TableField(value = "sell")
+    private Long sell;
 
     /**
-     * 最近5日涨跌幅
+     * 收盘价
      */
-    @TableField(value = "last_five_days_rate")
-    private BigDecimal lastFiveDaysRate;
+    @TableField(value = "price")
+    private BigDecimal price;
+
+    /**
+     * 流通市值
+     */
+    @TableField(value = "market_value")
+    private Long marketValue;
+
+    /**
+     * 成交额
+     */
+    @TableField(value = "accum_amount")
+    private Long accumAmount;
+
+    /**
+     * 涨跌幅
+     */
+    @TableField(value = "change_rate")
+    private BigDecimal changeRate;
 
     /**
      * 日期
