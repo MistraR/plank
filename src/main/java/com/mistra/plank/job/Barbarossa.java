@@ -49,6 +49,7 @@ public class Barbarossa implements CommandLineRunner {
     private final PlankConfig plankConfig;
     private final DailyRecordProcessor dailyRecordProcessor;
     private final DragonListProcessor dragonListProcessor;
+    private final StockProcessor stockProcessor;
 
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
 
@@ -64,7 +65,7 @@ public class Barbarossa implements CommandLineRunner {
     public Barbarossa(StockMapper stockMapper, DailyRecordMapper dailyRecordMapper, ClearanceMapper clearanceMapper,
                       TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
                       PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor,
-                      DragonListProcessor dragonListProcessor) {
+                      DragonListProcessor dragonListProcessor, StockProcessor stockProcessor) {
         this.stockMapper = stockMapper;
         this.dailyRecordMapper = dailyRecordMapper;
         this.clearanceMapper = clearanceMapper;
@@ -73,6 +74,7 @@ public class Barbarossa implements CommandLineRunner {
         this.plankConfig = plankConfig;
         this.dailyRecordProcessor = dailyRecordProcessor;
         this.dragonListProcessor = dragonListProcessor;
+        this.stockProcessor = stockProcessor;
     }
 
     @Override
@@ -92,13 +94,20 @@ public class Barbarossa implements CommandLineRunner {
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
+        this.barbarossa();
+    }
+
+    @Scheduled(cron = "0 0 18 * * ? ")
+    private void collectData() throws Exception {
+        stockProcessor.run();
+        dragonListProcessor.run();
+        dailyRecordProcessor.run();
     }
 
     /**
      * 巴巴罗萨 工作日
      */
-    @Scheduled(cron = "0 0 18 * * ? ")
-    private void collect() throws Exception {
+    private void barbarossa() throws Exception {
         Date date = DateUtils.addMinutes(new Date(plankConfig.getBeginDay()), 10);
         do {
             this.barbarossa(date);

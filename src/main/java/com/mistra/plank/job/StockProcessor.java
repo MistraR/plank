@@ -42,7 +42,6 @@ public class StockProcessor {
         this.plankConfig = plankConfig;
     }
 
-    @Scheduled(cron = "0 0,30 0,15 ? * ? ")
     public void run() throws Exception {
         log.info("开始更新股票每日成交量！");
         DefaultHttpClient defaultHttpClient = new DefaultHttpClient();

@@ -1,11 +1,13 @@
 package com.mistra.plank.job;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.DragonListMapper;
 import com.mistra.plank.pojo.DragonList;
+import com.mistra.plank.pojo.Stock;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -32,7 +34,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-public class DragonListProcessor implements CommandLineRunner {
+public class DragonListProcessor {
 
     private final PlankConfig plankConfig;
     private final DragonListMapper dragonListMapper;
@@ -95,10 +97,5 @@ public class DragonListProcessor implements CommandLineRunner {
         for (Map.Entry<String, List<DragonList>> entry : collect.entrySet()) {
             dragonListMapper.insert(entry.getValue().get(0));
         }
-    }
-
-    @Override
-    public void run(String... args) throws Exception {
-//        run();
     }
 }
