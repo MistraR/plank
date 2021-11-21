@@ -208,7 +208,7 @@ public class Barbarossa implements CommandLineRunner {
                     TradeRecord tradeRecord = new TradeRecord();
                     tradeRecord.setName(holdShare.getName());
                     tradeRecord.setCode(holdShare.getCode());
-                    tradeRecord.setDate(date);
+                    tradeRecord.setDate(DateUtils.addHours(dailyRecord.getDate(), 9));
                     tradeRecord.setMoney((int) (number * 100 * dailyRecord.getOpenPrice().doubleValue()));
                     tradeRecord.setReason("买入" + holdShare.getName() + number * 100 + "股，花费" + cost + "元，当前可用余额" +
                             BALANCE_AVAILABLE.intValue());
@@ -309,8 +309,7 @@ public class Barbarossa implements CommandLineRunner {
         double money = number * sellPrice;
         // 本次卖出部分盈利金额
         BigDecimal profit = new BigDecimal(number * (sellPrice - holdShare.getBuyPrice().doubleValue()));
-        // 总资产
-        BALANCE = BALANCE.add(profit);
+
         // 可用金额
         BALANCE_AVAILABLE = BALANCE_AVAILABLE.add(new BigDecimal(money));
         TradeRecord tradeRecord = new TradeRecord();
