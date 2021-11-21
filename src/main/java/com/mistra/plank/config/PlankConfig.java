@@ -128,6 +128,11 @@ public class PlankConfig {
     private Integer stockPriceLowerLimit;
 
     /**
+     * 股价下限
+     */
+    private Integer clearanceDay;
+
+    /**
      * 可打板涨幅比率
      */
     private BigDecimal buyPlankRatioLimit;

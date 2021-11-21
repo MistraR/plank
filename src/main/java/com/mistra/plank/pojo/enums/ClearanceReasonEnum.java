@@ -15,6 +15,7 @@ public enum ClearanceReasonEnum {
     BREAK_LOSS_LINE("跌破止损线清仓"),
     TAKE_PROFIT("收益回撤到10个点止盈清仓"),
     PROFIT_UPPER("收益达到止盈条件清仓"),
+    TEN_DAY("持股超过8天 清仓"),
     POSITION_HALF("收益15% 减半仓"),
     POSITION_QUARTER("收益20% 减至1/4仓");
 

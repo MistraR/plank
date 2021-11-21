@@ -74,6 +74,12 @@ public class Clearance {
     private BigDecimal balance;
 
     /**
+     * 可用余额
+     */
+    @TableField(value = "available_balance")
+    private BigDecimal availableBalance;
+
+    /**
      * 清仓原因
      */
     @TableField(value = "reason")
