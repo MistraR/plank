@@ -1,0 +1,30 @@
+Manifest-Version: 1.0
+Main-Class: com.mistra.plank.PlankApplication
+Class-Path: spring-webmvc-5.3.12.jar commons-io-1.3.2.jar slf4j-log4j12-
+ 1.7.32.jar fastjson-1.2.28.jar log4j-api-2.14.1.jar jsqlparser-4.0.jar 
+ commons-lang3-3.9.jar tomcat-embed-websocket-9.0.54.jar jackson-databin
+ d-2.12.5.jar spring-boot-starter-web-2.5.6.jar tomcat-embed-el-9.0.54.j
+ ar commons-collections-3.2.2.jar assertj-core-3.19.0.jar asm-9.1.jar hu
+ tool-all-5.1.1.jar spring-boot-starter-logging-2.5.6.jar spring-web-5.3
+ .12.jar jsoup-1.10.3.jar jakarta.annotation-api-1.3.5.jar webmagic-exte
+ nsion-0.7.3.jar spring-boot-starter-tomcat-2.5.6.jar mybatis-spring-boo
+ t-starter-2.2.0.jar spring-expression-5.3.12.jar logback-core-1.2.6.jar
+  mybatis-plus-3.4.2.jar jackson-annotations-2.12.5.jar webmagic-core-0.
+ 7.3.jar guava-r09.jar spring-beans-5.3.12.jar json-smart-2.4.7.jar slf4
+ j-api-1.7.32.jar json-path-2.5.0.jar mybatis-plus-extension-3.4.2.jar j
+ ul-to-slf4j-1.7.32.jar jedis-3.6.3.jar commons-pool2-2.9.0.jar httpmime
+ -4.2.1.jar mysql-connector-java-8.0.27.jar httpcore-4.3.1.jar spring-bo
+ ot-autoconfigure-2.5.6.jar spring-boot-2.5.6.jar jackson-datatype-jdk8-
+ 2.12.5.jar accessors-smart-2.4.7.jar mybatis-plus-core-3.4.2.jar spring
+ -boot-starter-2.5.6.jar mybatis-plus-annotation-3.4.2.jar spring-jcl-5.
+ 3.12.jar spring-boot-starter-json-2.5.6.jar snakeyaml-1.28.jar mybatis-
+ plus-boot-starter-3.4.2.jar tomcat-embed-core-9.0.54.jar logback-classi
+ c-1.2.6.jar spring-tx-5.3.12.jar commons-codec-1.15.jar HikariCP-4.0.3.
+ jar spring-context-5.3.12.jar spring-aop-5.3.12.jar mybatis-spring-boot
+ -autoconfigure-2.2.0.jar log4j-to-slf4j-2.14.1.jar xsoup-0.3.1.jar myba
+ tis-spring-2.0.6.jar commons-collections4-4.4.jar jackson-module-parame
+ ter-names-2.12.5.jar spring-boot-starter-jdbc-2.5.6.jar spring-core-5.3
+ .12.jar joda-time-2.9.9.jar spring-jdbc-5.3.12.jar jackson-datatype-jsr
+ 310-2.12.5.jar mybatis-3.5.7.jar httpclient-4.3.6.jar jackson-core-2.12
+ .5.jar log4j-1.2.17.jar
+

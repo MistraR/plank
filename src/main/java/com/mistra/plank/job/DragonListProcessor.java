@@ -45,7 +45,7 @@ public class DragonListProcessor {
     }
 
     public void run() throws IOException {
-        Date date = new Date(plankConfig.getBeginDay());
+        Date date = new Date();
         String strDateFormat = "yyyy-MM-dd";
         SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
         do {

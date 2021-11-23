@@ -1,0 +1,34 @@
+# 开始操盘日期 20200101
+plank.beginDay=1577894400000
+# 开始操盘日期 20210101
+#plank.beginDay=1609430400000
+# 起始资金
+plank.funds=1000000
+# 资金分层数
+plank.fundsPart=2
+# 每日仓位层数上限
+plank.fundsPartLimit=2
+# 止盈清仓比率
+plank.profitUpperRatio=0.35
+# 阶段止盈减至1/4仓比率
+plank.profitQuarterRatio=0.25
+# 阶段止盈减半仓比率
+plank.profitHalfRatio=0.20
+# 阶段止盈回车清仓比率
+plank.profitClearanceRatio=0.10
+# 止损比率
+plank.deficitRatio=-0.05
+# 止损均线 6日线
+plank.deficitMovingAverage=5
+# 介入比率下限 2日涨幅
+plank.joinIncreaseRatioLowerLimit=0.15
+# 介入比率上限 6日涨幅
+plank.joinIncreaseRatioUpperLimit=0.40
+# 股价上限
+plank.stockPriceUpperLimit=200
+# 股价下限
+plank.stockPriceLowerLimit=10
+# 可打板涨幅比率
+plank.buyPlankRatioLimit=0.093
+# 最长持股天数限制
+plank.clearanceDay=5

@@ -89,7 +89,7 @@ public class Barbarossa implements CommandLineRunner {
         this.barbarossa();
     }
 
-    @Scheduled(cron = "0 0 18 * * ? ")
+    @Scheduled(cron = "0 0 17 * * ? ")
     private void collectData() throws Exception {
         stockProcessor.run();
         dragonListProcessor.run();
@@ -165,7 +165,7 @@ public class Barbarossa implements CommandLineRunner {
             }
         }
         dragonLists = dragonLists.stream().filter(dragonList -> stockCode.contains(dragonList.getCode())).collect(Collectors.toList());
-        dragonLists = dragonLists.stream().sorted((a, b) -> b.getNetBuy().compareTo(a.getNetBuy())).collect(Collectors.toList());
+        dragonLists = dragonLists.stream().sorted((a, b) -> b.getBuy().compareTo(a.getBuy())).collect(Collectors.toList());
         List<Stock> result = new ArrayList<>();
         for (DragonList dragonList : dragonLists) {
             result.add(stockMapper.selectOne(new QueryWrapper<Stock>().eq("code", dragonList.getCode())));
