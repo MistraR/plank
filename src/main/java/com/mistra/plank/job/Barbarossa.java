@@ -221,7 +221,6 @@ public class Barbarossa implements CommandLineRunner {
                 }
             }
         }
-
     }
 
     /**
@@ -282,7 +281,7 @@ public class Barbarossa implements CommandLineRunner {
                     }
 
                     // 持股超过8天 清仓
-                    if (Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime())).getDays() > 8) {
+                    if (Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime())).getDays() > plankConfig.getClearanceDay()) {
                         this.clearanceStock(holdShare, ClearanceReasonEnum.TEN_DAY, date, todayRecord.getOpenPrice().add(todayRecord.getClosePrice()).doubleValue() / 2);
                     }
                 }
