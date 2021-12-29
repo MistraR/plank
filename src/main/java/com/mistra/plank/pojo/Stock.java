@@ -1,5 +1,6 @@
 package com.mistra.plank.pojo;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -36,10 +37,22 @@ public class Stock {
     private Long marketValue;
 
     /**
-     * 当日成交量
+     * 当前价格
+     */
+    @TableField(value = "current_price")
+    private BigDecimal currentPrice;
+
+    /**
+     * 当日成交量（手）
      */
     @TableField(value = "volume")
     private Long volume;
+
+    /**
+     * 当日成交额
+     */
+    @TableField(value = "transaction_amount")
+    private BigDecimal transactionAmount;
 
     /**
      * 最近更新日期

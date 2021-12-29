@@ -1,5 +1,6 @@
 package com.mistra.plank.job;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Date;
 import java.util.Objects;
@@ -17,8 +18,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Logger;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -60,19 +59,24 @@ public class StockProcessor {
             for (Object o : list) {
                 data = (JSONObject) o;
                 // volume 值不准确忽略
-                Stock stock = new Stock(data.getString("symbol"), data.getString("name"), data.getLongValue("mc"),
-                        data.getLongValue("volume") / 10000, today);
-                Stock exist = stockMapper.selectById(stock.getCode());
-                if (Objects.nonNull(exist)) {
-                    exist.setVolume(stock.getVolume());
-                    exist.setModifyTime(today);
-                    stockMapper.updateById(exist);
-                } else {
-                    stockMapper.insert(stock);
+                BigDecimal current = data.getBigDecimal("current");
+                BigDecimal volume = data.getBigDecimal("volume");
+                if (Objects.nonNull(current) && Objects.nonNull(volume)) {
+                    Stock stock = new Stock(data.getString("symbol"), data.getString("name"), data.getLongValue("mc"),
+                            current, volume.longValue(), current.multiply(volume), today);
+                    Stock exist = stockMapper.selectById(stock.getCode());
+                    if (Objects.nonNull(exist)) {
+                        exist.setVolume(stock.getVolume());
+                        exist.setModifyTime(today);
+                        exist.setCurrentPrice(stock.getCurrentPrice());
+                        exist.setTransactionAmount(stock.getTransactionAmount());
+                        stockMapper.updateById(exist);
+                    } else {
+                        stockMapper.insert(stock);
+                    }
                 }
             }
         }
         log.info("更新股票每日成交量完成！");
     }
-
 }

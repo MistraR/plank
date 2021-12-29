@@ -71,6 +71,8 @@ public class Barbarossa implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+//        stockProcessor.run();
+        dragonListProcessor.run();
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
                 .notLike("name", "%ST%")
                 .notLike("name", "%st%")
