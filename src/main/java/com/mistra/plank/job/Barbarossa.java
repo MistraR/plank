@@ -2,15 +2,31 @@ package com.mistra.plank.job;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.config.PlankConfig;
-import com.mistra.plank.mapper.*;
-import com.mistra.plank.pojo.*;
+import com.mistra.plank.mapper.ClearanceMapper;
+import com.mistra.plank.mapper.DailyRecordMapper;
+import com.mistra.plank.mapper.DragonListMapper;
+import com.mistra.plank.mapper.HoldSharesMapper;
+import com.mistra.plank.mapper.StockMapper;
+import com.mistra.plank.mapper.TradeRecordMapper;
+import com.mistra.plank.pojo.Clearance;
+import com.mistra.plank.pojo.DailyRecord;
+import com.mistra.plank.pojo.DragonList;
+import com.mistra.plank.pojo.HoldShares;
+import com.mistra.plank.pojo.Stock;
+import com.mistra.plank.pojo.TradeRecord;
 import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -72,7 +88,7 @@ public class Barbarossa implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 //        stockProcessor.run();
-        dragonListProcessor.run();
+//        dragonListProcessor.run();
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
                 .notLike("name", "%ST%")
                 .notLike("name", "%st%")
@@ -86,9 +102,10 @@ public class Barbarossa implements CommandLineRunner {
         );
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
+        dailyRecordProcessor.run();
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
-        this.barbarossa();
+//        this.barbarossa();
     }
 
     @Scheduled(cron = "0 0 17 * * ? ")
