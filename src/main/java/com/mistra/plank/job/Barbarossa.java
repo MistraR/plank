@@ -129,6 +129,8 @@ public class Barbarossa implements CommandLineRunner {
         HashMap<String, BigDecimal> twoToThree = new HashMap<>(64);
         //三板三进四胜率
         HashMap<String, BigDecimal> threeToFour = new HashMap<>(64);
+        //四板四进无胜率
+        HashMap<String, BigDecimal> fourToFive = new HashMap<>(64);
         List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
                 .ge("date", date));
         Map<String, List<DailyRecord>> dateListMap = dailyRecords.stream().collect(Collectors.groupingBy(dailyRecord -> sdf.format(dailyRecord.getDate())));
@@ -138,6 +140,8 @@ public class Barbarossa implements CommandLineRunner {
         HashMap<String, Double> yesterdayTwo = new HashMap<>(64);
         //昨日三板
         HashMap<String, Double> yesterdayThree = new HashMap<>(64);
+        //昨日四板
+        HashMap<String, Double> yesterdayFour = new HashMap<>(64);
         do {
             List<DailyRecord> records = dateListMap.get(sdf.format(date));
             if (CollectionUtils.isNotEmpty(records)) {
@@ -149,37 +153,46 @@ public class Barbarossa implements CommandLineRunner {
                 HashMap<String, Double> todayThree = new HashMap<>(16);
                 //今日四板
                 HashMap<String, Double> todayFour = new HashMap<>(16);
+                //今日五板
+                HashMap<String, Double> todayFive = new HashMap<>(16);
                 for (DailyRecord dailyRecord : records) {
                     double v = dailyRecord.getIncreaseRate().doubleValue();
                     String name = dailyRecord.getName();
                     String code = dailyRecord.getCode();
                     if ((!code.contains("SZ30") && v > 9.5 && v < 11) || (code.contains("SZ30") && v > 19.5 && v < 21)) {
-                        if (!yesterdayOne.containsKey(name)) {
-                            //昨日没有板，今日首板
-                            todayOne.put(dailyRecord.getName(), v);
-                        } else if (yesterdayOne.containsKey(name)) {
-                            //昨日首板，今天继续板，进阶2板
-                            todayTwo.put(dailyRecord.getName(), v);
-                        } else if (yesterdayTwo.containsKey(name)) {
-                            // 昨日的二板，今天继续板，进阶3板
-                            todayThree.put(dailyRecord.getName(), v);
+                        if (yesterdayFour.containsKey(name)) {
+                            // 昨日的四板，今天继续板，进阶5板
+                            todayFive.put(dailyRecord.getName(), v);
                         } else if (yesterdayThree.containsKey(name)) {
                             // 昨日的三板，今天继续板，进阶4板
                             todayFour.put(dailyRecord.getName(), v);
+                        } else if (yesterdayTwo.containsKey(name)) {
+                            // 昨日的二板，今天继续板，进阶3板
+                            todayThree.put(dailyRecord.getName(), v);
+                        } else if (yesterdayOne.containsKey(name)) {
+                            //昨日首板，今天继续板，进阶2板
+                            todayTwo.put(dailyRecord.getName(), v);
+                        } else if (!yesterdayOne.containsKey(name)) {
+                            //昨日没有板，今日首板
+                            todayOne.put(dailyRecord.getName(), v);
                         }
                     }
                 }
                 if (yesterdayOne.size() > 0) {
                     //一进二成功率
-                    oneToTwo.put(sdf.format(date), new BigDecimal(todayTwo.size()).divide(new BigDecimal(yesterdayOne.size()), 2));
+                    oneToTwo.put(sdf.format(date), new BigDecimal(todayTwo.size()).divide(new BigDecimal(yesterdayOne.size()), 2, BigDecimal.ROUND_HALF_UP));
                 }
                 if (yesterdayTwo.size() > 0) {
                     //二进三成功率
-                    twoToThree.put(sdf.format(date), new BigDecimal(todayThree.size()).divide(new BigDecimal(yesterdayTwo.size()), 2));
+                    twoToThree.put(sdf.format(date), new BigDecimal(todayThree.size()).divide(new BigDecimal(yesterdayTwo.size()), 2, BigDecimal.ROUND_HALF_UP));
                 }
                 if (yesterdayThree.size() > 0) {
                     //三进四成功率
-                    threeToFour.put(sdf.format(date), new BigDecimal(todayFour.size()).divide(new BigDecimal(yesterdayThree.size()), 2));
+                    threeToFour.put(sdf.format(date), new BigDecimal(todayFour.size()).divide(new BigDecimal(yesterdayThree.size()), 2, BigDecimal.ROUND_HALF_UP));
+                }
+                if (yesterdayFour.size() > 0) {
+                    //四进五成功率
+                    fourToFive.put(sdf.format(date), new BigDecimal(todayFive.size()).divide(new BigDecimal(yesterdayFour.size()), 2, BigDecimal.ROUND_HALF_UP));
                 }
                 yesterdayOne.clear();
                 yesterdayOne.putAll(todayOne);
@@ -187,6 +200,8 @@ public class Barbarossa implements CommandLineRunner {
                 yesterdayTwo.putAll(todayTwo);
                 yesterdayThree.clear();
                 yesterdayThree.putAll(todayThree);
+                yesterdayFour.clear();
+                yesterdayFour.putAll(todayFour);
             }
             log.info("{}日的打板晋级数据计算完毕！", sdf.format(date));
             date = DateUtils.addDays(date, 1);
@@ -206,9 +221,15 @@ public class Barbarossa implements CommandLineRunner {
             log.info("三进四胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
             three += entry.getValue().doubleValue();
         }
-        log.info("首板一进二平均胜率：{}", new BigDecimal(one).divide(new BigDecimal(oneToTwo.size()), 2));
-        log.info("二板二进三平均胜率：{}", new BigDecimal(two).divide(new BigDecimal(twoToThree.size()), 2));
-        log.info("三板三进四平均胜率：{}", new BigDecimal(three).divide(new BigDecimal(threeToFour.size()), 2));
+        double four = 0d;
+        for (Map.Entry<String, BigDecimal> entry : fourToFive.entrySet()) {
+            log.info("四进五胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            four += entry.getValue().doubleValue();
+        }
+        log.info("首板>一进二平均胜率：{}", new BigDecimal(one).divide(new BigDecimal(oneToTwo.size()), 2, BigDecimal.ROUND_HALF_UP));
+        log.info("二板>二进三平均胜率：{}", new BigDecimal(two).divide(new BigDecimal(twoToThree.size()), 2, BigDecimal.ROUND_HALF_UP));
+        log.info("三板>三进四平均胜率：{}", new BigDecimal(three).divide(new BigDecimal(threeToFour.size()), 2, BigDecimal.ROUND_HALF_UP));
+        log.info("四板>四进五平均胜率：{}", new BigDecimal(four).divide(new BigDecimal(fourToFive.size()), 2, BigDecimal.ROUND_HALF_UP));
     }
 
     /**
