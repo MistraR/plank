@@ -131,7 +131,7 @@ public class Barbarossa implements CommandLineRunner {
         HashMap<String, BigDecimal> threeToFour = new HashMap<>(64);
         List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
                 .ge("date", date));
-        Map<Date, List<DailyRecord>> trainingStatisticsDayMap = dailyRecords.stream().collect(Collectors.groupingBy(DailyRecord::getDate));
+        Map<String, List<DailyRecord>> dateListMap = dailyRecords.stream().collect(Collectors.groupingBy(dailyRecord -> sdf.format(dailyRecord.getDate())));
         //昨日首板
         HashMap<String, Double> yesterdayOne = new HashMap<>(64);
         //昨日二板
@@ -139,7 +139,7 @@ public class Barbarossa implements CommandLineRunner {
         //昨日三板
         HashMap<String, Double> yesterdayThree = new HashMap<>(64);
         do {
-            List<DailyRecord> records = trainingStatisticsDayMap.get(date);
+            List<DailyRecord> records = dateListMap.get(sdf.format(date));
             if (CollectionUtils.isNotEmpty(records)) {
                 //今日首板
                 HashMap<String, Double> todayOne = new HashMap<>(64);
@@ -150,21 +150,22 @@ public class Barbarossa implements CommandLineRunner {
                 //今日四板
                 HashMap<String, Double> todayFour = new HashMap<>(16);
                 for (DailyRecord dailyRecord : records) {
-
-                    if ((!dailyRecord.getCode().contains("SZ30") && dailyRecord.getIncreaseRate().doubleValue() > 0.095)
-                            || (dailyRecord.getCode().contains("SZ30") && dailyRecord.getIncreaseRate().doubleValue() > 0.195)) {
-                        if (!yesterdayOne.containsKey(dailyRecord.getName())) {
+                    double v = dailyRecord.getIncreaseRate().doubleValue();
+                    String name = dailyRecord.getName();
+                    String code = dailyRecord.getCode();
+                    if ((!code.contains("SZ30") && v > 0.095 && v < 0.11) || (code.contains("SZ30") && v > 0.195 && v < 0.21)) {
+                        if (!yesterdayOne.containsKey(name)) {
                             //昨日没有板，今日首板
-                            todayOne.put(dailyRecord.getName(), dailyRecord.getIncreaseRate().doubleValue());
-                        } else if (yesterdayOne.containsKey(dailyRecord.getName())) {
+                            todayOne.put(dailyRecord.getName(), v);
+                        } else if (yesterdayOne.containsKey(name)) {
                             //昨日首板，今天继续板，进阶2板
-                            todayTwo.put(dailyRecord.getName(), dailyRecord.getIncreaseRate().doubleValue());
-                        } else if (yesterdayTwo.containsKey(dailyRecord.getName())) {
+                            todayTwo.put(dailyRecord.getName(), v);
+                        } else if (yesterdayTwo.containsKey(name)) {
                             // 昨日的二板，今天继续板，进阶3板
-                            todayThree.put(dailyRecord.getName(), dailyRecord.getIncreaseRate().doubleValue());
-                        } else if (yesterdayThree.containsKey(dailyRecord.getName())) {
+                            todayThree.put(dailyRecord.getName(), v);
+                        } else if (yesterdayThree.containsKey(name)) {
                             // 昨日的三板，今天继续板，进阶4板
-                            todayFour.put(dailyRecord.getName(), dailyRecord.getIncreaseRate().doubleValue());
+                            todayFour.put(dailyRecord.getName(), v);
                         }
                         //一进二成功率
                         oneToTwo.put(sdf.format(date), new BigDecimal(todayTwo.size()).divide(new BigDecimal(yesterdayOne.size()), 2));
