@@ -31,6 +31,7 @@ import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.springframework.boot.CommandLineRunner;
@@ -108,9 +109,79 @@ public class Barbarossa implements CommandLineRunner {
 
     @Scheduled(cron = "0 0 17 * * ? ")
     private void collectData() throws Exception {
-        stockProcessor.run();
-        dragonListProcessor.run();
+//        stockProcessor.run();
+//        dragonListProcessor.run();
         dailyRecordProcessor.run();
+//        analyze();
+    }
+
+    /**
+     * 分析首板一进二，二板二进三胜率
+     */
+    private void analyze() {
+        String strDateFormat = "yyyy-MM-dd";
+        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
+        Date date = new DateTime(plankConfig.getAnalyzeTime()).withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0)
+                .withMillisOfSecond(0).toDate();
+        //首板一进二胜率
+        HashMap<String, BigDecimal> oneToTwo = new HashMap<>(64);
+        //二板二进三胜率
+        HashMap<String, BigDecimal> twoToThree = new HashMap<>(64);
+        List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
+                .ge("date", date));
+        Map<Date, List<DailyRecord>> trainingStatisticsDayMap = dailyRecords.stream().collect(Collectors.groupingBy(DailyRecord::getDate));
+        //昨日首板
+        HashMap<String, Double> yesterdayOne = new HashMap<>(64);
+        //昨日二板
+        HashMap<String, Double> yesterdayTwo = new HashMap<>(64);
+        do {
+            List<DailyRecord> records = trainingStatisticsDayMap.get(date);
+            if (CollectionUtils.isNotEmpty(records)) {
+                //今日首板
+                HashMap<String, Double> todayOne = new HashMap<>(64);
+                //今日二板
+                HashMap<String, Double> todayTwo = new HashMap<>(32);
+                //今日三板
+                HashMap<String, Double> todayThree = new HashMap<>(16);
+                for (DailyRecord dailyRecord : records) {
+
+                    if ((!dailyRecord.getCode().contains("SZ30") && dailyRecord.getIncreaseRate().doubleValue() > 0.095)
+                            && (dailyRecord.getCode().contains("SZ30") && dailyRecord.getIncreaseRate().doubleValue() > 0.195)) {
+                        if (!yesterdayOne.containsKey(dailyRecord.getName())) {
+                            //昨日没有板，今日首板
+                            todayOne.put(dailyRecord.getName(), dailyRecord.getIncreaseRate().doubleValue());
+                        } else if (yesterdayOne.containsKey(dailyRecord.getName())) {
+                            //昨日首板，今天继续板，进阶2板
+                            todayTwo.put(dailyRecord.getName(), dailyRecord.getIncreaseRate().doubleValue());
+                        } else if (yesterdayTwo.containsKey(dailyRecord.getName())) {
+                            // 昨日的二板，今天继续板，进阶3板
+                            todayThree.put(dailyRecord.getName(), dailyRecord.getIncreaseRate().doubleValue());
+                        }
+                        //一进二成功率
+                        oneToTwo.put(sdf.format(date), new BigDecimal(todayTwo.size()).divide(new BigDecimal(yesterdayOne.size()), 2));
+                        //二进三成功率
+                        twoToThree.put(sdf.format(date), new BigDecimal(todayThree.size()).divide(new BigDecimal(yesterdayTwo.size()), 2));
+                        yesterdayOne.clear();
+                        yesterdayOne.putAll(todayOne);
+                        yesterdayTwo.clear();
+                        yesterdayTwo.putAll(todayTwo);
+                    }
+                }
+            }
+            date = DateUtils.addDays(date, 1);
+        } while (date.getTime() < System.currentTimeMillis());
+        double one = 0d;
+        for (Map.Entry<String, BigDecimal> entry : oneToTwo.entrySet()) {
+            log.info("一进二胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            one += entry.getValue().doubleValue();
+        }
+        log.info("一进二平均胜率：{}", new BigDecimal(one).divide(new BigDecimal(oneToTwo.size()), 2));
+        double two = 0d;
+        for (Map.Entry<String, BigDecimal> entry : twoToThree.entrySet()) {
+            log.info("二进三胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            two += entry.getValue().doubleValue();
+        }
+        log.info("二进三平均胜率：{}", new BigDecimal(two).divide(new BigDecimal(oneToTwo.size()), 2));
     }
 
     /**
