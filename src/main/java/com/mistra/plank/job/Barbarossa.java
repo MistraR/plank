@@ -194,6 +194,9 @@ public class Barbarossa implements CommandLineRunner {
                     //四进五成功率
                     fourToFive.put(sdf.format(date), new BigDecimal(todayFive.size()).divide(new BigDecimal(yesterdayFour.size()), 2, BigDecimal.ROUND_HALF_UP));
                 }
+                log.info("{}日二板股票:{}", sdf.format(date), todayTwo);
+                log.info("{}日三板股票:{}", sdf.format(date), todayThree);
+                log.info("{}日四板股票:{}", sdf.format(date), todayFour);
                 yesterdayOne.clear();
                 yesterdayOne.putAll(todayOne);
                 yesterdayTwo.clear();
@@ -208,22 +211,22 @@ public class Barbarossa implements CommandLineRunner {
         } while (date.getTime() < System.currentTimeMillis());
         double one = 0d;
         for (Map.Entry<String, BigDecimal> entry : oneToTwo.entrySet()) {
-            log.info("一进二胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+//            log.info("一进二胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
             one += entry.getValue().doubleValue();
         }
         double two = 0d;
         for (Map.Entry<String, BigDecimal> entry : twoToThree.entrySet()) {
-            log.info("二进三胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+//            log.info("二进三胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
             two += entry.getValue().doubleValue();
         }
         double three = 0d;
         for (Map.Entry<String, BigDecimal> entry : threeToFour.entrySet()) {
-            log.info("三进四胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+//            log.info("三进四胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
             three += entry.getValue().doubleValue();
         }
         double four = 0d;
         for (Map.Entry<String, BigDecimal> entry : fourToFive.entrySet()) {
-            log.info("四进五胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+//            log.info("四进五胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
             four += entry.getValue().doubleValue();
         }
         log.info("首板>一进二平均胜率：{}", new BigDecimal(one).divide(new BigDecimal(oneToTwo.size()), 2, BigDecimal.ROUND_HALF_UP));
