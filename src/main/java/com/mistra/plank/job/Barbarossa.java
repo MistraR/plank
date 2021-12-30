@@ -111,8 +111,8 @@ public class Barbarossa implements CommandLineRunner {
     private void collectData() throws Exception {
 //        stockProcessor.run();
 //        dragonListProcessor.run();
-        dailyRecordProcessor.run();
-//        analyze();
+//        dailyRecordProcessor.run();
+        analyze();
     }
 
     /**
@@ -153,7 +153,7 @@ public class Barbarossa implements CommandLineRunner {
                     double v = dailyRecord.getIncreaseRate().doubleValue();
                     String name = dailyRecord.getName();
                     String code = dailyRecord.getCode();
-                    if ((!code.contains("SZ30") && v > 0.095 && v < 0.11) || (code.contains("SZ30") && v > 0.195 && v < 0.21)) {
+                    if ((!code.contains("SZ30") && v > 9.5 && v < 11) || (code.contains("SZ30") && v > 19.5 && v < 21)) {
                         if (!yesterdayOne.containsKey(name)) {
                             //昨日没有板，今日首板
                             todayOne.put(dailyRecord.getName(), v);
@@ -167,21 +167,28 @@ public class Barbarossa implements CommandLineRunner {
                             // 昨日的三板，今天继续板，进阶4板
                             todayFour.put(dailyRecord.getName(), v);
                         }
-                        //一进二成功率
-                        oneToTwo.put(sdf.format(date), new BigDecimal(todayTwo.size()).divide(new BigDecimal(yesterdayOne.size()), 2));
-                        //二进三成功率
-                        twoToThree.put(sdf.format(date), new BigDecimal(todayThree.size()).divide(new BigDecimal(yesterdayTwo.size()), 2));
-                        //三进四成功率
-                        threeToFour.put(sdf.format(date), new BigDecimal(todayFour.size()).divide(new BigDecimal(yesterdayThree.size()), 2));
-                        yesterdayOne.clear();
-                        yesterdayOne.putAll(todayOne);
-                        yesterdayTwo.clear();
-                        yesterdayTwo.putAll(todayTwo);
-                        yesterdayThree.clear();
-                        yesterdayThree.putAll(todayThree);
                     }
                 }
+                if (yesterdayOne.size() > 0) {
+                    //一进二成功率
+                    oneToTwo.put(sdf.format(date), new BigDecimal(todayTwo.size()).divide(new BigDecimal(yesterdayOne.size()), 2));
+                }
+                if (yesterdayTwo.size() > 0) {
+                    //二进三成功率
+                    twoToThree.put(sdf.format(date), new BigDecimal(todayThree.size()).divide(new BigDecimal(yesterdayTwo.size()), 2));
+                }
+                if (yesterdayThree.size() > 0) {
+                    //三进四成功率
+                    threeToFour.put(sdf.format(date), new BigDecimal(todayFour.size()).divide(new BigDecimal(yesterdayThree.size()), 2));
+                }
+                yesterdayOne.clear();
+                yesterdayOne.putAll(todayOne);
+                yesterdayTwo.clear();
+                yesterdayTwo.putAll(todayTwo);
+                yesterdayThree.clear();
+                yesterdayThree.putAll(todayThree);
             }
+            log.info("{}日的打板晋级数据计算完毕！", sdf.format(date));
             date = DateUtils.addDays(date, 1);
         } while (date.getTime() < System.currentTimeMillis());
         double one = 0d;
