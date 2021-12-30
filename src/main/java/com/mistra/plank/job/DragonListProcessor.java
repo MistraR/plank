@@ -46,7 +46,7 @@ public class DragonListProcessor {
     }
 
     public void run() throws IOException {
-        Date date = new Date(1637659454000L);
+        Date date = new Date(plankConfig.getDragonListTime());
         String strDateFormat = "yyyy-MM-dd";
         SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
         do {

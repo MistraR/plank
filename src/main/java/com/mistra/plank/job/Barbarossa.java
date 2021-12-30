@@ -87,8 +87,6 @@ public class Barbarossa implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-//        stockProcessor.run();
-//        dragonListProcessor.run();
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
                 .notLike("name", "%ST%")
                 .notLike("name", "%st%")
@@ -102,9 +100,9 @@ public class Barbarossa implements CommandLineRunner {
         );
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
-        dailyRecordProcessor.run();
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
+        this.collectData();
 //        this.barbarossa();
     }
 

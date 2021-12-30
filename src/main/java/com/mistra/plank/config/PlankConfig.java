@@ -48,6 +48,11 @@ public class PlankConfig {
     private String dragonListUrl;
 
     /**
+     * 东财 抓取从某天以来的龙虎榜数据
+     */
+    private Long dragonListTime;
+
+    /**
      * 雪球 获取某只股票最近多少天的记录
      */
     private Integer recentDayNumber;
