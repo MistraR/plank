@@ -194,9 +194,8 @@ public class Barbarossa implements CommandLineRunner {
                     //四进五成功率
                     fourToFive.put(sdf.format(date), new BigDecimal(todayFive.size()).divide(new BigDecimal(yesterdayFour.size()), 2, BigDecimal.ROUND_HALF_UP));
                 }
-                log.info("{}日二板股票:{}", sdf.format(date), todayTwo);
-                log.info("{}日三板股票:{}", sdf.format(date), todayThree);
-                log.info("{}日四板股票:{}", sdf.format(date), todayFour);
+                log.info("\n{}日\n二板:{}\n三板:{}\n四板:{}\n五板:{}", sdf.format(date), new ArrayList<>(todayTwo.keySet()),
+                        new ArrayList<>(todayThree.keySet()), new ArrayList<>(todayFour.keySet()), new ArrayList<>(todayFive.keySet()));
                 yesterdayOne.clear();
                 yesterdayOne.putAll(todayOne);
                 yesterdayTwo.clear();
@@ -206,7 +205,7 @@ public class Barbarossa implements CommandLineRunner {
                 yesterdayFour.clear();
                 yesterdayFour.putAll(todayFour);
             }
-            log.info("{}日的打板晋级数据计算完毕！", sdf.format(date));
+//            log.info("{}日的打板晋级数据计算完毕！", sdf.format(date));
             date = DateUtils.addDays(date, 1);
         } while (date.getTime() < System.currentTimeMillis());
         double one = 0d;
