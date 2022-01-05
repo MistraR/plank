@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -111,7 +112,8 @@ public class Barbarossa implements CommandLineRunner {
     private void collectData() throws Exception {
 //        stockProcessor.run();
 //        dragonListProcessor.run();
-//        dailyRecordProcessor.run();
+        dailyRecordProcessor.run();
+        Thread.sleep(10000);
         analyze();
     }
 
@@ -119,6 +121,7 @@ public class Barbarossa implements CommandLineRunner {
      * 分析首板一进二，二板二进三胜率
      */
     private void analyze() {
+        HashSet<String> stock = new HashSet<>();
         String strDateFormat = "yyyy-MM-dd";
         SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
         Date date = new DateTime(plankConfig.getAnalyzeTime()).withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0)
@@ -159,7 +162,7 @@ public class Barbarossa implements CommandLineRunner {
                     double v = dailyRecord.getIncreaseRate().doubleValue();
                     String name = dailyRecord.getName();
                     String code = dailyRecord.getCode();
-                    if ((!code.contains("SZ30") && v > 9.5 && v < 11) || (code.contains("SZ30") && v > 19.5 && v < 21)) {
+                    if ((!code.contains("SZ30") && v > 9.7 && v < 11) || (code.contains("SZ30") && v > 19.7 && v < 21)) {
                         if (yesterdayFour.containsKey(name)) {
                             // 昨日的四板，今天继续板，进阶5板
                             todayFive.put(dailyRecord.getName(), v);
@@ -196,6 +199,9 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 log.info("\n{}日\n二板:{}\n三板:{}\n四板:{}\n五板:{}", sdf.format(date), new ArrayList<>(todayTwo.keySet()),
                         new ArrayList<>(todayThree.keySet()), new ArrayList<>(todayFour.keySet()), new ArrayList<>(todayFive.keySet()));
+                stock.addAll(todayThree.keySet());
+                stock.addAll(todayFour.keySet());
+                stock.addAll(todayFive.keySet());
                 yesterdayOne.clear();
                 yesterdayOne.putAll(todayOne);
                 yesterdayTwo.clear();
@@ -205,33 +211,41 @@ public class Barbarossa implements CommandLineRunner {
                 yesterdayFour.clear();
                 yesterdayFour.putAll(todayFour);
             }
-//            log.info("{}日的打板晋级数据计算完毕！", sdf.format(date));
             date = DateUtils.addDays(date, 1);
         } while (date.getTime() < System.currentTimeMillis());
+        log.info("当前分析时间段所有上榜股票:{}", stock);
         double one = 0d;
         for (Map.Entry<String, BigDecimal> entry : oneToTwo.entrySet()) {
-//            log.info("一进二胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            log.info("一进二胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
             one += entry.getValue().doubleValue();
         }
         double two = 0d;
         for (Map.Entry<String, BigDecimal> entry : twoToThree.entrySet()) {
-//            log.info("二进三胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            log.info("二进三胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
             two += entry.getValue().doubleValue();
         }
         double three = 0d;
         for (Map.Entry<String, BigDecimal> entry : threeToFour.entrySet()) {
-//            log.info("三进四胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            log.info("三进四胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
             three += entry.getValue().doubleValue();
         }
         double four = 0d;
         for (Map.Entry<String, BigDecimal> entry : fourToFive.entrySet()) {
-//            log.info("四进五胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            log.info("四进五胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
             four += entry.getValue().doubleValue();
         }
-        log.info("首板>一进二平均胜率：{}", new BigDecimal(one).divide(new BigDecimal(oneToTwo.size()), 2, BigDecimal.ROUND_HALF_UP));
-        log.info("二板>二进三平均胜率：{}", new BigDecimal(two).divide(new BigDecimal(twoToThree.size()), 2, BigDecimal.ROUND_HALF_UP));
-        log.info("三板>三进四平均胜率：{}", new BigDecimal(three).divide(new BigDecimal(threeToFour.size()), 2, BigDecimal.ROUND_HALF_UP));
-        log.info("四板>四进五平均胜率：{}", new BigDecimal(four).divide(new BigDecimal(fourToFive.size()), 2, BigDecimal.ROUND_HALF_UP));
+        if (oneToTwo.size() > 0) {
+            log.info("首板>一进二平均胜率：{}", new BigDecimal(one).divide(new BigDecimal(oneToTwo.size()), 2, BigDecimal.ROUND_HALF_UP));
+        }
+        if (twoToThree.size() > 0) {
+            log.info("二板>二进三平均胜率：{}", new BigDecimal(two).divide(new BigDecimal(twoToThree.size()), 2, BigDecimal.ROUND_HALF_UP));
+        }
+        if (threeToFour.size() > 0) {
+            log.info("三板>三进四平均胜率：{}", new BigDecimal(three).divide(new BigDecimal(threeToFour.size()), 2, BigDecimal.ROUND_HALF_UP));
+        }
+        if (fourToFive.size() > 0) {
+            log.info("四板>四进五平均胜率：{}", new BigDecimal(four).divide(new BigDecimal(fourToFive.size()), 2, BigDecimal.ROUND_HALF_UP));
+        }
     }
 
     /**
