@@ -112,8 +112,8 @@ public class Barbarossa implements CommandLineRunner {
     private void collectData() throws Exception {
 //        stockProcessor.run();
 //        dragonListProcessor.run();
-        dailyRecordProcessor.run();
-        Thread.sleep(10000);
+//        dailyRecordProcessor.run();
+//        Thread.sleep(10000);
         analyze();
     }
 
@@ -132,8 +132,10 @@ public class Barbarossa implements CommandLineRunner {
         HashMap<String, BigDecimal> twoToThree = new HashMap<>(64);
         //三板三进四胜率
         HashMap<String, BigDecimal> threeToFour = new HashMap<>(64);
-        //四板四进无胜率
+        //四板四进五胜率
         HashMap<String, BigDecimal> fourToFive = new HashMap<>(64);
+        //五板五进六胜率
+        HashMap<String, BigDecimal> fiveToSix = new HashMap<>(64);
         List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
                 .ge("date", date));
         Map<String, List<DailyRecord>> dateListMap = dailyRecords.stream().collect(Collectors.groupingBy(dailyRecord -> sdf.format(dailyRecord.getDate())));
@@ -145,6 +147,8 @@ public class Barbarossa implements CommandLineRunner {
         HashMap<String, Double> yesterdayThree = new HashMap<>(64);
         //昨日四板
         HashMap<String, Double> yesterdayFour = new HashMap<>(64);
+        //昨日五板
+        HashMap<String, Double> yesterdayFive = new HashMap<>(64);
         do {
             List<DailyRecord> records = dateListMap.get(sdf.format(date));
             if (CollectionUtils.isNotEmpty(records)) {
@@ -158,12 +162,17 @@ public class Barbarossa implements CommandLineRunner {
                 HashMap<String, Double> todayFour = new HashMap<>(16);
                 //今日五板
                 HashMap<String, Double> todayFive = new HashMap<>(16);
+                //今日六板
+                HashMap<String, Double> todaySix = new HashMap<>(16);
                 for (DailyRecord dailyRecord : records) {
                     double v = dailyRecord.getIncreaseRate().doubleValue();
                     String name = dailyRecord.getName();
                     String code = dailyRecord.getCode();
-                    if ((!code.contains("SZ30") && v > 9.7 && v < 11) || (code.contains("SZ30") && v > 19.7 && v < 21)) {
-                        if (yesterdayFour.containsKey(name)) {
+                    if ((!code.contains("SZ30") && v > 9.4 && v < 11) || (code.contains("SZ30") && v > 19.4 && v < 21)) {
+                        if (yesterdayFive.containsKey(name)) {
+                            // 昨日的五板，今天继续板，进阶6板
+                            todaySix.put(dailyRecord.getName(), v);
+                        } else if (yesterdayFour.containsKey(name)) {
                             // 昨日的四板，今天继续板，进阶5板
                             todayFive.put(dailyRecord.getName(), v);
                         } else if (yesterdayThree.containsKey(name)) {
@@ -197,8 +206,19 @@ public class Barbarossa implements CommandLineRunner {
                     //四进五成功率
                     fourToFive.put(sdf.format(date), new BigDecimal(todayFive.size()).divide(new BigDecimal(yesterdayFour.size()), 2, BigDecimal.ROUND_HALF_UP));
                 }
-                log.info("\n{}日\n二板:{}\n三板:{}\n四板:{}\n五板:{}", sdf.format(date), new ArrayList<>(todayTwo.keySet()),
-                        new ArrayList<>(todayThree.keySet()), new ArrayList<>(todayFour.keySet()), new ArrayList<>(todayFive.keySet()));
+                if (yesterdayFive.size() > 0) {
+                    //五进六成功率
+                    fiveToSix.put(sdf.format(date), new BigDecimal(todaySix.size()).divide(new BigDecimal(yesterdayFive.size()), 2, BigDecimal.ROUND_HALF_UP));
+                }
+                log.info("\n-------------------------------------------------------------------------------------------{}日-------------------------------------------------------------------------------------------" +
+                                "\n首板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}" +
+                                "\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", sdf.format(date),
+                        todayOne.keySet().size(), new ArrayList<>(todayOne.keySet()),
+                        todayTwo.keySet().size(), new ArrayList<>(todayTwo.keySet()),
+                        todayThree.keySet().size(), new ArrayList<>(todayThree.keySet()),
+                        todayFour.keySet().size(), new ArrayList<>(todayFour.keySet()),
+                        todayFive.keySet().size(), new ArrayList<>(todayFive.keySet()),
+                        todaySix.keySet().size(), new ArrayList<>(todaySix.keySet()));
                 stock.addAll(todayThree.keySet());
                 stock.addAll(todayFour.keySet());
                 stock.addAll(todayFive.keySet());
@@ -210,29 +230,46 @@ public class Barbarossa implements CommandLineRunner {
                 yesterdayThree.putAll(todayThree);
                 yesterdayFour.clear();
                 yesterdayFour.putAll(todayFour);
+                yesterdayFive.clear();
+                yesterdayFive.putAll(todayFive);
             }
             date = DateUtils.addDays(date, 1);
         } while (date.getTime() < System.currentTimeMillis());
-        log.info("当前分析时间段所有上榜股票:{}", stock);
+//        log.info("当前分析时间段所有上榜股票:{}", stock);
         double one = 0d;
         for (Map.Entry<String, BigDecimal> entry : oneToTwo.entrySet()) {
-            log.info("一进二胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            if (entry.getKey().equals(sdf.format(new Date()))) {
+                log.info("{}日一进二胜率:{}", entry.getKey(), entry.getValue());
+            }
             one += entry.getValue().doubleValue();
         }
         double two = 0d;
         for (Map.Entry<String, BigDecimal> entry : twoToThree.entrySet()) {
-            log.info("二进三胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            if (entry.getKey().equals(sdf.format(new Date()))) {
+                log.info("{}日二进三胜率:{}", entry.getKey(), entry.getValue());
+            }
             two += entry.getValue().doubleValue();
         }
         double three = 0d;
         for (Map.Entry<String, BigDecimal> entry : threeToFour.entrySet()) {
-            log.info("三进四胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            if (entry.getKey().equals(sdf.format(new Date()))) {
+                log.info("{}日三进四胜率:{}", entry.getKey(), entry.getValue());
+            }
             three += entry.getValue().doubleValue();
         }
         double four = 0d;
         for (Map.Entry<String, BigDecimal> entry : fourToFive.entrySet()) {
-            log.info("四进五胜率：日期:{},胜率:{}", entry.getKey(), entry.getValue());
+            if (entry.getKey().equals(sdf.format(new Date()))) {
+                log.info("{}日四进五胜率:{}", entry.getKey(), entry.getValue());
+            }
             four += entry.getValue().doubleValue();
+        }
+        double five = 0d;
+        for (Map.Entry<String, BigDecimal> entry : fiveToSix.entrySet()) {
+            if (entry.getKey().equals(sdf.format(new Date()))) {
+                log.info("{}日五进六胜率:{}", entry.getKey(), entry.getValue());
+            }
+            five += entry.getValue().doubleValue();
         }
         if (oneToTwo.size() > 0) {
             log.info("首板>一进二平均胜率：{}", new BigDecimal(one).divide(new BigDecimal(oneToTwo.size()), 2, BigDecimal.ROUND_HALF_UP));
@@ -245,6 +282,9 @@ public class Barbarossa implements CommandLineRunner {
         }
         if (fourToFive.size() > 0) {
             log.info("四板>四进五平均胜率：{}", new BigDecimal(four).divide(new BigDecimal(fourToFive.size()), 2, BigDecimal.ROUND_HALF_UP));
+        }
+        if (fiveToSix.size() > 0) {
+            log.info("五板>五进六平均胜率：{}", new BigDecimal(five).divide(new BigDecimal(fiveToSix.size()), 2, BigDecimal.ROUND_HALF_UP));
         }
     }
 
