@@ -147,4 +147,33 @@ public class PlankConfig {
      */
     private BigDecimal buyPlankRatioLimit;
 
+    /**
+     * 上升趋势样本名称，逗号分隔
+     */
+    private String sample;
+    /**
+     * 样本入选第5个交易日日期
+     */
+    private Long sampleFiveDay;
+    /**
+     * 样本入选第10个交易日日期
+     */
+    private Long sampleTenDay;
+    /**
+     * 样本入选第15个交易日日期
+     */
+    private Long sampleFifteenDay;
+    /**
+     * 样本入选第20个交易日日期
+     */
+    private Long sampleTwentyDay;
+    /**
+     * 样本入选第25个交易日日期
+     */
+    private Long sampleTwentyFiveDay;
+    /**
+     * 样本入选第30个交易日日期
+     */
+    private Long sampleThirtyDay;
+
 }

@@ -89,7 +89,7 @@ public class DailyRecordProcessor {
                             log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>更新[{}]今日成交数据完成！", entry.getValue());
                         }
                     }
-                    Thread.sleep(3000);
+                    Thread.sleep(4000);
                 }
             });
         }

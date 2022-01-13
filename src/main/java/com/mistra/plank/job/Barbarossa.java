@@ -3,6 +3,7 @@ package com.mistra.plank.job;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -114,10 +115,19 @@ public class Barbarossa implements CommandLineRunner {
 //        dragonListProcessor.run();
 //        dailyRecordProcessor.run();
         analyze();
+        analyzeAverageIncrease();
     }
 
     /**
-     * 分析首板一进二，二板二进三胜率
+     * 分析上升趋势样本的平均涨幅
+     */
+    private void analyzeAverageIncrease() {
+        ArrayList<String> list = new ArrayList(Arrays.asList(plankConfig.getSample().split(",")));
+
+    }
+
+    /**
+     * 分析各连板晋级率
      */
     private void analyze() {
         HashSet<String> stock = new HashSet<>();
@@ -232,8 +242,6 @@ public class Barbarossa implements CommandLineRunner {
                         todayFive.keySet().size(), new ArrayList<>(todayFive.keySet()),
                         todaySix.keySet().size(), new ArrayList<>(todaySix.keySet()),
                         todaySeven.keySet().size(), new ArrayList<>(todaySeven.keySet()));
-                stock.addAll(todayThree.keySet());
-                stock.addAll(todayFour.keySet());
                 stock.addAll(todayFive.keySet());
                 yesterdayOne.clear();
                 yesterdayOne.putAll(todayOne);
@@ -286,7 +294,6 @@ public class Barbarossa implements CommandLineRunner {
             }
             five += entry.getValue().doubleValue();
         }
-
         double six = 0d;
         for (Map.Entry<String, BigDecimal> entry : sixToSeven.entrySet()) {
             if (entry.getKey().equals(sdf.format(new Date()))) {
