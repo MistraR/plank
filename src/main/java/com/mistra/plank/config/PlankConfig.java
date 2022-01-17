@@ -176,4 +176,17 @@ public class PlankConfig {
      */
     private Long sampleThirtyDay;
 
+    /**
+     * 已加入自选的20CM股票
+     */
+    private String gemPlankStock;
+    /**
+     * 已加入自选的20CM2板股票
+     */
+    private String gemPlankStockTwice;
+    /**
+     * 已加入自选的5连板股票
+     */
+    private String fivePlank;
+
 }
