@@ -152,6 +152,10 @@ public class PlankConfig {
      */
     private String sample;
     /**
+     * 样本入选日期
+     */
+    private Long sampleDay;
+    /**
      * 样本入选第5个交易日日期
      */
     private Long sampleFiveDay;

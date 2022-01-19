@@ -1,9 +1,11 @@
 package com.mistra.plank.job;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,9 +31,11 @@ import com.mistra.plank.pojo.DragonList;
 import com.mistra.plank.pojo.HoldShares;
 import com.mistra.plank.pojo.Stock;
 import com.mistra.plank.pojo.TradeRecord;
+import com.mistra.plank.pojo.dto.StockSample;
 import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
@@ -66,6 +70,13 @@ public class Barbarossa implements CommandLineRunner {
     private final String gemPlankStockTwice = "中文在线,中粮工科,春晖智控,泰林生物,炬华科技,川网传媒,康平科技,观想科技,丝路视觉,山水比德,海泰科,锋尚文化,海联讯,耐普矿机,雅本化学,奥雅设计,国联水产,红日药业,粤万年青,正海磁材,扬电科技,中捷精工,博俊科技,方直科技,仟源医药,中辰股份,迦南科技,赛摩智能,山河药辅,海辰药业,致远新能,兰卫医学,天瑞仪器,新开普,越博动力,陇神戎发,金运激光,左江科技,宣亚国际,中科信息,恒信东方,神思电子,康芝药业,鹏辉能源,翰宇药业,拓新药业,广生堂,舒泰神,大富科技";
 
     private final String fivePlank = "风范股份,龙津药业,京城股份,兰石重装,亚太药业,龙洲股份,富临运业,新筑股份,华塑股份,福然德,渝开发,九安医疗,万里股份,金山股份,冰山冷热,赛隆药业,蓝光发展,长江材料,翠微股份,湖南天雁,富佳股份,跃岭股份,内蒙新华,三羊马,大龙地产,亚世光电,陕西金叶,开开实业,顾地科技,延华智能,迪生力,蓝科高新,顺钠股份,永安期货,长城电工,镇洋发展,中锐股份,汇绿生态,美盛文化,中铝国际,湖北广电,英洛华,梦天家居,精华制药,新华联,西仪股份";
+
+    /**
+     * 一月11号上升趋势样本数据，分析11号加入自选到月底31号的涨幅情况
+     */
+    private final String monthOneSample = "华安鑫创,东华科技,天永智能,中曼石油,小熊电器,中银绒业,锡业股份,新宝股份,云图控股,远兴能源,国邦医药,盛航股份,杭氧股份,世运电路,电魂网络,赢时胜,惠泉啤酒,胜蓝股份,国药一致,桂林旅游,莱宝高科,美银森," +
+            "盛讯达,力鼎光电,云内动力,天地在线,三全食品,华中数控,卫光生物,亚星锚链,誉衡药业,中嘉博创,中石科技,振东制药,天创时尚,吴通控股,佳隆股份,瑞普生物,四川美丰,紫天科技,京新药业,兆丰股份,优博讯,安妮股份,金马游乐,东宝生物,和佳医疗," +
+            "仲景食品,天龙集团,景峰医药,数码视讯,诺邦股份,万辰生物,乐普医疗,理邦仪器,麦克奥迪,开能健康,新瀚新材,葫芦娃,常山药业,果麦文化,康跃科技,读客文化,济民医疗,迈克生物,阳普医疗";
 
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
 
@@ -111,8 +122,8 @@ public class Barbarossa implements CommandLineRunner {
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
-        this.collectData();
-//        this.analyzeSample();
+//        this.collectData();
+        this.analyzeSample();
 //        this.barbarossa();
     }
 
@@ -124,7 +135,7 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private void analyzeSample() throws Exception {
-        analyze();
+//        analyze();
         analyzeAverageIncrease();
     }
 
@@ -132,8 +143,41 @@ public class Barbarossa implements CommandLineRunner {
      * 分析上升趋势样本的平均涨幅
      */
     private void analyzeAverageIncrease() {
-        ArrayList<String> list = new ArrayList(Arrays.asList(plankConfig.getSample().split(",")));
+        List<String> stockName = Arrays.asList(monthOneSample.split(","));
+        Map<String, DailyRecord> join = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
+                .eq("date", new Date(plankConfig.getSampleDay())).in("name", stockName))
+                .stream().collect(Collectors.toMap(DailyRecord::getName, e -> e));
+        increaseDetail(join, stockName, 5, plankConfig.getSampleFiveDay());
+        increaseDetail(join, stockName, 10, plankConfig.getSampleTenDay());
+        increaseDetail(join, stockName, 15, plankConfig.getSampleFifteenDay());
+        increaseDetail(join, stockName, 20, plankConfig.getSampleTwentyDay());
+        increaseDetail(join, stockName, 25, plankConfig.getSampleTwentyFiveDay());
+        increaseDetail(join, stockName, 30, plankConfig.getSampleThirtyDay());
+    }
 
+    private void increaseDetail(Map<String, DailyRecord> join, List<String> stockName, int day, Long time) {
+        DecimalFormat df = new DecimalFormat("######0.000");
+        Map<String, DailyRecord> sample = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
+                .eq("date", new Date(time)).in("name", stockName))
+                .stream().collect(Collectors.toMap(DailyRecord::getName, e -> e));
+        if (MapUtils.isNotEmpty(sample) && sample.size() > 0) {
+            List<StockSample> list = new ArrayList<>();
+            for (Map.Entry<String, DailyRecord> entry : sample.entrySet()) {
+                if (join.containsKey(entry.getKey())) {
+                    BigDecimal closePrice = entry.getValue().getClosePrice();
+                    BigDecimal joinClosePrice = join.get(entry.getKey()).getClosePrice();
+                    list.add(StockSample.builder().name(entry.getValue().getName())
+                            .increase(closePrice.subtract(joinClosePrice).divide(joinClosePrice, 2, BigDecimal.ROUND_HALF_UP).doubleValue()).build());
+                }
+            }
+            log.info("样本加入自选{}个交易日收盘价平均涨幅:{}", day, df.format(list.stream().mapToDouble(StockSample::getIncrease).average().getAsDouble()));
+            Collections.sort(list);
+            log.info("样本加入自选{}个交易日涨幅明细:{}", day, list.stream().map(stockSample ->
+                    stockSample.getName() + stockSample.getIncrease()).collect(Collectors.toList()));
+            double count = (double) list.stream().filter(stockSample -> stockSample.getIncrease() > 0).count();
+            String winRate = df.format(count / list.size());
+            log.info("样本加入自选{}个交易日收盘价胜率:{}", day, winRate);
+        }
     }
 
     /**
