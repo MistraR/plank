@@ -78,6 +78,11 @@ public class Barbarossa implements CommandLineRunner {
             "盛讯达,力鼎光电,云内动力,天地在线,三全食品,华中数控,卫光生物,亚星锚链,誉衡药业,中嘉博创,中石科技,振东制药,天创时尚,吴通控股,佳隆股份,瑞普生物,四川美丰,紫天科技,京新药业,兆丰股份,优博讯,安妮股份,金马游乐,东宝生物,和佳医疗," +
             "仲景食品,天龙集团,景峰医药,数码视讯,诺邦股份,万辰生物,乐普医疗,理邦仪器,麦克奥迪,开能健康,新瀚新材,葫芦娃,常山药业,果麦文化,康跃科技,读客文化,济民医疗,迈克生物,阳普医疗";
 
+    /**
+     * 一月11号上升趋势  创业板样本数据，分析11号加入自选到月底31号的涨幅情况
+     */
+    private final String monthOneGemSample = "读客文化,优博讯,数码视讯";
+
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
 
     /**
@@ -136,26 +141,29 @@ public class Barbarossa implements CommandLineRunner {
 
     private void analyzeSample() throws Exception {
 //        analyze();
-        analyzeAverageIncrease();
+        // 混合样本
+        analyzeAverageIncrease("混合样本", monthOneSample);
+        // 创业板样本
+        analyzeAverageIncrease("创业板样本", monthOneGemSample);
     }
 
     /**
      * 分析上升趋势样本的平均涨幅
      */
-    private void analyzeAverageIncrease() {
-        List<String> stockName = Arrays.asList(monthOneSample.split(","));
+    private void analyzeAverageIncrease(String sampleName, String sample) {
+        List<String> stockName = Arrays.asList(sample.split(","));
         Map<String, DailyRecord> join = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
                 .eq("date", new Date(plankConfig.getSampleDay())).in("name", stockName))
                 .stream().collect(Collectors.toMap(DailyRecord::getName, e -> e));
-        increaseDetail(join, stockName, 5, plankConfig.getSampleFiveDay());
-        increaseDetail(join, stockName, 10, plankConfig.getSampleTenDay());
-        increaseDetail(join, stockName, 15, plankConfig.getSampleFifteenDay());
-        increaseDetail(join, stockName, 20, plankConfig.getSampleTwentyDay());
-        increaseDetail(join, stockName, 25, plankConfig.getSampleTwentyFiveDay());
-        increaseDetail(join, stockName, 30, plankConfig.getSampleThirtyDay());
+        increaseDetail(join, stockName, 5, plankConfig.getSampleFiveDay(), sampleName);
+        increaseDetail(join, stockName, 10, plankConfig.getSampleTenDay(), sampleName);
+        increaseDetail(join, stockName, 15, plankConfig.getSampleFifteenDay(), sampleName);
+        increaseDetail(join, stockName, 20, plankConfig.getSampleTwentyDay(), sampleName);
+        increaseDetail(join, stockName, 25, plankConfig.getSampleTwentyFiveDay(), sampleName);
+        increaseDetail(join, stockName, 30, plankConfig.getSampleThirtyDay(), sampleName);
     }
 
-    private void increaseDetail(Map<String, DailyRecord> join, List<String> stockName, int day, Long time) {
+    private void increaseDetail(Map<String, DailyRecord> join, List<String> stockName, int day, Long time, String sampleName) {
         DecimalFormat df = new DecimalFormat("######0.000");
         Map<String, DailyRecord> sample = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
                 .eq("date", new Date(time)).in("name", stockName))
@@ -170,13 +178,13 @@ public class Barbarossa implements CommandLineRunner {
                             .increase(closePrice.subtract(joinClosePrice).divide(joinClosePrice, 2, BigDecimal.ROUND_HALF_UP).doubleValue()).build());
                 }
             }
-            log.info("样本加入自选{}个交易日收盘价平均涨幅:{}", day, df.format(list.stream().mapToDouble(StockSample::getIncrease).average().getAsDouble()));
+            log.info("{}加入自选{}个交易日收盘价平均涨幅:{}", sampleName, day, df.format(list.stream().mapToDouble(StockSample::getIncrease).average().getAsDouble()));
             Collections.sort(list);
-            log.info("样本加入自选{}个交易日涨幅明细:{}", day, list.stream().map(stockSample ->
+            log.info("{}加入自选{}个交易日涨幅明细:{}", sampleName, day, list.stream().map(stockSample ->
                     stockSample.getName() + stockSample.getIncrease()).collect(Collectors.toList()));
             double count = (double) list.stream().filter(stockSample -> stockSample.getIncrease() > 0).count();
             String winRate = df.format(count / list.size());
-            log.info("样本加入自选{}个交易日收盘价胜率:{}", day, winRate);
+            log.info("{}加入自选{}个交易日收盘价胜率:{}", sampleName, day, winRate);
         }
     }
 
