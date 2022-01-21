@@ -1,6 +1,8 @@
 package com.mistra.plank.job;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,6 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
@@ -127,9 +134,11 @@ public class Barbarossa implements CommandLineRunner {
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
+        //        this.barbarossa();
 //        this.collectData();
-        this.analyzeSample();
-//        this.barbarossa();
+//        this.analyzeSample();
+        // 找出最近5日和10日主力持续流入的票
+        continuousInflow();
     }
 
     @Scheduled(cron = "0 0 23 * * ? ")
@@ -140,11 +149,27 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private void analyzeSample() throws Exception {
-//        analyze();
+        analyze();
         // 混合样本
         analyzeAverageIncrease("混合样本", monthOneSample);
         // 创业板样本
         analyzeAverageIncrease("创业板样本", monthOneGemSample);
+    }
+
+    private void continuousInflow() throws IOException {
+        DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
+        HashSet<String> fiveInflow = new HashSet<>();
+        HashSet<String> tenInflow = new HashSet<>();
+        for (Map.Entry<String, String> entry : Barbarossa.STOCK_MAP.entrySet()) {
+            HttpGet httpGet = new HttpGet(URI.create(plankConfig.getMainForceUrl().replace("{code}", entry.getKey().substring(2, 8))));
+            CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
+            HttpEntity entity = response.getEntity();
+            String body = "";
+            if (entity != null) {
+                body = EntityUtils.toString(entity, "UTF-8");
+            }
+            fiveInflow.add(entry.getValue());
+        }
     }
 
     /**
