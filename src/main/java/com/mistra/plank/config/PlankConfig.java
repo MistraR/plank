@@ -53,6 +53,11 @@ public class PlankConfig {
     private String mainForceUrl;
 
     /**
+     *  东财 抓取每只股票近10天的主力资金流入情况 cookie
+     */
+    private String mainForceUrlCookie;
+
+    /**
      * 东财 抓取从某天以来的龙虎榜数据
      */
     private Long dragonListTime;

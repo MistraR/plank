@@ -18,6 +18,9 @@ import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.json.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.config.PlankConfig;
@@ -85,12 +88,20 @@ public class Barbarossa implements CommandLineRunner {
             "盛讯达,力鼎光电,云内动力,天地在线,三全食品,华中数控,卫光生物,亚星锚链,誉衡药业,中嘉博创,中石科技,振东制药,天创时尚,吴通控股,佳隆股份,瑞普生物,四川美丰,紫天科技,京新药业,兆丰股份,优博讯,安妮股份,金马游乐,东宝生物,和佳医疗," +
             "仲景食品,天龙集团,景峰医药,数码视讯,诺邦股份,万辰生物,乐普医疗,理邦仪器,麦克奥迪,开能健康,新瀚新材,葫芦娃,常山药业,果麦文化,康跃科技,读客文化,济民医疗,迈克生物,阳普医疗";
 
+    private final String inflowAdded = "全通教育,果麦文化,美亚柏科,机器人,鼎捷软件,金陵体育,冰川网络,安车检测,海达股份,科大国创,汇金股份,普联软件,铜牛信息,旋极信息,南都电源,兆日科技,信息发展,赢时胜,高伟达,零点有数,天龙集团,佳云科技," +
+            "广和通,康拓红外,特锐德,斯莱克,锦浪科技,盛弘股份,科顺股份,北京君正,中科信息,东方通,吴通控股,长亮科技,协创数据,汉得信息,通合科技,胜宏科技,赢合科技,奥飞数据,宋城演艺,同花顺," +
+            "雅本化学,银之杰,振东制药,东土科技,盛讯达,每日互动,迈瑞医疗,同有科技,中伟股份,思创医惠,汇金科技,圣邦股份,共同药业,立昂技术,幸福蓝海,朗科科技,朗新科技,拓尔思,北信源,浩云科技," +
+            "上海凯宝,华宇软件,钢研高纳,金城医药,华峰超纤,英搏尔,国科微,星源材质,拓新药业,万顺新材,安硕信息,宜安科技,上海钢联,迪阿股份,乐普医疗,景嘉微";
+    private final String threeContinueInflowAdded = "全通教育,佰奥智能,长盛轴承,鼎捷软件,金陵体育,盛讯达,腾信股份,张小泉,申昊科技,华利集团,圣邦股份,信濠光电,浩洋股份,朗科科技,万隆光电," +
+            "科锐国际,海伦钢琴,探路者,朗新科技,凯伦股份,锦浪科技,迪普科技,飞力达,华峰超纤,华伍股份,佩蒂股份,吴通控股,万顺新材,安硕信息,协创数据,宜安科技,开润股份,同益股份,横河精密,赢合科技,鹏翎股份";
     /**
      * 一月11号上升趋势  创业板样本数据，分析11号加入自选到月底31号的涨幅情况
      */
     private final String monthOneGemSample = "读客文化,优博讯,数码视讯";
 
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
+
+    public static final HashMap<String, String> GEM_STOCK_MAP = new HashMap<>();
 
     /**
      * 总金额
@@ -132,6 +143,19 @@ public class Barbarossa implements CommandLineRunner {
         );
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
+
+        List<Stock> gemStocks = stockMapper.selectList(new QueryWrapper<Stock>()
+                .like("code", "%SZ30%")
+                .notLike("name", "%ST%")
+                .notLike("name", "%st%")
+                .notLike("name", "%A%")
+                .notLike("name", "%C%")
+                .notLike("name", "%N%")
+                .notLike("name", "%U%")
+                .notLike("name", "%W%")
+        );
+        gemStocks.forEach(stock -> GEM_STOCK_MAP.put(stock.getCode(), stock.getName()));
+        log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支创业板股票！", gemStocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
         //        this.barbarossa();
@@ -157,19 +181,42 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private void continuousInflow() throws IOException {
+        long timeStart = System.currentTimeMillis();
+        long timeEnd = System.currentTimeMillis() + 1323114;
         DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
         HashSet<String> fiveInflow = new HashSet<>();
-        HashSet<String> tenInflow = new HashSet<>();
-        for (Map.Entry<String, String> entry : Barbarossa.STOCK_MAP.entrySet()) {
-            HttpGet httpGet = new HttpGet(URI.create(plankConfig.getMainForceUrl().replace("{code}", entry.getKey().substring(2, 8))));
+        HashSet<String> threeInflow = new HashSet<>();
+        // 连续3日净流入
+        HashSet<String> threeContinueInflow = new HashSet<>();
+        for (Map.Entry<String, String> entry : Barbarossa.GEM_STOCK_MAP.entrySet()) {
+            HttpGet httpGet = new HttpGet(URI.create(plankConfig.getMainForceUrl().replace("{code}", entry.getKey())
+                    .replace("{timeStart}", timeStart + "").replace("{timeEnd}", timeEnd + "")));
+            httpGet.setHeader("Cookie", plankConfig.getMainForceUrlCookie());
             CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
             HttpEntity entity = response.getEntity();
             String body = "";
             if (entity != null) {
                 body = EntityUtils.toString(entity, "UTF-8");
             }
-            fiveInflow.add(entry.getValue());
+            JSONObject data = JSONObject.parseObject(body).getJSONObject("data");
+            if (data.getDoubleValue("sum3") > 20000000) {
+                threeInflow.add(entry.getValue());
+            }
+            if (data.getDoubleValue("sum5") > 30000000) {
+                fiveInflow.add(entry.getValue());
+            }
+            JSONArray jsonArray = data.getJSONArray("items");
+            if (jsonArray.getJSONObject(19).getDoubleValue("amount") > 0 &&
+                    jsonArray.getJSONObject(18).getDoubleValue("amount") > 0 &&
+                    jsonArray.getJSONObject(17).getDoubleValue("amount") > 0) {
+                threeContinueInflow.add(entry.getValue());
+            }
         }
+        log.info("3日净流入大于三千万的股票一共{}支", threeInflow.size());
+        log.info("5日净流入大于三千万的股票一共{}支", fiveInflow.size());
+        fiveInflow.addAll(threeInflow);
+        log.info("3,5日净流入大于三千万的股票一共{}支，还未加入自选的:{}", fiveInflow.size(), fiveInflow);
+        log.info("连续3日净流入大于0的股票一共{}支，还未加入自选的:{}", threeContinueInflow.size(), threeContinueInflow);
     }
 
     /**
