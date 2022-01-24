@@ -18,7 +18,6 @@ import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.json.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -161,9 +160,9 @@ public class Barbarossa implements CommandLineRunner {
         BALANCE_AVAILABLE = BALANCE;
         //        this.barbarossa();
 //        this.collectData();
-//        this.analyzeSample();
+        this.analyzeSample();
         // 找出最近5日和10日主力持续流入的票
-        continuousInflow();
+//        continuousInflow();
     }
 
     @Scheduled(cron = "0 0 23 * * ? ")
@@ -213,12 +212,16 @@ public class Barbarossa implements CommandLineRunner {
                 threeContinueInflow.add(entry.getValue());
             }
         }
-        log.info("3日净流入大于三千万的股票一共{}支", threeInflow.size());
+        log.info("3日净流入大于两千万的股票一共{}支", threeInflow.size());
         log.info("5日净流入大于三千万的股票一共{}支", fiveInflow.size());
         fiveInflow.addAll(threeInflow);
         fiveInflow.addAll(threeContinueInflow);
-        log.info("3,5日净流入大于三千万的股票一共{}支，还未加入自选的:{}", fiveInflow.size(), fiveInflow);
-        log.info("连续3日净流入大于0的股票一共{}支，还未加入自选的:{}", threeContinueInflow.size(), threeContinueInflow);
+        List<String> inflowAddedList = Arrays.asList(inflowAdded.split(","));
+        fiveInflow.removeIf(inflowAddedList::contains);
+        log.info("3,5日净流入还未加入自选的股票一共{}支:{}", fiveInflow.size(), fiveInflow);
+        List<String> threeContinueInflowAddedList = Arrays.asList(threeContinueInflowAdded.split(","));
+        threeContinueInflow.removeIf(threeContinueInflowAddedList::contains);
+        log.info("连续3日净流入大于0还未加入自选的股票一共{}支:{}", threeContinueInflow.size(), threeContinueInflow);
     }
 
     /**
