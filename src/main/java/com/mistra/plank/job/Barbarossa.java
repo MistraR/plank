@@ -159,8 +159,8 @@ public class Barbarossa implements CommandLineRunner {
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
         //        this.barbarossa();
-//        this.collectData();
-        this.analyzeSample();
+        this.collectData();
+//        this.analyzeSample();
         // 找出最近5日和10日主力持续流入的票
 //        continuousInflow();
     }
