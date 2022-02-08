@@ -197,10 +197,8 @@ public class Barbarossa implements CommandLineRunner {
         }
         log.info("3日净流入大于两千万的股票一共{}支", threeInflow.size());
         log.info("5日净流入大于三千万的股票一共{}支", fiveInflow.size());
-        fiveInflow.addAll(threeInflow);
-        fiveInflow.addAll(threeContinueInflow);
-        log.info("3,5日净流入还未加入自选的股票一共{}支:{}", fiveInflow.size(), fiveInflow);
-        log.info("连续3日净流入大于0还未加入自选的股票一共{}支:{}", threeContinueInflow.size(), threeContinueInflow);
+//        log.info("3,5日净流入还未加入自选的股票一共{}支:{}", fiveInflow.size(), fiveInflow);
+//        log.info("连续3日净流入大于0还未加入自选的股票一共{}支:{}", threeContinueInflow.size(), threeContinueInflow);
         for (Map.Entry<String, Double> entry : threeContinueInflowMap.entrySet()) {
             stockInflowSamples.add(StockInflowSample.builder().money(entry.getValue()).name(entry.getKey()).build());
         }
