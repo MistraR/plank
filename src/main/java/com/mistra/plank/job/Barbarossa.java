@@ -3,7 +3,6 @@ package com.mistra.plank.job;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,11 +34,10 @@ import com.mistra.plank.pojo.DragonList;
 import com.mistra.plank.pojo.HoldShares;
 import com.mistra.plank.pojo.Stock;
 import com.mistra.plank.pojo.TradeRecord;
-import com.mistra.plank.pojo.dto.StockSample;
+import com.mistra.plank.pojo.dto.StockInflowSample;
 import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -80,24 +78,11 @@ public class Barbarossa implements CommandLineRunner {
 
     private final String fivePlank = "风范股份,龙津药业,京城股份,兰石重装,亚太药业,龙洲股份,富临运业,新筑股份,华塑股份,福然德,渝开发,九安医疗,万里股份,金山股份,冰山冷热,赛隆药业,蓝光发展,长江材料,翠微股份,湖南天雁,富佳股份,跃岭股份,内蒙新华,三羊马,大龙地产,亚世光电,陕西金叶,开开实业,顾地科技,延华智能,迪生力,蓝科高新,顺钠股份,永安期货,长城电工,镇洋发展,中锐股份,汇绿生态,美盛文化,中铝国际,湖北广电,英洛华,梦天家居,精华制药,新华联,西仪股份";
 
-    /**
-     * 一月11号上升趋势样本数据，分析11号加入自选到月底31号的涨幅情况
-     */
-    private final String monthOneSample = "华安鑫创,东华科技,天永智能,中曼石油,小熊电器,中银绒业,锡业股份,新宝股份,云图控股,远兴能源,国邦医药,盛航股份,杭氧股份,世运电路,电魂网络,赢时胜,惠泉啤酒,胜蓝股份,国药一致,桂林旅游,莱宝高科,美银森," +
-            "盛讯达,力鼎光电,云内动力,天地在线,三全食品,华中数控,卫光生物,亚星锚链,誉衡药业,中嘉博创,中石科技,振东制药,天创时尚,吴通控股,佳隆股份,瑞普生物,四川美丰,紫天科技,京新药业,兆丰股份,优博讯,安妮股份,金马游乐,东宝生物,和佳医疗," +
-            "仲景食品,天龙集团,景峰医药,数码视讯,诺邦股份,万辰生物,乐普医疗,理邦仪器,麦克奥迪,开能健康,新瀚新材,葫芦娃,常山药业,果麦文化,康跃科技,读客文化,济民医疗,迈克生物,阳普医疗";
-
-    private final String inflowAdded = "果麦文化,佰奥智能,长盛轴承,金陵体育,冰川网络,海达股份,科大国创,汇金股份,普联软件,南都电源,兆日科技,信息发展,高伟达,零点有数,万隆光电,科锐国际,康拓红外," +
+    private final String inflowAdded = ",,富春股份,楚天科技,超频三,雄帝科技,宁德时代,中来股份,新强联,中青宝,温氏股份,九典制药,国瓷材料,长川科技,金刚玻璃,苏大维格,三角防务,绿盟科技,华策影视,果麦文化,佰奥智能,长盛轴承,金陵体育,冰川网络,海达股份,科大国创,汇金股份,普联软件,南都电源,兆日科技,信息发展,高伟达,零点有数,万隆光电,科锐国际,康拓红外," +
             "特锐德,斯莱克,北京君正,华伍股份,长亮科技,汉得信息,同益股份,奥飞数据,宋城演艺,雅本化学,东土科技,每日互动,中伟股份,圣邦股份,幸福蓝海,朗科科技,海伦钢琴,朗新科技,北信源,华宇软件,迪普科技," +
             "钢研高纳,英搏尔,佩蒂股份,开润股份,上海钢联,迪阿股份,乐普医疗,全通教育,美亚柏科,机器人,鼎捷软件,安车检测,铜牛信息,旋极信息,申昊科技,华利集团,信濠光电,赢时胜,天龙集团,佳云科技,探路者," +
             "广和通,凯伦股份,锦浪科技,盛弘股份,科顺股份,飞力达,中科信息,东方通,吴通控股,协创数据,通合科技,胜宏科技,横河精密,赢合科技,同花顺,银之杰,振东制药,盛讯达,腾信股份,迈瑞医疗,同有科技,张小泉," +
             "思创医惠,汇金科技,共同药业,立昂技术,浩洋股份,拓尔思,浩云科技,上海凯宝,金城医药,华峰超纤,国科微,星源材质,拓新药业,万顺新材,安硕信息,宜安科技,鹏翎股份,景嘉微";
-    private final String threeContinueInflowAdded = "全通教育,佰奥智能,长盛轴承,鼎捷软件,金陵体育,盛讯达,腾信股份,张小泉,申昊科技,华利集团,圣邦股份,信濠光电,浩洋股份,朗科科技,万隆光电," +
-            "科锐国际,海伦钢琴,探路者,朗新科技,凯伦股份,锦浪科技,迪普科技,飞力达,华峰超纤,华伍股份,佩蒂股份,吴通控股,万顺新材,安硕信息,协创数据,宜安科技,开润股份,同益股份,横河精密,赢合科技,鹏翎股份";
-    /**
-     * 一月11号上升趋势  创业板样本数据，分析11号加入自选到月底31号的涨幅情况
-     */
-    private final String monthOneGemSample = "读客文化,优博讯,数码视讯";
 
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
 
@@ -159,10 +144,9 @@ public class Barbarossa implements CommandLineRunner {
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
         //        this.barbarossa();
-        this.collectData();
-//        this.analyzeSample();
-        // 找出最近5日和10日主力持续流入的票
-//        continuousInflow();
+//        this.collectData();
+        this.analyze();
+        this.continuousInflow();
     }
 
     @Scheduled(cron = "0 0 23 * * ? ")
@@ -172,20 +156,15 @@ public class Barbarossa implements CommandLineRunner {
         dailyRecordProcessor.run();
     }
 
-    private void analyzeSample() throws Exception {
-        analyze();
-        // 混合样本
-        analyzeAverageIncrease("混合样本", monthOneSample);
-        // 创业板样本
-        analyzeAverageIncrease("创业板样本", monthOneGemSample);
-    }
-
     private void continuousInflow() throws IOException {
         long timeStart = System.currentTimeMillis();
         long timeEnd = System.currentTimeMillis() + 1323114;
         DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
         HashSet<String> fiveInflow = new HashSet<>();
         HashSet<String> threeInflow = new HashSet<>();
+        List<String> inflowAddedList = Arrays.asList(inflowAdded.split(","));
+        HashMap<String, Double> threeContinueInflowMap = new HashMap<>();
+        List<StockInflowSample> stockInflowSamples = new ArrayList<>();
         // 连续3日净流入
         HashSet<String> threeContinueInflow = new HashSet<>();
         for (Map.Entry<String, String> entry : Barbarossa.GEM_STOCK_MAP.entrySet()) {
@@ -199,70 +178,34 @@ public class Barbarossa implements CommandLineRunner {
                 body = EntityUtils.toString(entity, "UTF-8");
             }
             JSONObject data = JSONObject.parseObject(body).getJSONObject("data");
-            if (data.getDoubleValue("sum3") > 20000000) {
+            if (data.getDoubleValue("sum3") > 40000000 && !inflowAddedList.contains(entry.getValue())) {
                 threeInflow.add(entry.getValue());
+                threeContinueInflowMap.put(entry.getValue(), data.getDoubleValue("sum3"));
             }
-            if (data.getDoubleValue("sum5") > 30000000) {
+            if (data.getDoubleValue("sum5") > 50000000 && !inflowAddedList.contains(entry.getValue())) {
                 fiveInflow.add(entry.getValue());
+                threeContinueInflowMap.put(entry.getValue(), Math.max(data.getDoubleValue("sum5"), data.getDoubleValue("sum3")));
             }
             JSONArray jsonArray = data.getJSONArray("items");
             if (jsonArray.getJSONObject(19).getDoubleValue("amount") > 0 &&
                     jsonArray.getJSONObject(18).getDoubleValue("amount") > 0 &&
-                    jsonArray.getJSONObject(17).getDoubleValue("amount") > 0 && data.getDoubleValue("sum3") > 20000000) {
+                    jsonArray.getJSONObject(17).getDoubleValue("amount") > 0 &&
+                    data.getDoubleValue("sum3") > 20000000 && !inflowAddedList.contains(entry.getValue())) {
                 threeContinueInflow.add(entry.getValue());
+                threeContinueInflowMap.put(entry.getValue(), Math.max(data.getDoubleValue("sum5"), data.getDoubleValue("sum3")));
             }
         }
         log.info("3日净流入大于两千万的股票一共{}支", threeInflow.size());
         log.info("5日净流入大于三千万的股票一共{}支", fiveInflow.size());
         fiveInflow.addAll(threeInflow);
         fiveInflow.addAll(threeContinueInflow);
-        List<String> inflowAddedList = Arrays.asList(inflowAdded.split(","));
-        fiveInflow.removeIf(inflowAddedList::contains);
         log.info("3,5日净流入还未加入自选的股票一共{}支:{}", fiveInflow.size(), fiveInflow);
-        List<String> threeContinueInflowAddedList = Arrays.asList(threeContinueInflowAdded.split(","));
-        threeContinueInflow.removeIf(threeContinueInflowAddedList::contains);
         log.info("连续3日净流入大于0还未加入自选的股票一共{}支:{}", threeContinueInflow.size(), threeContinueInflow);
-    }
-
-    /**
-     * 分析上升趋势样本的平均涨幅
-     */
-    private void analyzeAverageIncrease(String sampleName, String sample) {
-        List<String> stockName = Arrays.asList(sample.split(","));
-        Map<String, DailyRecord> join = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
-                .eq("date", new Date(plankConfig.getSampleDay())).in("name", stockName))
-                .stream().collect(Collectors.toMap(DailyRecord::getName, e -> e));
-        increaseDetail(join, stockName, 5, plankConfig.getSampleFiveDay(), sampleName);
-        increaseDetail(join, stockName, 10, plankConfig.getSampleTenDay(), sampleName);
-        increaseDetail(join, stockName, 15, plankConfig.getSampleFifteenDay(), sampleName);
-        increaseDetail(join, stockName, 20, plankConfig.getSampleTwentyDay(), sampleName);
-        increaseDetail(join, stockName, 25, plankConfig.getSampleTwentyFiveDay(), sampleName);
-        increaseDetail(join, stockName, 30, plankConfig.getSampleThirtyDay(), sampleName);
-    }
-
-    private void increaseDetail(Map<String, DailyRecord> join, List<String> stockName, int day, Long time, String sampleName) {
-        DecimalFormat df = new DecimalFormat("######0.000");
-        Map<String, DailyRecord> sample = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
-                .eq("date", new Date(time)).in("name", stockName))
-                .stream().collect(Collectors.toMap(DailyRecord::getName, e -> e));
-        if (MapUtils.isNotEmpty(sample) && sample.size() > 0) {
-            List<StockSample> list = new ArrayList<>();
-            for (Map.Entry<String, DailyRecord> entry : sample.entrySet()) {
-                if (join.containsKey(entry.getKey())) {
-                    BigDecimal closePrice = entry.getValue().getClosePrice();
-                    BigDecimal joinClosePrice = join.get(entry.getKey()).getClosePrice();
-                    list.add(StockSample.builder().name(entry.getValue().getName())
-                            .increase(closePrice.subtract(joinClosePrice).divide(joinClosePrice, 2, BigDecimal.ROUND_HALF_UP).doubleValue()).build());
-                }
-            }
-            log.info("{}加入自选{}个交易日收盘价平均涨幅:{}", sampleName, day, df.format(list.stream().mapToDouble(StockSample::getIncrease).average().getAsDouble()));
-            Collections.sort(list);
-            log.info("{}加入自选{}个交易日涨幅明细:{}", sampleName, day, list.stream().map(stockSample ->
-                    stockSample.getName() + stockSample.getIncrease()).collect(Collectors.toList()));
-            double count = (double) list.stream().filter(stockSample -> stockSample.getIncrease() > 0).count();
-            String winRate = df.format(count / list.size());
-            log.info("{}加入自选{}个交易日收盘价胜率:{}", sampleName, day, winRate);
+        for (Map.Entry<String, Double> entry : threeContinueInflowMap.entrySet()) {
+            stockInflowSamples.add(StockInflowSample.builder().money(entry.getValue()).name(entry.getKey()).build());
         }
+        Collections.sort(stockInflowSamples);
+        log.info("净流入股票排序:{}", stockInflowSamples.stream().map(StockInflowSample::getName).collect(Collectors.toList()));
     }
 
     /**
