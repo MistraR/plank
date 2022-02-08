@@ -78,7 +78,8 @@ public class Barbarossa implements CommandLineRunner {
 
     private final String fivePlank = "风范股份,龙津药业,京城股份,兰石重装,亚太药业,龙洲股份,富临运业,新筑股份,华塑股份,福然德,渝开发,九安医疗,万里股份,金山股份,冰山冷热,赛隆药业,蓝光发展,长江材料,翠微股份,湖南天雁,富佳股份,跃岭股份,内蒙新华,三羊马,大龙地产,亚世光电,陕西金叶,开开实业,顾地科技,延华智能,迪生力,蓝科高新,顺钠股份,永安期货,长城电工,镇洋发展,中锐股份,汇绿生态,美盛文化,中铝国际,湖北广电,英洛华,梦天家居,精华制药,新华联,西仪股份";
 
-    private final String inflowAdded = ",,富春股份,楚天科技,超频三,雄帝科技,宁德时代,中来股份,新强联,中青宝,温氏股份,九典制药,国瓷材料,长川科技,金刚玻璃,苏大维格,三角防务,绿盟科技,华策影视,果麦文化,佰奥智能,长盛轴承,金陵体育,冰川网络,海达股份,科大国创,汇金股份,普联软件,南都电源,兆日科技,信息发展,高伟达,零点有数,万隆光电,科锐国际,康拓红外," +
+    private final String inflowAdded = "网宿科技,中海达,力星股份,天铁股份,昌红科技,欣锐科技,宇信科技,远方信息,润丰股份,江丰电子,电连技术,万达信息,菲利华,恒实科技,依米康,华蓝集团,聚光科技,金雷股份,欧普康视,指南针,东方国信,智飞生物," +
+            "网宿科技,富春股份,楚天科技,超频三,雄帝科技,宁德时代,中来股份,新强联,中青宝,温氏股份,九典制药,国瓷材料,长川科技,金刚玻璃,苏大维格,三角防务,绿盟科技,华策影视,果麦文化,佰奥智能,长盛轴承,金陵体育,冰川网络,海达股份,科大国创,汇金股份,普联软件,南都电源,兆日科技,信息发展,高伟达,零点有数,万隆光电,科锐国际,康拓红外," +
             "特锐德,斯莱克,北京君正,华伍股份,长亮科技,汉得信息,同益股份,奥飞数据,宋城演艺,雅本化学,东土科技,每日互动,中伟股份,圣邦股份,幸福蓝海,朗科科技,海伦钢琴,朗新科技,北信源,华宇软件,迪普科技," +
             "钢研高纳,英搏尔,佩蒂股份,开润股份,上海钢联,迪阿股份,乐普医疗,全通教育,美亚柏科,机器人,鼎捷软件,安车检测,铜牛信息,旋极信息,申昊科技,华利集团,信濠光电,赢时胜,天龙集团,佳云科技,探路者," +
             "广和通,凯伦股份,锦浪科技,盛弘股份,科顺股份,飞力达,中科信息,东方通,吴通控股,协创数据,通合科技,胜宏科技,横河精密,赢合科技,同花顺,银之杰,振东制药,盛讯达,腾信股份,迈瑞医疗,同有科技,张小泉," +
@@ -167,7 +168,7 @@ public class Barbarossa implements CommandLineRunner {
         List<StockInflowSample> stockInflowSamples = new ArrayList<>();
         // 连续3日净流入
         HashSet<String> threeContinueInflow = new HashSet<>();
-        for (Map.Entry<String, String> entry : Barbarossa.GEM_STOCK_MAP.entrySet()) {
+        for (Map.Entry<String, String> entry : Barbarossa.STOCK_MAP.entrySet()) {
             HttpGet httpGet = new HttpGet(URI.create(plankConfig.getMainForceUrl().replace("{code}", entry.getKey())
                     .replace("{timeStart}", timeStart + "").replace("{timeEnd}", timeEnd + "")));
             httpGet.setHeader("Cookie", plankConfig.getMainForceUrlCookie());
