@@ -146,8 +146,9 @@ public class Barbarossa implements CommandLineRunner {
         BALANCE_AVAILABLE = BALANCE;
         //        this.barbarossa();
 //        this.collectData();
-        this.analyze();
-        this.continuousInflow();
+//        this.analyze();
+//        this.continuousInflow(Barbarossa.STOCK_MAP);
+        this.continuousInflow(Barbarossa.GEM_STOCK_MAP);
     }
 
     @Scheduled(cron = "0 0 23 * * ? ")
@@ -157,7 +158,7 @@ public class Barbarossa implements CommandLineRunner {
         dailyRecordProcessor.run();
     }
 
-    private void continuousInflow() throws IOException {
+    private void continuousInflow(HashMap<String, String> stock) throws IOException {
         long timeStart = System.currentTimeMillis();
         long timeEnd = System.currentTimeMillis() + 1323114;
         DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
@@ -168,7 +169,7 @@ public class Barbarossa implements CommandLineRunner {
         List<StockInflowSample> stockInflowSamples = new ArrayList<>();
         // 连续3日净流入
         HashSet<String> threeContinueInflow = new HashSet<>();
-        for (Map.Entry<String, String> entry : Barbarossa.STOCK_MAP.entrySet()) {
+        for (Map.Entry<String, String> entry : stock.entrySet()) {
             HttpGet httpGet = new HttpGet(URI.create(plankConfig.getMainForceUrl().replace("{code}", entry.getKey())
                     .replace("{timeStart}", timeStart + "").replace("{timeEnd}", timeEnd + "")));
             httpGet.setHeader("Cookie", plankConfig.getMainForceUrlCookie());
