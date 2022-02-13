@@ -83,6 +83,7 @@ public class Barbarossa implements CommandLineRunner {
             "特锐德,斯莱克,北京君正,华伍股份,长亮科技,汉得信息,同益股份,奥飞数据,宋城演艺,雅本化学,东土科技,每日互动,中伟股份,圣邦股份,幸福蓝海,朗科科技,海伦钢琴,朗新科技,北信源,华宇软件,迪普科技," +
             "钢研高纳,英搏尔,佩蒂股份,开润股份,上海钢联,迪阿股份,乐普医疗,全通教育,美亚柏科,机器人,鼎捷软件,安车检测,铜牛信息,旋极信息,申昊科技,华利集团,信濠光电,赢时胜,天龙集团,佳云科技,探路者," +
             "广和通,凯伦股份,锦浪科技,盛弘股份,科顺股份,飞力达,中科信息,东方通,吴通控股,协创数据,通合科技,胜宏科技,横河精密,赢合科技,同花顺,银之杰,振东制药,盛讯达,腾信股份,迈瑞医疗,同有科技,张小泉," +
+            "中兰环保,川金诺,全信股份,卓胜微,旗天科技,飞天诚信,开能健康,拉卡拉,新国都,汇纳科技,海兰信,东富龙,银信科技,芒果超媒,天阳科技,联创股份,东方日升,神思电子,汇川技术,捷成股份,先进数通,四方精创,天华超净,"+
             "思创医惠,汇金科技,共同药业,立昂技术,浩洋股份,拓尔思,浩云科技,上海凯宝,金城医药,华峰超纤,国科微,星源材质,拓新药业,万顺新材,安硕信息,宜安科技,鹏翎股份,景嘉微";
 
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
@@ -168,7 +169,7 @@ public class Barbarossa implements CommandLineRunner {
         List<StockInflowSample> stockInflowSamples = new ArrayList<>();
         // 连续3日净流入
         HashSet<String> threeContinueInflow = new HashSet<>();
-        for (Map.Entry<String, String> entry : Barbarossa.STOCK_MAP.entrySet()) {
+        for (Map.Entry<String, String> entry : Barbarossa.GEM_STOCK_MAP.entrySet()) {
             HttpGet httpGet = new HttpGet(URI.create(plankConfig.getMainForceUrl().replace("{code}", entry.getKey())
                     .replace("{timeStart}", timeStart + "").replace("{timeEnd}", timeEnd + "")));
             httpGet.setHeader("Cookie", plankConfig.getMainForceUrlCookie());
@@ -197,7 +198,7 @@ public class Barbarossa implements CommandLineRunner {
             }
         }
         log.info("3日净流入大于两千万的股票一共{}支", threeInflow.size());
-        log.info("5日净流入大于三千万的股票一共{}支", fiveInflow.size());
+        log.info("5日净流入大于三千万的股票一共{}支:{}", fiveInflow.size(),fiveInflow);
 //        log.info("3,5日净流入还未加入自选的股票一共{}支:{}", fiveInflow.size(), fiveInflow);
 //        log.info("连续3日净流入大于0还未加入自选的股票一共{}支:{}", threeContinueInflow.size(), threeContinueInflow);
         for (Map.Entry<String, Double> entry : threeContinueInflowMap.entrySet()) {
