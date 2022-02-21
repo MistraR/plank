@@ -161,16 +161,28 @@ public class Barbarossa implements CommandLineRunner {
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
         //        this.barbarossa();
-//        this.collectData();
-        this.analyze();
-        this.continuousInflow();
+        this.collectData();
+//        this.replenish();
+//        this.analyze();
+//        this.continuousInflow();
     }
 
     @Scheduled(cron = "0 0 23 * * ? ")
     private void collectData() throws Exception {
 //        stockProcessor.run();
 //        dragonListProcessor.run();
-        dailyRecordProcessor.run();
+        dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
+    }
+
+    /**
+     * 补充写入今日交易数据
+     */
+    private void replenish() throws Exception {
+        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-02-20 23:00:00"));
+        for (DailyRecord stock : stocks) {
+            Barbarossa.STOCK_MAP.remove(stock.getName());
+        }
+        dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
     }
 
     private void continuousInflow() throws IOException {
