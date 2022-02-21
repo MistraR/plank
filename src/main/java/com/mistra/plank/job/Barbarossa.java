@@ -180,7 +180,7 @@ public class Barbarossa implements CommandLineRunner {
     private void replenish() throws Exception {
         List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-02-20 23:00:00"));
         for (DailyRecord stock : stocks) {
-            Barbarossa.STOCK_MAP.remove(stock.getName());
+            Barbarossa.STOCK_MAP.remove(stock.getCode());
         }
         dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
     }

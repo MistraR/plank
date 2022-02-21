@@ -43,7 +43,7 @@ public class DailyRecordProcessor {
     private final DailyRecordMapper dailyRecordMapper;
     private final PlankConfig plankConfig;
 
-    private final ExecutorService executorService = new ThreadPoolExecutor(5, 5,
+    private final ExecutorService executorService = new ThreadPoolExecutor(10, 10,
             0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(5000), new NamedThreadFactory("DailyRecord线程-", false));
 
     public DailyRecordProcessor(DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig) {
