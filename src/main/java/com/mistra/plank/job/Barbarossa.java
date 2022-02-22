@@ -17,6 +17,7 @@ import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -96,7 +97,7 @@ public class Barbarossa implements CommandLineRunner {
             "特锐德,斯莱克,北京君正,华伍股份,长亮科技,汉得信息,同益股份,奥飞数据,宋城演艺,雅本化学,东土科技,每日互动,中伟股份,圣邦股份,幸福蓝海,朗科科技,海伦钢琴,朗新科技,北信源,华宇软件,迪普科技," +
             "钢研高纳,英搏尔,佩蒂股份,开润股份,上海钢联,迪阿股份,乐普医疗,全通教育,美亚柏科,机器人,鼎捷软件,安车检测,铜牛信息,旋极信息,申昊科技,华利集团,信濠光电,赢时胜,天龙集团,佳云科技,探路者," +
             "广和通,凯伦股份,锦浪科技,盛弘股份,科顺股份,飞力达,中科信息,东方通,吴通控股,协创数据,通合科技,胜宏科技,横河精密,赢合科技,同花顺,银之杰,振东制药,盛讯达,腾信股份,迈瑞医疗,同有科技,张小泉," +
-            "中兰环保,川金诺,全信股份,卓胜微,旗天科技,飞天诚信,开能健康,拉卡拉,新国都,汇纳科技,海兰信,东富龙,银信科技,芒果超媒,天阳科技,联创股份,东方日升,神思电子,汇川技术,捷成股份,先进数通,四方精创,天华超净,"+
+            "中兰环保,川金诺,全信股份,卓胜微,旗天科技,飞天诚信,开能健康,拉卡拉,新国都,汇纳科技,海兰信,东富龙,银信科技,芒果超媒,天阳科技,联创股份,东方日升,神思电子,汇川技术,捷成股份,先进数通,四方精创,天华超净," +
             "思创医惠,汇金科技,共同药业,立昂技术,浩洋股份,拓尔思,浩云科技,上海凯宝,金城医药,华峰超纤,国科微,星源材质,拓新药业,万顺新材,安硕信息,宜安科技,鹏翎股份,景嘉微,中泰股份,万马科技,中简科技,超越科技,漱玉平民," +
             "阿尔特,新宙邦,晶盛机电,同飞股份,融捷健康,金鹰重工,星云股份,荃银高科,铂科新材,迦南科技,乾照光电,超图软件,华辰装备,仟源医药,万孚生物,立中集团,高澜股份,中科创达,富祥药业,亚康股份,蓝思科技,天能重工,光威复材," +
             "上能电气,永福股份,深城交,德方纳米,鹏辉能源,首都在线,先导智能,康泰医学,欣旺达,泰格医药,爱尔眼科,阳光电源";
@@ -145,7 +146,6 @@ public class Barbarossa implements CommandLineRunner {
         );
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
-
         List<Stock> gemStocks = stockMapper.selectList(new QueryWrapper<Stock>()
                 .like("code", "%SZ30%")
                 .notLike("name", "%ST%")
@@ -160,15 +160,11 @@ public class Barbarossa implements CommandLineRunner {
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支创业板股票！", gemStocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
-        //        this.barbarossa();
-        this.collectData();
-//        this.replenish();
-//        this.analyze();
-//        this.continuousInflow();
+//        this.barbarossa();
     }
 
     @Scheduled(cron = "0 0 23 * * ? ")
-    private void collectData() throws Exception {
+    public void collectData() throws Exception {
 //        stockProcessor.run();
 //        dragonListProcessor.run();
         dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
@@ -177,15 +173,54 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 补充写入今日交易数据
      */
-    private void replenish() throws Exception {
-        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-02-20 23:00:00"));
+    public void replenish() throws Exception {
+        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-02-21 23:00:00"));
         for (DailyRecord stock : stocks) {
             Barbarossa.STOCK_MAP.remove(stock.getCode());
         }
         dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
     }
 
-    private void continuousInflow() throws IOException {
+    public void monitor(String haveStock) throws IOException, InterruptedException {
+        List<String> haveStockList = Arrays.asList(haveStock.split(","));
+        List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", haveStockList));
+        HashMap<String, Double> price = new HashMap<>();
+        while (true) {
+            for (Stock stock : stocks) {
+                String url = plankConfig.getXueQiuStockDetailUrl();
+                url = url.replace("{code}", stock.getCode()).replace("{time}", String.valueOf(System.currentTimeMillis()))
+                        .replace("{recentDayNumber}", "1");
+                DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
+                HttpGet httpGet = new HttpGet(URI.create(url));
+                httpGet.setHeader("Cookie", plankConfig.getXueQiuCookie());
+                CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
+                HttpEntity entity = response.getEntity();
+                String body = "";
+                if (entity != null) {
+                    body = EntityUtils.toString(entity, "UTF-8");
+                }
+                JSONObject data = JSON.parseObject(body).getJSONObject("data");
+                JSONArray list = data.getJSONArray("item");
+                if (org.apache.commons.collections.CollectionUtils.isNotEmpty(list)) {
+                    for (Object o : list) {
+                        price.put(stock.getName(), ((JSONArray) o).getDoubleValue(7));
+                    }
+                }
+            }
+            log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            for (Map.Entry<String, Double> entry : price.entrySet()) {
+                log.info(entry.getKey() + " " + entry.getValue());
+            }
+            Thread.sleep(5000);
+        }
+    }
+
+    /**
+     * cookie失效了
+     *
+     * @throws IOException
+     */
+    public void continuousInflow() throws IOException {
         long timeStart = System.currentTimeMillis();
         long timeEnd = System.currentTimeMillis() + 1323114;
         DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
@@ -238,7 +273,7 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 分析各连板晋级率
      */
-    private void analyze() {
+    public void analyze() {
         List<String> gemPlankStockAdded = Arrays.asList(gemPlankStock.split(","));
         List<String> gemPlankStockTwiceAdded = Arrays.asList(gemPlankStockTwice.split(","));
         List<String> fivePlankAdded = Arrays.asList(fivePlank.split(","));
