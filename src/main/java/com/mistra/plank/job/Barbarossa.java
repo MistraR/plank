@@ -37,6 +37,7 @@ import com.mistra.plank.pojo.Stock;
 import com.mistra.plank.pojo.TradeRecord;
 import com.mistra.plank.pojo.dto.StockInflowSample;
 import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -182,37 +183,49 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     public void monitor(String haveStock) throws IOException, InterruptedException {
-        List<String> haveStockList = Arrays.asList(haveStock.split(","));
-        List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", haveStockList));
-        HashMap<String, Double> price = new HashMap<>();
-        while (true) {
-            for (Stock stock : stocks) {
-                String url = plankConfig.getXueQiuStockDetailUrl();
-                url = url.replace("{code}", stock.getCode()).replace("{time}", String.valueOf(System.currentTimeMillis()))
-                        .replace("{recentDayNumber}", "1");
-                DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
-                HttpGet httpGet = new HttpGet(URI.create(url));
-                httpGet.setHeader("Cookie", plankConfig.getXueQiuCookie());
-                CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
-                HttpEntity entity = response.getEntity();
-                String body = "";
-                if (entity != null) {
-                    body = EntityUtils.toString(entity, "UTF-8");
-                }
-                JSONObject data = JSON.parseObject(body).getJSONObject("data");
-                JSONArray list = data.getJSONArray("item");
-                if (org.apache.commons.collections.CollectionUtils.isNotEmpty(list)) {
-                    for (Object o : list) {
-                        price.put(stock.getName(), ((JSONArray) o).getDoubleValue(7));
+        Thread thread = new Thread(new Runnable() {
+            @SneakyThrows
+            @Override
+            public void run() {
+                List<String> haveStockList = Arrays.asList(haveStock.split(","));
+                List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", haveStockList));
+                HashMap<String, Double> price = new HashMap<>();
+                int count = 1000;
+                while (true) {
+                    for (Stock stock : stocks) {
+                        String url = plankConfig.getXueQiuStockDetailUrl();
+                        url = url.replace("{code}", stock.getCode()).replace("{time}", String.valueOf(System.currentTimeMillis()))
+                                .replace("{recentDayNumber}", "1");
+                        DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
+                        HttpGet httpGet = new HttpGet(URI.create(url));
+                        httpGet.setHeader("Cookie", plankConfig.getXueQiuCookie());
+                        CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
+                        HttpEntity entity = response.getEntity();
+                        String body = "";
+                        if (entity != null) {
+                            body = EntityUtils.toString(entity, "UTF-8");
+                        }
+                        JSONObject data = JSON.parseObject(body).getJSONObject("data");
+                        JSONArray list = data.getJSONArray("item");
+                        if (org.apache.commons.collections.CollectionUtils.isNotEmpty(list)) {
+                            for (Object o : list) {
+                                price.put(stock.getName(), ((JSONArray) o).getDoubleValue(7));
+                            }
+                        }
                     }
+                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    for (Map.Entry<String, Double> entry : price.entrySet()) {
+                        log.info(entry.getKey() + " " + entry.getValue());
+                    }
+                    count--;
+                    if (count < 0) {
+                        break;
+                    }
+                    Thread.sleep(5000);
                 }
             }
-            log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-            for (Map.Entry<String, Double> entry : price.entrySet()) {
-                log.info(entry.getKey() + " " + entry.getValue());
-            }
-            Thread.sleep(5000);
-        }
+        });
+        thread.start();
     }
 
     /**
