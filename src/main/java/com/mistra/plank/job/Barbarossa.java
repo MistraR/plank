@@ -162,7 +162,11 @@ public class Barbarossa implements CommandLineRunner {
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
 //        this.barbarossa();
+//        collectData();
+        replenish();
+//        analyze();
     }
+
 
     @Scheduled(cron = "0 0 23 * * ? ")
     public void collectData() throws Exception {
@@ -175,7 +179,7 @@ public class Barbarossa implements CommandLineRunner {
      * 补充写入今日交易数据
      */
     public void replenish() throws Exception {
-        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-02-21 23:00:00"));
+        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-03-09 23:00:00"));
         for (DailyRecord stock : stocks) {
             Barbarossa.STOCK_MAP.remove(stock.getCode());
         }
@@ -438,7 +442,7 @@ public class Barbarossa implements CommandLineRunner {
                 gemPlankStockTwice.add(entry.getKey());
             }
         }
-//        log.info("当前分析时间段创业板涨停2次及以上的股票:{}", gemPlankStockTwice);
+        log.info("当前分析时间段创业板涨停2次及以上的股票:{}", gemPlankStockTwice);
         fivePlankStock.removeAll(fivePlankAdded);
         gemPlankStock.removeAll(gemPlankStockAdded);
         gemPlankStockTwice.removeAll(gemPlankStockTwiceAdded);
