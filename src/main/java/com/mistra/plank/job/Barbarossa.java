@@ -163,8 +163,8 @@ public class Barbarossa implements CommandLineRunner {
         BALANCE_AVAILABLE = BALANCE;
 //        this.barbarossa();
 //        collectData();
-        replenish();
-//        analyze();
+//        replenish();
+        analyze();
     }
 
 
@@ -179,7 +179,7 @@ public class Barbarossa implements CommandLineRunner {
      * 补充写入今日交易数据
      */
     public void replenish() throws Exception {
-        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-03-09 23:00:00"));
+        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-03-10 23:00:00"));
         for (DailyRecord stock : stocks) {
             Barbarossa.STOCK_MAP.remove(stock.getCode());
         }
@@ -418,7 +418,7 @@ public class Barbarossa implements CommandLineRunner {
                         todayFive.keySet().size(), new ArrayList<>(todayFive.keySet()),
                         todaySix.keySet().size(), new ArrayList<>(todaySix.keySet()),
                         todaySeven.keySet().size(), new ArrayList<>(todaySeven.keySet()));
-                fivePlankStock.addAll(todayFive.keySet());
+                fivePlankStock.addAll(todayFour.keySet());
                 yesterdayOne.clear();
                 yesterdayOne.putAll(todayOne);
                 yesterdayTwo.clear();
@@ -446,7 +446,7 @@ public class Barbarossa implements CommandLineRunner {
         fivePlankStock.removeAll(fivePlankAdded);
         gemPlankStock.removeAll(gemPlankStockAdded);
         gemPlankStockTwice.removeAll(gemPlankStockTwiceAdded);
-        log.info("当前分析时间段还未加入自选的5连板+的股票:{}", fivePlankStock);
+        log.info("当前分析时间段还未加入自选的4连板+的股票:{}", fivePlankStock);
         log.info("当前分析时间段还未加入自选的创业板涨停2次及以上的股票:{}", gemPlankStockTwice);
         double one = 0d;
         for (Map.Entry<String, BigDecimal> entry : oneToTwo.entrySet()) {
