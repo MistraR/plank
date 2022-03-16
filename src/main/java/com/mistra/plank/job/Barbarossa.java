@@ -80,7 +80,7 @@ public class Barbarossa implements CommandLineRunner {
             "恒信东方,神思电子,康芝药业,鹏辉能源,翰宇药业,拓新药业,广生堂,舒泰神,大富科技,依米康,冠中生态,每日互动,建科院,先进数通,杭州园林,建研设计,岱勒新材,康泰医学,立昂技术,首都在线,捷成股份,零点有数,天利科技,旗天科技," +
             "德艺文创,数字政通,德迈仕,华蓝集团,雄帝科技,星辉娱乐,初灵信息,南凌科技,天源迪科,上海凯宝,达嘉维康,迅游科技,远方信息,易瑞生物,万孚生物,新晨科技,嘉寓股份,迪威迅,通源石油,亚康股份,熙菱信息,富邦股份,四方精创,共同药业";
 
-    private final String fivePlank = "风范股份,龙津药业,京城股份,兰石重装,亚太药业,龙洲股份,富临运业,新筑股份,华塑股份,福然德,渝开发,九安医疗,万里股份,金山股份,冰山冷热,赛隆药业,蓝光发展,长江材料,翠微股份,湖南天雁," +
+    private final String fourPlank = "风范股份,龙津药业,京城股份,兰石重装,亚太药业,龙洲股份,富临运业,新筑股份,华塑股份,福然德,渝开发,九安医疗,万里股份,金山股份,冰山冷热,赛隆药业,蓝光发展,长江材料,翠微股份,湖南天雁," +
             "富佳股份,跃岭股份,内蒙新华,三羊马,大龙地产,亚世光电,陕西金叶,开开实业,顾地科技,延华智能,迪生力,蓝科高新,顺钠股份,永安期货,长城电工,镇洋发展,中锐股份,汇绿生态,美盛文化,中铝国际,湖北广电,英洛华," +
             "梦天家居,精华制药,新华联,西仪股份,金时科技,美吉姆,元隆雅图,得利斯,正平股份,保利联合,冀东装备,千红制药,中农联合,诚邦股份,鞍重股份,天鹅股份,浙江建投,金财互联,恒宝股份,安妮股份," +
             "宋都股份,金种子酒,吉翔股份,京蓝科技,锦州港,正和生态,元成股份,北大医药,金陵饭店,真视通,长江健康,海欣食品,岭南股份,宁波能源,贵广网络,亚联发展,依米康,准油股份,大理药业,佳力图,海量数据," +
@@ -189,7 +189,7 @@ public class Barbarossa implements CommandLineRunner {
      */
     public void analyze() {
         List<String> gemPlankStockTwiceAdded = Arrays.asList(gemPlankStockTwice.split(","));
-        List<String> fourPlankAdded = Arrays.asList(fivePlank.split(","));
+        List<String> fourPlankAdded = Arrays.asList(fourPlank.split(","));
         // 4连板+的股票
         HashSet<String> fourPlankStock = new HashSet<>();
         HashMap<String, Integer> gemPlankStockNumber = new HashMap<>();

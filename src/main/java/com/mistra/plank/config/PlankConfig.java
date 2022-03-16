@@ -1,6 +1,5 @@
 package com.mistra.plank.config;
 
-
 import java.math.BigDecimal;
 
 import lombok.AllArgsConstructor;
@@ -46,16 +45,6 @@ public class PlankConfig {
      * 东财 抓取每日龙虎榜数据，只取净买入额前20
      */
     private String dragonListUrl;
-
-    /**
-     *  东财 抓取每只股票近10天的主力资金流入情况
-     */
-    private String mainForceUrl;
-
-    /**
-     *  东财 抓取每只股票近10天的主力资金流入情况 cookie
-     */
-    private String mainForceUrlCookie;
 
     /**
      * 东财 抓取从某天以来的龙虎榜数据
@@ -133,11 +122,6 @@ public class PlankConfig {
     private BigDecimal joinIncreaseRatioUpperLimit;
 
     /**
-     * 可打板涨幅比率
-     */
-    private BigDecimal buyRatioLimit;
-
-    /**
      * 股价上限
      */
     private Integer stockPriceUpperLimit;
@@ -156,51 +140,5 @@ public class PlankConfig {
      * 可打板涨幅比率
      */
     private BigDecimal buyPlankRatioLimit;
-
-    /**
-     * 上升趋势样本名称，逗号分隔
-     */
-    private String sample;
-    /**
-     * 样本入选日期
-     */
-    private Long sampleDay;
-    /**
-     * 样本入选第5个交易日日期
-     */
-    private Long sampleFiveDay;
-    /**
-     * 样本入选第10个交易日日期
-     */
-    private Long sampleTenDay;
-    /**
-     * 样本入选第15个交易日日期
-     */
-    private Long sampleFifteenDay;
-    /**
-     * 样本入选第20个交易日日期
-     */
-    private Long sampleTwentyDay;
-    /**
-     * 样本入选第25个交易日日期
-     */
-    private Long sampleTwentyFiveDay;
-    /**
-     * 样本入选第30个交易日日期
-     */
-    private Long sampleThirtyDay;
-
-    /**
-     * 已加入自选的20CM股票
-     */
-    private String gemPlankStock;
-    /**
-     * 已加入自选的20CM2板股票
-     */
-    private String gemPlankStockTwice;
-    /**
-     * 已加入自选的5连板股票
-     */
-    private String fivePlank;
 
 }
