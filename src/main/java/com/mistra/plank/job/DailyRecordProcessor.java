@@ -17,7 +17,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.DailyRecordMapper;
 import com.mistra.plank.pojo.DailyRecord;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.http.HttpEntity;
@@ -51,13 +50,11 @@ public class DailyRecordProcessor {
         this.plankConfig = plankConfig;
     }
 
-    public void run(HashMap<String, String> map) throws Exception {
+    public void run(HashMap<String, String> map) {
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>开始更新股票每日成交数据！");
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            executorService.submit(new Runnable() {
-                @SneakyThrows
-                @Override
-                public void run() {
+            executorService.submit(() -> {
+                try {
                     String url = plankConfig.getXueQiuStockDetailUrl();
                     url = url.replace("{code}", entry.getKey()).replace("{time}", String.valueOf(System.currentTimeMillis()))
                             .replace("{recentDayNumber}", String.valueOf(plankConfig.getRecentDayNumber()));
@@ -73,24 +70,26 @@ public class DailyRecordProcessor {
                     JSONObject data = JSON.parseObject(body).getJSONObject("data");
                     JSONArray list = data.getJSONArray("item");
                     if (CollectionUtils.isNotEmpty(list)) {
-                        JSONArray array = new JSONArray();
+                        JSONArray array;
                         for (Object o : list) {
                             array = (JSONArray) o;
                             DailyRecord dailyRecord = new DailyRecord();
                             dailyRecord.setDate(new Date(array.getLongValue(0)));
                             dailyRecord.setCode(entry.getKey());
                             dailyRecord.setName(entry.getValue());
-                            dailyRecord.setOpenPrice(new BigDecimal(array.getDoubleValue(2)));
-                            dailyRecord.setHighest(new BigDecimal(array.getDoubleValue(3)));
-                            dailyRecord.setLowest(new BigDecimal(array.getDoubleValue(4)));
-                            dailyRecord.setClosePrice(new BigDecimal(array.getDoubleValue(5)));
-                            dailyRecord.setIncreaseRate(new BigDecimal(array.getDoubleValue(7)));
+                            dailyRecord.setOpenPrice(BigDecimal.valueOf(array.getDoubleValue(2)));
+                            dailyRecord.setHighest(BigDecimal.valueOf(array.getDoubleValue(3)));
+                            dailyRecord.setLowest(BigDecimal.valueOf(array.getDoubleValue(4)));
+                            dailyRecord.setClosePrice(BigDecimal.valueOf(array.getDoubleValue(5)));
+                            dailyRecord.setIncreaseRate(BigDecimal.valueOf(array.getDoubleValue(7)));
                             dailyRecord.setAmount(array.getLongValue(9) / 10000);
                             dailyRecordMapper.insert(dailyRecord);
                             log.info("更新[{}]近日成交数据完成！", entry.getValue());
                         }
                     }
                     Thread.sleep(3000);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             });
         }

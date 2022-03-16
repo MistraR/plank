@@ -41,42 +41,46 @@ public class StockProcessor {
         this.plankConfig = plankConfig;
     }
 
-    public void run() throws Exception {
-        log.info("开始更新股票每日成交量！");
-        DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
-        HttpGet httpGet = new HttpGet(URI.create(plankConfig.getXueQiuAllStockUrl()));
-        httpGet.setHeader("Cookie", plankConfig.getXueQiuCookie());
-        CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
-        HttpEntity entity = response.getEntity();
-        String body = "";
-        if (entity != null) {
-            body = EntityUtils.toString(entity, "UTF-8");
-        }
-        JSONObject data = JSON.parseObject(body).getJSONObject("data");
-        JSONArray list = data.getJSONArray("list");
-        Date today = new Date();
-        if (CollectionUtils.isNotEmpty(list)) {
-            for (Object o : list) {
-                data = (JSONObject) o;
-                // volume 值不准确忽略
-                BigDecimal current = data.getBigDecimal("current");
-                BigDecimal volume = data.getBigDecimal("volume");
-                if (Objects.nonNull(current) && Objects.nonNull(volume)) {
-                    Stock stock = new Stock(data.getString("symbol"), data.getString("name"), data.getLongValue("mc"),
-                            current, volume.longValue(), current.multiply(volume), today);
-                    Stock exist = stockMapper.selectById(stock.getCode());
-                    if (Objects.nonNull(exist)) {
-                        exist.setVolume(stock.getVolume());
-                        exist.setModifyTime(today);
-                        exist.setCurrentPrice(stock.getCurrentPrice());
-                        exist.setTransactionAmount(stock.getTransactionAmount());
-                        stockMapper.updateById(exist);
-                    } else {
-                        stockMapper.insert(stock);
+    public void run() {
+        try {
+            log.info("开始更新股票每日成交量！");
+            DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
+            HttpGet httpGet = new HttpGet(URI.create(plankConfig.getXueQiuAllStockUrl()));
+            httpGet.setHeader("Cookie", plankConfig.getXueQiuCookie());
+            CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
+            HttpEntity entity = response.getEntity();
+            String body = "";
+            if (entity != null) {
+                body = EntityUtils.toString(entity, "UTF-8");
+            }
+            JSONObject data = JSON.parseObject(body).getJSONObject("data");
+            JSONArray list = data.getJSONArray("list");
+            Date today = new Date();
+            if (CollectionUtils.isNotEmpty(list)) {
+                for (Object o : list) {
+                    data = (JSONObject) o;
+                    // volume 值不准确忽略
+                    BigDecimal current = data.getBigDecimal("current");
+                    BigDecimal volume = data.getBigDecimal("volume");
+                    if (Objects.nonNull(current) && Objects.nonNull(volume)) {
+                        Stock stock = new Stock(data.getString("symbol"), data.getString("name"), data.getLongValue("mc"),
+                                current, volume.longValue(), current.multiply(volume), today);
+                        Stock exist = stockMapper.selectById(stock.getCode());
+                        if (Objects.nonNull(exist)) {
+                            exist.setVolume(stock.getVolume());
+                            exist.setModifyTime(today);
+                            exist.setCurrentPrice(stock.getCurrentPrice());
+                            exist.setTransactionAmount(stock.getTransactionAmount());
+                            stockMapper.updateById(exist);
+                        } else {
+                            stockMapper.insert(stock);
+                        }
                     }
                 }
             }
+            log.info("更新股票每日成交量完成！");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        log.info("更新股票每日成交量完成！");
     }
 }

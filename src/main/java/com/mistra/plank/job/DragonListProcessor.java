@@ -1,6 +1,5 @@
 package com.mistra.plank.job;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.text.SimpleDateFormat;
@@ -45,7 +44,7 @@ public class DragonListProcessor {
         this.dragonListMapper = dragonListMapper;
     }
 
-    public void run() throws IOException {
+    public void run() {
         Date date = new Date(plankConfig.getDragonListTime());
         String strDateFormat = "yyyy-MM-dd";
         SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
@@ -55,9 +54,8 @@ public class DragonListProcessor {
         } while (date.getTime() < System.currentTimeMillis());
     }
 
-    private void execute(Date date, String timeStr) throws IOException {
+    private void execute(Date date, String timeStr) {
         try {
-
             String url = plankConfig.getDragonListUrl().replace("{time}", timeStr);
             DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
             HttpGet httpGet = new HttpGet(URI.create(url));
@@ -76,7 +74,7 @@ public class DragonListProcessor {
             JSONArray list = data.getJSONArray("data");
             List<DragonList> dragonLists = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(list)) {
-                JSONObject stock = new JSONObject();
+                JSONObject stock;
                 for (Object o : list) {
                     try {
                         stock = (JSONObject) o;
@@ -96,7 +94,7 @@ public class DragonListProcessor {
                         dragonList.setChangeRate(stock.getBigDecimal("CHANGE_RATE").setScale(2, BigDecimal.ROUND_HALF_UP));
                         dragonLists.add(dragonList);
                     } catch (Exception e) {
-                        continue;
+                        e.printStackTrace();
                     }
                 }
             }
@@ -105,6 +103,7 @@ public class DragonListProcessor {
                 dragonListMapper.insert(entry.getValue().get(0));
             }
         } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
