@@ -146,7 +146,7 @@ public class Barbarossa implements CommandLineRunner {
             try {
                 List<String> haveStockList = Arrays.asList(haveStock.split(","));
                 List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", haveStockList));
-                HashMap<String, Double> price = new HashMap<>();
+                HashMap<String, String> price = new HashMap<>();
                 int count = 1000;
                 while (true) {
                     for (Stock stock : stocks) {
@@ -166,12 +166,13 @@ public class Barbarossa implements CommandLineRunner {
                         JSONArray list = data.getJSONArray("item");
                         if (org.apache.commons.collections.CollectionUtils.isNotEmpty(list)) {
                             for (Object o : list) {
-                                price.put(stock.getName(), ((JSONArray) o).getDoubleValue(7));
+                                price.put(stock.getName(), "最高:" + ((JSONArray) o).getDoubleValue(3) + " | 最低:" + ((JSONArray) o).getDoubleValue(4) +
+                                        " | 现价:" + ((JSONArray) o).getDoubleValue(5) + " | 涨幅:" + ((JSONArray) o).getDoubleValue(7));
                             }
                         }
                     }
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                    for (Map.Entry<String, Double> entry : price.entrySet()) {
+                    for (Map.Entry<String, String> entry : price.entrySet()) {
                         log.info(entry.getKey() + " " + entry.getValue());
                     }
                     count--;
