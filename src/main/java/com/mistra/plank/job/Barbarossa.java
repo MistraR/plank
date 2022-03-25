@@ -129,7 +129,7 @@ public class Barbarossa implements CommandLineRunner {
      * 补充写入今日交易数据
      */
     public void replenish() {
-        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-03-16 23:00:00"));
+        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-03-24 23:00:00"));
         for (DailyRecord stock : stocks) {
             Barbarossa.STOCK_MAP.remove(stock.getCode());
         }
