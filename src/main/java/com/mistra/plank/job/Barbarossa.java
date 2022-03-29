@@ -297,7 +297,7 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 log.info("\n-------------------------------------------------------------------------------------------{}日-------------------------------------------------------------------------------------------" +
                                 "\n一板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}\n七板{}支:{}" +
-                                "\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", sdf.format(date),
+                                "\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", sdf.format(date),
                         todayOne.keySet().size(), new ArrayList<>(todayOne.keySet()),
                         todayTwo.keySet().size(), new ArrayList<>(todayTwo.keySet()),
                         todayThree.keySet().size(), new ArrayList<>(todayThree.keySet()),
@@ -329,8 +329,8 @@ public class Barbarossa implements CommandLineRunner {
         }
         fourPlankAdded.forEach(fourPlankStock::remove);
         gemPlankStockTwice.removeAll(gemPlankStockTwiceAdded);
-        log.info("当前分析时间段还未加入自选的4连板+的股票:{}", fourPlankStock);
-        log.info("当前分析时间段还未加入自选的创业板涨停2次及以上的股票:{}", gemPlankStockTwice);
+        log.info("未加入自选的4连板+的股票:{}", fourPlankStock.toString().replace(" ", "").replace("[", ",").replace("]", ""));
+        log.info("未加入自选的创业板涨停2次+的股票:{}", gemPlankStockTwice.toString().replace(" ", "").replace("[", ",").replace("]", ""));
         log.info("一板>一进二平均胜率：{}", (double) Math.round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
         log.info("二板>二进三平均胜率：{}", (double) Math.round(twoToThree.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
         log.info("三板>三进四平均胜率：{}", (double) Math.round(threeToFour.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
