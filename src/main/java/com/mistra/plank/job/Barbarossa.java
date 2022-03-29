@@ -72,7 +72,7 @@ public class Barbarossa implements CommandLineRunner {
     private final PlankConfig plankConfig;
     private final DailyRecordProcessor dailyRecordProcessor;
 
-    private final ExecutorService executorService = new ThreadPoolExecutor(10, 10,
+    private final ExecutorService executorService = new ThreadPoolExecutor(10, 20,
             0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(5000), new NamedThreadFactory("DailyRecord线程-", false));
 
     private final String gemPlankStockTwice = "中文在线,中粮工科,春晖智控,泰林生物,炬华科技,川网传媒,康平科技,观想科技,丝路视觉,山水比德,海泰科,锋尚文化,海联讯,耐普矿机,雅本化学,奥雅设计,国联水产,红日药业," +
@@ -331,54 +331,12 @@ public class Barbarossa implements CommandLineRunner {
         gemPlankStockTwice.removeAll(gemPlankStockTwiceAdded);
         log.info("当前分析时间段还未加入自选的4连板+的股票:{}", fourPlankStock);
         log.info("当前分析时间段还未加入自选的创业板涨停2次及以上的股票:{}", gemPlankStockTwice);
-        double one = 0d;
-        for (Map.Entry<String, BigDecimal> entry : oneToTwo.entrySet()) {
-            if (entry.getKey().equals(sdf.format(new Date()))) {
-                log.info("{}日一进二胜率:{}", entry.getKey(), entry.getValue());
-            }
-            one += entry.getValue().doubleValue();
-        }
-        double two = 0d;
-        for (Map.Entry<String, BigDecimal> entry : twoToThree.entrySet()) {
-            if (entry.getKey().equals(sdf.format(new Date()))) {
-                log.info("{}日二进三胜率:{}", entry.getKey(), entry.getValue());
-            }
-            two += entry.getValue().doubleValue();
-        }
-        double three = 0d;
-        for (Map.Entry<String, BigDecimal> entry : threeToFour.entrySet()) {
-            if (entry.getKey().equals(sdf.format(new Date()))) {
-                log.info("{}日三进四胜率:{}", entry.getKey(), entry.getValue());
-            }
-            three += entry.getValue().doubleValue();
-        }
-        double four = 0d;
-        for (Map.Entry<String, BigDecimal> entry : fourToFive.entrySet()) {
-            if (entry.getKey().equals(sdf.format(new Date()))) {
-                log.info("{}日四进五胜率:{}", entry.getKey(), entry.getValue());
-            }
-            four += entry.getValue().doubleValue();
-        }
-        double five = 0d;
-        for (Map.Entry<String, BigDecimal> entry : fiveToSix.entrySet()) {
-            if (entry.getKey().equals(sdf.format(new Date()))) {
-                log.info("{}日五进六胜率:{}", entry.getKey(), entry.getValue());
-            }
-            five += entry.getValue().doubleValue();
-        }
-        double six = 0d;
-        for (Map.Entry<String, BigDecimal> entry : sixToSeven.entrySet()) {
-            if (entry.getKey().equals(sdf.format(new Date()))) {
-                log.info("{}日六进七胜率:{}", entry.getKey(), entry.getValue());
-            }
-            six += entry.getValue().doubleValue();
-        }
-        log.info("一板>一进二平均胜率：{}", divide(one, oneToTwo.size()));
-        log.info("二板>二进三平均胜率：{}", divide(two, twoToThree.size()));
-        log.info("三板>三进四平均胜率：{}", divide(three, threeToFour.size()));
-        log.info("四板>四进五平均胜率：{}", divide(four, fourToFive.size()));
-        log.info("五板>五进六平均胜率：{}", divide(five, fiveToSix.size()));
-        log.info("六板>六进七平均胜率：{}", divide(six, sixToSeven.size()));
+        log.info("一板>一进二平均胜率：{}", (double) Math.round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
+        log.info("二板>二进三平均胜率：{}", (double) Math.round(twoToThree.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
+        log.info("三板>三进四平均胜率：{}", (double) Math.round(threeToFour.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
+        log.info("四板>四进五平均胜率：{}", (double) Math.round(fourToFive.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
+        log.info("五板>五进六平均胜率：{}", (double) Math.round(fiveToSix.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
+        log.info("六板>六进七平均胜率：{}", (double) Math.round(sixToSeven.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
     }
 
     private BigDecimal divide(double x, int y) {
