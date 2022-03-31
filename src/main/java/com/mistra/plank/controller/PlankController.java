@@ -30,6 +30,9 @@ public class PlankController {
         this.dailyRecordProcessor = dailyRecordProcessor;
     }
 
+    /**
+     * 抓取近日股票涨跌数据
+     */
     @PostMapping("/collectData")
     public void collectData() {
         dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
@@ -40,23 +43,46 @@ public class PlankController {
         barbarossa.replenish();
     }
 
+    /**
+     * 监控指定股票的实时涨跌数据
+     *
+     * @param haveStock 股票中文名,逗号分隔
+     */
     @PostMapping("/monitor")
     public void monitor(String haveStock) {
         barbarossa.monitor(haveStock);
     }
 
+    /**
+     * 分析连板晋级率
+     */
     @PostMapping("/analyze")
     public void analyze() {
         barbarossa.analyze();
     }
 
+    /**
+     * 更新新上市的股票数据
+     */
     @PostMapping("/updateStock")
     public void updateStock() {
         stockProcessor.run();
     }
 
+    /**
+     * 更新龙虎榜数据
+     */
     @PostMapping("/updateDragonList")
     public void updateDragonList() {
         dragonListProcessor.run();
+    }
+
+    /**
+     * 以历史数据为样本，根据配置的买入，卖出，分仓策略自动交易
+     * 确保龙虎榜数据已经更新到最新日期
+     */
+    @PostMapping("/barbarossa")
+    public void barbarossa() throws Exception {
+        barbarossa.barbarossa();
     }
 }

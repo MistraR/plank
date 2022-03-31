@@ -123,14 +123,13 @@ public class Barbarossa implements CommandLineRunner {
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
-        analyze();
     }
 
     /**
      * 补充写入今日交易数据
      */
     public void replenish() {
-        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", "2022-03-24 23:00:00"));
+        List<DailyRecord> stocks = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", DateUtils.addDays(new Date(), -1)));
         for (DailyRecord stock : stocks) {
             Barbarossa.STOCK_MAP.remove(stock.getCode());
         }
@@ -347,9 +346,9 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     /**
-     * 巴巴罗萨计划
+     * 以历史数据为样本，根据配置的买入，卖出，分仓策略自动交易
      */
-    private void barbarossa() throws Exception {
+    public void barbarossa() throws Exception {
         Date date = new Date(plankConfig.getBeginDay());
         do {
             this.barbarossa(date);
