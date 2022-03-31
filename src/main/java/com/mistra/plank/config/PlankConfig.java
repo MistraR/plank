@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * @author Mistra
  * @ Version: 1.0
  * @ Time: 2021/11/18 21:44
- * @ Description: 配置
+ * @ Description: 配 置
  * @ Copyright (c) Mistra,All Rights Reserved.
  * @ Github: https://github.com/MistraR
  * @ CSDN: https://blog.csdn.net/axela30w
