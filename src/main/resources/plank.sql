@@ -92,7 +92,7 @@ CREATE TABLE `hold_shares` (
   `buy_time` datetime NOT NULL COMMENT '建仓日期',
   `fifteen_profit` tinyint NOT NULL COMMENT '收益是否到过15%',
   `buy_number` int NOT NULL COMMENT '建仓数量',
-  `profit` decimal(10,2) NOT NULL COMMENT '利润\r\n',
+  `profit` decimal(10,2) NOT NULL COMMENT '利润',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6261 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

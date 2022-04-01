@@ -36,6 +36,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class DragonListProcessor {
 
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     private final PlankConfig plankConfig;
     private final DragonListMapper dragonListMapper;
 
@@ -46,8 +47,6 @@ public class DragonListProcessor {
 
     public void run() {
         Date date = new Date(plankConfig.getDragonListTime());
-        String strDateFormat = "yyyy-MM-dd";
-        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
         do {
             this.execute(date, sdf.format(date));
             date = DateUtils.addDays(date, 1);
@@ -70,7 +69,7 @@ public class DragonListProcessor {
             if (Objects.isNull(data)) {
                 return;
             }
-            log.info("抓取{}日龙虎榜数据！", date);
+            log.info("抓取{}日龙虎榜数据！", sdf.format(date));
             JSONArray list = data.getJSONArray("data");
             List<DragonList> dragonLists = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(list)) {

@@ -63,6 +63,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class Barbarossa implements CommandLineRunner {
 
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     private final StockMapper stockMapper;
     private final DailyRecordMapper dailyRecordMapper;
     private final ClearanceMapper clearanceMapper;
@@ -349,6 +350,9 @@ public class Barbarossa implements CommandLineRunner {
      * 以历史数据为样本，根据配置的买入，卖出，分仓策略自动交易
      */
     public void barbarossa() throws Exception {
+        // 清除老数据
+        holdSharesMapper.delete(new QueryWrapper<HoldShares>());
+        clearanceMapper.delete(new QueryWrapper<Clearance>());
         Date date = new Date(plankConfig.getBeginDay());
         do {
             this.barbarossa(date);
@@ -377,7 +381,7 @@ public class Barbarossa implements CommandLineRunner {
      */
     private List<Stock> checkCanBuyStock(Date date) {
         List<DragonList> dragonLists = dragonListMapper.selectList(new QueryWrapper<DragonList>()
-                .ge("date", date).le("date", date).ge("price", 6).le("price", 100)
+                .ge("date", date).lt("date", DateUtils.addDays(date, 1)).ge("price", 5).le("price", 100)
                 .notLike("name", "%ST%").notLike("name", "%st%").notLike("name", "%A%")
                 .notLike("name", "%C%").notLike("name", "%N%").notLike("name", "%U%")
                 .notLike("name", "%W%").notLike("code", "%BJ%").notLike("code", "%688%"));
@@ -419,7 +423,7 @@ public class Barbarossa implements CommandLineRunner {
         for (Stock stock : stocks) {
             List<HoldShares> holdShares = holdSharesMapper.selectList(new QueryWrapper<>());
             if (holdShares.size() >= plankConfig.getFundsPart()) {
-                log.info("仓位已打满！");
+                log.info("仓位已打满！无法开新仓！");
                 return;
             }
             Page<DailyRecord> selectPage = dailyRecordMapper.selectPage(new Page<>(1, 5), new QueryWrapper<DailyRecord>()
@@ -473,13 +477,14 @@ public class Barbarossa implements CommandLineRunner {
         if (CollectionUtils.isNotEmpty(holdShares)) {
             for (HoldShares holdShare : holdShares) {
                 if (!DateUtils.isSameDay(holdShare.getBuyTime(), date) && holdShare.getBuyTime().getTime() < date.getTime()) {
-                    Page<DailyRecord> selectPage = dailyRecordMapper.selectPage(new Page<>(1, 20), new QueryWrapper<DailyRecord>()
+                    Page<DailyRecord> selectPage = dailyRecordMapper.selectPage(new Page<>(1, 25), new QueryWrapper<DailyRecord>()
                             .eq("code", holdShare.getCode()).ge("date", DateUtils.addDays(date, -plankConfig.getDeficitMovingAverage() - 9))
                             .le("date", date).orderByDesc("date"));
-                    List<DailyRecord> dailyRecords = selectPage.getRecords().subList(0, 5);
                     // 今日数据明细
-                    DailyRecord todayRecord = dailyRecords.get(0);
-                    // 5日均线价格
+                    DailyRecord todayRecord = selectPage.getRecords().get(0);
+                    List<DailyRecord> dailyRecords = selectPage.getRecords().size() >= plankConfig.getDeficitMovingAverage() ?
+                            selectPage.getRecords().subList(0, plankConfig.getDeficitMovingAverage() - 1) : selectPage.getRecords();
+                    // 止损均线价格
                     OptionalDouble average = dailyRecords.stream().mapToDouble(dailyRecord -> dailyRecord.getClosePrice().doubleValue()).average();
                     if (average.isPresent() && (todayRecord.getLowest().doubleValue() <= average.getAsDouble())) {
                         // 跌破均线，清仓
@@ -568,7 +573,7 @@ public class Barbarossa implements CommandLineRunner {
         holdShare.setCurrentPrice(todayRecord.getClosePrice());
         holdShare.setRate(todayRecord.getClosePrice().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(), 2));
         holdSharesMapper.updateById(holdShare);
-        log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>减仓{},目前盈利{}元!", holdShare.getName(), holdShare.getProfit().add(profit).intValue());
+        log.info("{}日减仓 {},目前盈利 {} 元!", sdf.format(date), holdShare.getName(), holdShare.getProfit().add(profit).intValue());
     }
 
     /**
@@ -607,8 +612,6 @@ public class Barbarossa implements CommandLineRunner {
         tradeRecord.setNumber(holdShare.getNumber());
         tradeRecord.setType(1);
         tradeRecordMapper.insert(tradeRecord);
-        String strDateFormat = "yyyy-MM-dd";
-        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
         Clearance clearance = new Clearance();
         clearance.setCode(holdShare.getCode());
         clearance.setName(holdShare.getName());
@@ -625,6 +628,6 @@ public class Barbarossa implements CommandLineRunner {
         clearance.setDayNumber(Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime())).getDays());
         clearanceMapper.insert(clearance);
         holdSharesMapper.delete(new QueryWrapper<HoldShares>().eq("id", holdShare.getId()));
-        log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>清仓{},总共盈利{}元!总资产:[{}]", holdShare.getName(), profit.intValue(), BALANCE.intValue());
+        log.info("{}日清仓 {},总共盈利 {} 元!当前总资产: {} ", sdf.format(date), holdShare.getName(), profit.intValue(), BALANCE.intValue());
     }
 }
