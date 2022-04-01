@@ -621,7 +621,7 @@ public class Barbarossa implements CommandLineRunner {
         clearance.setRate(profit.divide(BigDecimal.valueOf(holdShare.getBuyNumber() * holdShare.getBuyPrice().doubleValue()), 2));
         clearance.setProfit(profit);
         clearance.setReason("清仓" + holdShare.getName() + "总计盈亏" + profit.intValue() + "元，清仓原因:" +
-                clearanceReasonEnum.getDesc() + "建仓日期" + sdf.format(holdShare.getBuyTime()));
+                clearanceReasonEnum.getDesc() + "，建仓日期" + sdf.format(holdShare.getBuyTime()));
         clearance.setDate(date);
         clearance.setBalance(BALANCE.setScale(2, BigDecimal.ROUND_HALF_UP));
         clearance.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, BigDecimal.ROUND_HALF_UP));
