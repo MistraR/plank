@@ -411,7 +411,7 @@ public class Barbarossa implements CommandLineRunner {
             }
         }
         dragonLists = dragonLists.stream().filter(dragonList -> stockCode.contains(dragonList.getCode())).collect(Collectors.toList());
-        dragonLists = dragonLists.stream().sorted((a, b) -> b.getBuy().compareTo(a.getBuy())).collect(Collectors.toList());
+        dragonLists = dragonLists.stream().sorted((a, b) -> b.getNetBuy().compareTo(a.getNetBuy())).collect(Collectors.toList());
         List<Stock> result = new ArrayList<>();
         for (DragonList dragonList : dragonLists) {
             result.add(stockMapper.selectOne(new QueryWrapper<Stock>().eq("code", dragonList.getCode())));
@@ -435,7 +435,7 @@ public class Barbarossa implements CommandLineRunner {
             DailyRecord dailyRecord = selectPage.getRecords().get(1);
             double openRatio = (selectPage.getRecords().get(1).getOpenPrice().subtract(selectPage.getRecords().get(0).getClosePrice()))
                     .divide(selectPage.getRecords().get(0).getClosePrice(), 2, BigDecimal.ROUND_HALF_UP).doubleValue();
-            if (openRatio > -0.02 && openRatio < plankConfig.getBuyPlankRatioLimit().doubleValue() && BALANCE_AVAILABLE.intValue() > 10000) {
+            if (openRatio > -0.03 && openRatio < plankConfig.getBuyPlankRatioLimit().doubleValue() && BALANCE_AVAILABLE.intValue() > 10000) {
                 // 低开2个点以下不买
                 HoldShares one = holdSharesMapper.selectOne(new QueryWrapper<HoldShares>().eq("code", stock.getCode()));
                 if (Objects.isNull(one)) {
@@ -519,7 +519,7 @@ public class Barbarossa implements CommandLineRunner {
                         this.reduceStock(holdShare, ClearanceReasonEnum.POSITION_HALF, date, todayRecord,
                                 holdShare.getBuyPrice().doubleValue() * (1 + plankConfig.getProfitHalfRatio().doubleValue()));
                     }
-                    // 持股超过8天 清仓
+                    // 持股超过x天 并且 收益不到20% 清仓
                     if (Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime())).getDays() > plankConfig.getClearanceDay()) {
                         this.clearanceStock(holdShare, ClearanceReasonEnum.TEN_DAY, date, todayRecord.getOpenPrice().add(todayRecord.getClosePrice()).doubleValue() / 2);
                     }
