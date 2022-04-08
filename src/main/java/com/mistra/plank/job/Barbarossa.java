@@ -1,6 +1,7 @@
 package com.mistra.plank.job;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -74,20 +75,7 @@ public class Barbarossa implements CommandLineRunner {
     private final DailyRecordProcessor dailyRecordProcessor;
 
     private final ExecutorService executorService = new ThreadPoolExecutor(10, 20,
-            0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(5000), new NamedThreadFactory("DailyRecord线程-", false));
-
-    private final String gemPlankStockTwice = "中文在线,中粮工科,春晖智控,泰林生物,炬华科技,川网传媒,康平科技,观想科技,丝路视觉,山水比德,海泰科,锋尚文化,海联讯,耐普矿机,雅本化学,奥雅设计,国联水产,红日药业," +
-            "粤万年青,正海磁材,扬电科技,中捷精工,博俊科技,方直科技,仟源医药,中辰股份,迦南科技,赛摩智能,山河药辅,海辰药业,致远新能,兰卫医学,天瑞仪器,新开普,越博动力,陇神戎发,金运激光,左江科技,宣亚国际,中科信息," +
-            "恒信东方,神思电子,康芝药业,鹏辉能源,翰宇药业,拓新药业,广生堂,舒泰神,大富科技,依米康,冠中生态,每日互动,建科院,先进数通,杭州园林,建研设计,岱勒新材,康泰医学,立昂技术,首都在线,捷成股份,零点有数,天利科技,旗天科技," +
-            "德艺文创,数字政通,德迈仕,华蓝集团,雄帝科技,星辉娱乐,初灵信息,南凌科技,天源迪科,上海凯宝,达嘉维康,迅游科技,远方信息,易瑞生物,万孚生物,新晨科技,嘉寓股份,迪威迅,通源石油,亚康股份,熙菱信息,富邦股份,四方精创,共同药业," +
-            "中富通,尔康制药,晶雪节能,特发服务";
-
-    private final String fourPlank = "风范股份,龙津药业,京城股份,兰石重装,亚太药业,龙洲股份,富临运业,新筑股份,华塑股份,福然德,渝开发,九安医疗,万里股份,金山股份,冰山冷热,赛隆药业,蓝光发展,长江材料,翠微股份,湖南天雁," +
-            "富佳股份,跃岭股份,内蒙新华,三羊马,大龙地产,亚世光电,陕西金叶,开开实业,顾地科技,延华智能,迪生力,蓝科高新,顺钠股份,永安期货,长城电工,镇洋发展,中锐股份,汇绿生态,美盛文化,中铝国际,湖北广电,英洛华," +
-            "梦天家居,精华制药,新华联,西仪股份,金时科技,美吉姆,元隆雅图,得利斯,正平股份,保利联合,冀东装备,千红制药,中农联合,诚邦股份,鞍重股份,天鹅股份,浙江建投,金财互联,恒宝股份,安妮股份," +
-            "宋都股份,金种子酒,吉翔股份,京蓝科技,锦州港,正和生态,元成股份,北大医药,金陵饭店,真视通,长江健康,海欣食品,岭南股份,宁波能源,贵广网络,亚联发展,依米康,准油股份,大理药业,佳力图,海量数据," +
-            "证通电子,吉视传媒,河化股份,宁波建工,美诺华,新炬网络,淮河能源,直真科技,福成股份,中国医药,引力传媒,云南能投,浙农股份,黑牡丹,悦心健康,中路股份,重庆建工,浙大网新,天顺股份,美利云," +
-            "精伦电子,北化股份,南威软件,德邦股份,北玻股份,中欣氟材,广田集团,阳光城,天保基建,武汉凡谷,青海春天,国机汽车,岭南控股,粤水电,盘龙药业,荣安地产,西王食品,苏州高新,冠城大通";
+            0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(5000), new NamedThreadFactory("DailyRecord线程-", false));
 
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
 
@@ -124,6 +112,7 @@ public class Barbarossa implements CommandLineRunner {
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
+        analyze();
     }
 
     /**
@@ -172,7 +161,7 @@ public class Barbarossa implements CommandLineRunner {
                             }
                         }
                     }
-                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (Map.Entry<String, String> entry : price.entrySet()) {
                         log.info(entry.getKey() + " " + entry.getValue());
                     }
@@ -192,7 +181,18 @@ public class Barbarossa implements CommandLineRunner {
      * 分析各连板晋级率
      */
     public void analyze() {
-        List<String> gemPlankStockTwiceAdded = Arrays.asList(gemPlankStockTwice.split(","));
+        String gemPlankStockTwice1 = "中文在线,中粮工科,春晖智控,泰林生物,炬华科技,川网传媒,康平科技,观想科技,丝路视觉,山水比德,海泰科,锋尚文化,海联讯,耐普矿机,雅本化学,奥雅设计,国联水产,红日药业," +
+                "粤万年青,正海磁材,扬电科技,中捷精工,博俊科技,方直科技,仟源医药,中辰股份,迦南科技,赛摩智能,山河药辅,海辰药业,致远新能,兰卫医学,天瑞仪器,新开普,越博动力,陇神戎发,金运激光,左江科技,宣亚国际,中科信息," +
+                "恒信东方,神思电子,康芝药业,鹏辉能源,翰宇药业,拓新药业,广生堂,舒泰神,大富科技,依米康,冠中生态,每日互动,建科院,先进数通,杭州园林,建研设计,岱勒新材,康泰医学,立昂技术,首都在线,捷成股份,零点有数,天利科技,旗天科技," +
+                "德艺文创,数字政通,德迈仕,华蓝集团,雄帝科技,星辉娱乐,初灵信息,南凌科技,天源迪科,上海凯宝,达嘉维康,迅游科技,远方信息,易瑞生物,万孚生物,新晨科技,嘉寓股份,迪威迅,通源石油,亚康股份,熙菱信息,富邦股份,四方精创,共同药业," +
+                "中富通,尔康制药,晶雪节能,特发服务";
+        List<String> gemPlankStockTwiceAdded = Arrays.asList(gemPlankStockTwice1.split(","));
+        String fourPlank = "风范股份,龙津药业,京城股份,兰石重装,亚太药业,龙洲股份,富临运业,新筑股份,华塑股份,福然德,渝开发,九安医疗,万里股份,金山股份,冰山冷热,赛隆药业,蓝光发展,长江材料,翠微股份,湖南天雁," +
+                "富佳股份,跃岭股份,内蒙新华,三羊马,大龙地产,亚世光电,陕西金叶,开开实业,顾地科技,延华智能,迪生力,蓝科高新,顺钠股份,永安期货,长城电工,镇洋发展,中锐股份,汇绿生态,美盛文化,中铝国际,湖北广电,英洛华," +
+                "梦天家居,精华制药,新华联,西仪股份,金时科技,美吉姆,元隆雅图,得利斯,正平股份,保利联合,冀东装备,千红制药,中农联合,诚邦股份,鞍重股份,天鹅股份,浙江建投,金财互联,恒宝股份,安妮股份," +
+                "宋都股份,金种子酒,吉翔股份,京蓝科技,锦州港,正和生态,元成股份,北大医药,金陵饭店,真视通,长江健康,海欣食品,岭南股份,宁波能源,贵广网络,亚联发展,依米康,准油股份,大理药业,佳力图,海量数据," +
+                "证通电子,吉视传媒,河化股份,宁波建工,美诺华,新炬网络,淮河能源,直真科技,福成股份,中国医药,引力传媒,云南能投,浙农股份,黑牡丹,悦心健康,中路股份,重庆建工,浙大网新,天顺股份,美利云," +
+                "精伦电子,北化股份,南威软件,德邦股份,北玻股份,中欣氟材,广田集团,阳光城,天保基建,武汉凡谷,青海春天,国机汽车,岭南控股,粤水电,盘龙药业,荣安地产,西王食品,苏州高新,冠城大通";
         List<String> fourPlankAdded = Arrays.asList(fourPlank.split(","));
         // 4连板+的股票
         HashSet<String> fourPlankStock = new HashSet<>();
@@ -277,24 +277,12 @@ public class Barbarossa implements CommandLineRunner {
                         }
                     }
                 }
-                if (yesterdayOne.size() > 0) {
-                    oneToTwo.put(sdf.format(date), divide(todayTwo.size(), yesterdayOne.size()));
-                }
-                if (yesterdayTwo.size() > 0) {
-                    twoToThree.put(sdf.format(date), divide(todayThree.size(), yesterdayTwo.size()));
-                }
-                if (yesterdayThree.size() > 0) {
-                    threeToFour.put(sdf.format(date), divide(todayFour.size(), yesterdayThree.size()));
-                }
-                if (yesterdayFour.size() > 0) {
-                    fourToFive.put(sdf.format(date), divide(todayFive.size(), yesterdayFour.size()));
-                }
-                if (yesterdayFive.size() > 0) {
-                    fiveToSix.put(sdf.format(date), divide(todaySix.size(), yesterdayFive.size()));
-                }
-                if (yesterdaySix.size() > 0) {
-                    sixToSeven.put(sdf.format(date), divide(todaySeven.size(), yesterdaySix.size()));
-                }
+                this.promotion(oneToTwo, todayTwo, yesterdayOne, date);
+                this.promotion(twoToThree, todayThree, yesterdayTwo, date);
+                this.promotion(threeToFour, todayFour, yesterdayThree, date);
+                this.promotion(fourToFive, todayFive, yesterdayFour, date);
+                this.promotion(fiveToSix, todaySix, yesterdayFive, date);
+                this.promotion(sixToSeven, todaySeven, yesterdaySix, date);
                 log.info("\n-------------------------------------------------------------------------------------------{}日-------------------------------------------------------------------------------------------" +
                                 "\n一板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}\n七板{}支:{}" +
                                 "\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", sdf.format(date),
@@ -339,20 +327,26 @@ public class Barbarossa implements CommandLineRunner {
         log.info("六板>六进七平均胜率：{}", (double) Math.round(sixToSeven.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
     }
 
+    private void promotion(HashMap<String, BigDecimal> promotion, HashMap<String, Double> today, HashMap<String, Double> yesterday, Date date) {
+        if (yesterday.size() > 0) {
+            promotion.put(sdf.format(date), divide(today.size(), yesterday.size()));
+        }
+    }
+
     private BigDecimal divide(double x, int y) {
         if (y <= 0) {
             return new BigDecimal(0);
         }
-        return new BigDecimal(x).divide(new BigDecimal(y), 2, BigDecimal.ROUND_HALF_UP);
+        return new BigDecimal(x).divide(new BigDecimal(y), 2, RoundingMode.HALF_UP);
     }
 
     /**
      * 以历史数据为样本，根据配置的买入，卖出，分仓策略自动交易
      */
-    public void barbarossa() throws Exception {
+    public void barbarossa() {
         // 清除老数据
-        holdSharesMapper.delete(new QueryWrapper<HoldShares>());
-        clearanceMapper.delete(new QueryWrapper<Clearance>());
+        holdSharesMapper.delete(new QueryWrapper<>());
+        clearanceMapper.delete(new QueryWrapper<>());
         Date date = new Date(plankConfig.getBeginDay());
         do {
             this.barbarossa(date);
@@ -400,9 +394,9 @@ public class Barbarossa implements CommandLineRunner {
         List<String> stockCode = new ArrayList<>();
         for (Map.Entry<String, List<DailyRecord>> entry : map.entrySet()) {
             // 近8日涨幅
-            BigDecimal eightRatio = entry.getValue().get(0).getClosePrice().divide(entry.getValue().get(8).getClosePrice(), 2);
+            BigDecimal eightRatio = entry.getValue().get(0).getClosePrice().divide(entry.getValue().get(8).getClosePrice(), 2, RoundingMode.HALF_UP);
             // 近3日涨幅
-            BigDecimal threeRatio = entry.getValue().get(0).getClosePrice().divide(entry.getValue().get(3).getClosePrice(), 2);
+            BigDecimal threeRatio = entry.getValue().get(0).getClosePrice().divide(entry.getValue().get(3).getClosePrice(), 2, RoundingMode.HALF_UP);
             // 前3个交易日大跌的也排除
             if (eightRatio.doubleValue() <= 1.22 && eightRatio.doubleValue() >= 1.1 && threeRatio.doubleValue() < 1.22 &&
                     entry.getValue().get(0).getIncreaseRate().doubleValue() > 0.04 && entry.getValue().get(1).getIncreaseRate().doubleValue() > -0.04 &&
@@ -434,7 +428,7 @@ public class Barbarossa implements CommandLineRunner {
             }
             DailyRecord dailyRecord = selectPage.getRecords().get(1);
             double openRatio = (selectPage.getRecords().get(1).getOpenPrice().subtract(selectPage.getRecords().get(0).getClosePrice()))
-                    .divide(selectPage.getRecords().get(0).getClosePrice(), 2, BigDecimal.ROUND_HALF_UP).doubleValue();
+                    .divide(selectPage.getRecords().get(0).getClosePrice(), 2, RoundingMode.HALF_UP).doubleValue();
             if (openRatio > -0.03 && openRatio < plankConfig.getBuyPlankRatioLimit().doubleValue() && BALANCE_AVAILABLE.intValue() > 10000) {
                 // 低开2个点以下不买
                 HoldShares one = holdSharesMapper.selectOne(new QueryWrapper<HoldShares>().eq("code", stock.getCode()));
@@ -456,8 +450,8 @@ public class Barbarossa implements CommandLineRunner {
                     tradeRecord.setMoney((int) (number * 100 * dailyRecord.getOpenPrice().doubleValue()));
                     tradeRecord.setReason("买入" + holdShare.getName() + number * 100 + "股，花费" + cost + "元，当前可用余额" +
                             BALANCE_AVAILABLE.intValue());
-                    tradeRecord.setBalance(BALANCE.setScale(2, BigDecimal.ROUND_HALF_UP));
-                    tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, BigDecimal.ROUND_HALF_UP));
+                    tradeRecord.setBalance(BALANCE.setScale(2, RoundingMode.HALF_UP));
+                    tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, RoundingMode.HALF_UP));
                     tradeRecord.setPrice(dailyRecord.getOpenPrice());
                     tradeRecord.setNumber(number * 100);
                     tradeRecord.setType(0);
@@ -492,7 +486,7 @@ public class Barbarossa implements CommandLineRunner {
                         continue;
                     }
                     // 盘中最低收益率
-                    double profitLowRatio = todayRecord.getLowest().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(), 2).doubleValue();
+                    double profitLowRatio = todayRecord.getLowest().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(), 2, RoundingMode.HALF_UP).doubleValue();
                     if (profitLowRatio < plankConfig.getDeficitRatio().doubleValue()) {
                         // 跌破止损线，清仓
                         this.clearanceStock(holdShare, ClearanceReasonEnum.BREAK_LOSS_LINE, date,
@@ -505,7 +499,7 @@ public class Barbarossa implements CommandLineRunner {
                         continue;
                     }
                     // 盘中最高收益率
-                    double profitHighRatio = todayRecord.getHighest().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(), 2).doubleValue();
+                    double profitHighRatio = todayRecord.getHighest().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(), 2, RoundingMode.HALF_UP).doubleValue();
                     if (profitHighRatio >= plankConfig.getProfitUpperRatio().doubleValue()) {
                         // 收益25% 清仓
                         this.clearanceStock(holdShare, ClearanceReasonEnum.PROFIT_UPPER, date,
@@ -556,8 +550,8 @@ public class Barbarossa implements CommandLineRunner {
         tradeRecord.setMoney((int) money);
         tradeRecord.setReason("减仓" + holdShare.getName() + number + "股，卖出金额" + (int) money + "元，当前可用余额" + BALANCE_AVAILABLE.intValue() +
                 "，减仓原因" + clearanceReasonEnum.getDesc());
-        tradeRecord.setBalance(BALANCE.setScale(2, BigDecimal.ROUND_HALF_UP));
-        tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, BigDecimal.ROUND_HALF_UP));
+        tradeRecord.setBalance(BALANCE.setScale(2, RoundingMode.HALF_UP));
+        tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, RoundingMode.HALF_UP));
         tradeRecord.setPrice(new BigDecimal(sellPrice));
         tradeRecord.setNumber(number);
         tradeRecord.setType(1);
@@ -567,11 +561,11 @@ public class Barbarossa implements CommandLineRunner {
             return;
         }
         holdShare.setNumber(holdShare.getNumber() - number);
-        holdShare.setCost(holdShare.getBuyPrice().multiply(new BigDecimal(holdShare.getBuyNumber())).subtract(profit).divide(new BigDecimal(number), 2));
+        holdShare.setCost(holdShare.getBuyPrice().multiply(new BigDecimal(holdShare.getBuyNumber())).subtract(profit).divide(new BigDecimal(number), 2, RoundingMode.HALF_UP));
         holdShare.setProfit(holdShare.getProfit().add(profit));
         holdShare.setFifteenProfit(true);
         holdShare.setCurrentPrice(todayRecord.getClosePrice());
-        holdShare.setRate(todayRecord.getClosePrice().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(), 2));
+        holdShare.setRate(todayRecord.getClosePrice().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(), 2, RoundingMode.HALF_UP));
         holdSharesMapper.updateById(holdShare);
         log.info("{}日减仓 {},目前盈利 {} 元!", sdf.format(date), holdShare.getName(), holdShare.getProfit().add(profit).intValue());
     }
@@ -606,8 +600,8 @@ public class Barbarossa implements CommandLineRunner {
         tradeRecord.setMoney((int) money);
         tradeRecord.setReason("清仓" + holdShare.getName() + holdShare.getNumber() + "股，卖出金额" + (int) money + "元，当前可用余额" + BALANCE_AVAILABLE.intValue()
                 + "，清仓原因" + clearanceReasonEnum.getDesc());
-        tradeRecord.setBalance(BALANCE.setScale(2, BigDecimal.ROUND_HALF_UP));
-        tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, BigDecimal.ROUND_HALF_UP));
+        tradeRecord.setBalance(BALANCE.setScale(2, RoundingMode.HALF_UP));
+        tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, RoundingMode.HALF_UP));
         tradeRecord.setPrice(new BigDecimal(sellPrice));
         tradeRecord.setNumber(holdShare.getNumber());
         tradeRecord.setType(1);
@@ -618,13 +612,13 @@ public class Barbarossa implements CommandLineRunner {
         clearance.setCostPrice(holdShare.getBuyPrice());
         clearance.setNumber(holdShare.getBuyNumber());
         clearance.setPrice(new BigDecimal(sellPrice));
-        clearance.setRate(profit.divide(BigDecimal.valueOf(holdShare.getBuyNumber() * holdShare.getBuyPrice().doubleValue()), 2));
+        clearance.setRate(profit.divide(BigDecimal.valueOf(holdShare.getBuyNumber() * holdShare.getBuyPrice().doubleValue()), 2, RoundingMode.HALF_UP));
         clearance.setProfit(profit);
         clearance.setReason("清仓" + holdShare.getName() + "总计盈亏" + profit.intValue() + "元，清仓原因:" +
                 clearanceReasonEnum.getDesc() + "，建仓日期" + sdf.format(holdShare.getBuyTime()));
         clearance.setDate(date);
-        clearance.setBalance(BALANCE.setScale(2, BigDecimal.ROUND_HALF_UP));
-        clearance.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, BigDecimal.ROUND_HALF_UP));
+        clearance.setBalance(BALANCE.setScale(2, RoundingMode.HALF_UP));
+        clearance.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, RoundingMode.HALF_UP));
         clearance.setDayNumber(Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime())).getDays());
         clearanceMapper.insert(clearance);
         holdSharesMapper.delete(new QueryWrapper<HoldShares>().eq("id", holdShare.getId()));

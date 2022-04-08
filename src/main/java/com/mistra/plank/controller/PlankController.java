@@ -1,12 +1,5 @@
 package com.mistra.plank.controller;
 
-/**
- * 描述
- *
- * @author mistra@future.com
- * @date 2022/2/22
- */
-
 import com.mistra.plank.job.Barbarossa;
 import com.mistra.plank.job.DailyRecordProcessor;
 import com.mistra.plank.job.DragonListProcessor;
@@ -14,6 +7,10 @@ import com.mistra.plank.job.StockProcessor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * @author mistra@future.com
+ * @date 2021/11/19
+ */
 @RestController
 public class PlankController {
 
@@ -82,7 +79,7 @@ public class PlankController {
      * 确保龙虎榜数据已经更新到最新日期
      */
     @PostMapping("/barbarossa")
-    public void barbarossa() throws Exception {
+    public void barbarossa() {
         barbarossa.barbarossa();
     }
 }

@@ -1,6 +1,7 @@
 package com.mistra.plank.job;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -90,7 +91,7 @@ public class DragonListProcessor {
                         dragonList.setPrice(stock.getBigDecimal("CLOSE_PRICE"));
                         dragonList.setMarketValue(stock.getBigDecimal("FREE_MARKET_CAP").longValue());
                         dragonList.setAccumAmount(stock.getBigDecimal("ACCUM_AMOUNT").longValue());
-                        dragonList.setChangeRate(stock.getBigDecimal("CHANGE_RATE").setScale(2, BigDecimal.ROUND_HALF_UP));
+                        dragonList.setChangeRate(stock.getBigDecimal("CHANGE_RATE").setScale(2, RoundingMode.HALF_UP));
                         dragonLists.add(dragonList);
                     } catch (Exception e) {
                         e.printStackTrace();
