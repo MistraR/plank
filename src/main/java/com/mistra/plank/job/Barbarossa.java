@@ -137,7 +137,7 @@ public class Barbarossa implements CommandLineRunner {
                 List<String> haveStockList = Arrays.asList(haveStock.split(","));
                 List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", haveStockList));
                 HashMap<String, String> price = new HashMap<>();
-                int count = 1000;
+                int count = 100;
                 while (true) {
                     for (Stock stock : stocks) {
                         String url = plankConfig.getXueQiuStockDetailUrl();
