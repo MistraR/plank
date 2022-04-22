@@ -214,8 +214,7 @@ public class Barbarossa implements CommandLineRunner {
         HashMap<String, BigDecimal> fiveToSix = new HashMap<>(64);
         //六板六进七胜率
         HashMap<String, BigDecimal> sixToSeven = new HashMap<>(64);
-        List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
-                .ge("date", date));
+        List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", date));
         Map<String, List<DailyRecord>> dateListMap = dailyRecords.stream().collect(Collectors.groupingBy(dailyRecord -> sdf.format(dailyRecord.getDate())));
         //昨日首板
         HashMap<String, Double> yesterdayOne = new HashMap<>(64);
@@ -449,8 +448,7 @@ public class Barbarossa implements CommandLineRunner {
                     tradeRecord.setCode(holdShare.getCode());
                     tradeRecord.setDate(DateUtils.addHours(dailyRecord.getDate(), 9));
                     tradeRecord.setMoney((int) (number * 100 * dailyRecord.getOpenPrice().doubleValue()));
-                    tradeRecord.setReason("买入" + holdShare.getName() + number * 100 + "股，花费" + cost + "元，当前可用余额" +
-                            BALANCE_AVAILABLE.intValue());
+                    tradeRecord.setReason("买入" + holdShare.getName() + number * 100 + "股，花费" + cost + "元，当前可用余额" + BALANCE_AVAILABLE.intValue());
                     tradeRecord.setBalance(BALANCE.setScale(2, RoundingMode.HALF_UP));
                     tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, RoundingMode.HALF_UP));
                     tradeRecord.setPrice(dailyRecord.getOpenPrice());
