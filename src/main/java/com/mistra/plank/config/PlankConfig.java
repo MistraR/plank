@@ -141,4 +141,9 @@ public class PlankConfig {
      */
     private BigDecimal buyPlankRatioLimit;
 
+    /**
+     * 监控股票实时涨跌数据
+     */
+    private String monitor;
+
 }

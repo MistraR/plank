@@ -112,7 +112,9 @@ public class Barbarossa implements CommandLineRunner {
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
+//        dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
         analyze();
+        monitor(plankConfig.getMonitor());
     }
 
     /**
