@@ -115,9 +115,11 @@ public class Barbarossa implements CommandLineRunner {
         if (new Date().after(DateUtils.setHours(new Date(), 15))) {
             // 下午3点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
+        } else {
+            analyze();
+            // 3点以前实时监控涨跌
+            monitor(plankConfig.getMonitor());
         }
-        analyze();
-        monitor(plankConfig.getMonitor());
     }
 
     /**
