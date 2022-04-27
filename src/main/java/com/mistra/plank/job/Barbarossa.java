@@ -112,11 +112,12 @@ public class Barbarossa implements CommandLineRunner {
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
-        if (new Date().after(DateUtils.setHours(new Date(), 15))) {
+        if (DateUtil.hour(new Date(), true) >= 15) {
             // 下午3点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
-        } else {
+            // 分析连板数据
             analyze();
+        } else {
             // 3点以前实时监控涨跌
             monitor(plankConfig.getMonitor());
         }

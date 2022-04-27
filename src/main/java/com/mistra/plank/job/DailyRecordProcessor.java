@@ -14,11 +14,13 @@ import cn.hutool.core.thread.NamedThreadFactory;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.DailyRecordMapper;
 import com.mistra.plank.pojo.DailyRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -51,6 +53,11 @@ public class DailyRecordProcessor {
     }
 
     public void run(HashMap<String, String> map) {
+        Integer count = dailyRecordMapper.selectCount(new QueryWrapper<DailyRecord>().ge("date", DateUtils.addDays(new Date(), -1)));
+        if (count > 0) {
+            log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>今日已经更新过交易数据，一共:{}条！", count);
+            return;
+        }
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>开始更新股票每日成交数据！");
         for (Map.Entry<String, String> entry : map.entrySet()) {
             executorService.submit(() -> {
