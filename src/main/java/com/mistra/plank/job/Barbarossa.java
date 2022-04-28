@@ -145,8 +145,7 @@ public class Barbarossa implements CommandLineRunner {
                 List<String> haveStockList = Arrays.asList(haveStock.split(","));
                 List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", haveStockList));
                 HashMap<String, String> price = new HashMap<>();
-                int count = 500;
-                while (true) {
+                while (DateUtil.hour(new Date(), true) <= 15 && DateUtil.hour(new Date(), true) >= 9) {
                     for (Stock stock : stocks) {
                         String url = plankConfig.getXueQiuStockDetailUrl();
                         url = url.replace("{code}", stock.getCode()).replace("{time}", String.valueOf(System.currentTimeMillis()))
@@ -172,10 +171,6 @@ public class Barbarossa implements CommandLineRunner {
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (Map.Entry<String, String> entry : price.entrySet()) {
                         log.info(entry.getKey() + " " + entry.getValue());
-                    }
-                    count--;
-                    if (count < 0) {
-                        break;
                     }
                     Thread.sleep(5000);
                 }
