@@ -187,8 +187,6 @@ public class Barbarossa implements CommandLineRunner {
         // 4连板+的股票
         HashSet<String> fourPlankStock = new HashSet<>();
         HashMap<String, Integer> gemPlankStockNumber = new HashMap<>();
-        String strDateFormat = "yyyy-MM-dd";
-        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
         Date date = new DateTime(plankConfig.getAnalyzeTime()).withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0)
                 .withMillisOfSecond(0).toDate();
         //首板一进二胜率
