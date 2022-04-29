@@ -53,6 +53,8 @@ public class DailyRecordProcessor {
     }
 
     public void run(HashMap<String, String> map) {
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) this.executorService;
+        executor.allowCoreThreadTimeOut(true);
         Integer count = dailyRecordMapper.selectCount(new QueryWrapper<DailyRecord>().ge("date", DateUtils.addDays(new Date(), -1)));
         if (count > 0) {
             log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>今日已经更新过交易数据，一共:{}条！", count);
@@ -100,6 +102,14 @@ public class DailyRecordProcessor {
                 }
             });
         }
+        while (executor.getQueue().size() != 0) {
+            try {
+                Thread.sleep(60 * 1000);
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
+            }
+        }
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>更新股票每日成交数据完成！");
+        Barbarossa.updateDailyRecordSuccess.set(true);
     }
 }
