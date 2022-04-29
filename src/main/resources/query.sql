@@ -10,3 +10,6 @@ SELECT * FROM stock WHERE `name` IN ('卓胜微','韦尔股份','兆易创新','
 
 # 逼近建仓点的股票
 SELECT * FROM stock WHERE `name` IN ('通威股份','智飞生物','泰格医药','贝泰妮','珀莱雅','爱美客','泸州老窖','五粮液') ORDER BY code;
+
+UPDATE stock SET purchase_price=40 WHERE `name`='通威股份';
+
