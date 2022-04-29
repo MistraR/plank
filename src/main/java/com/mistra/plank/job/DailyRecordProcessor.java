@@ -107,6 +107,5 @@ public class DailyRecordProcessor {
             }
         }
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>更新股票每日成交数据完成！");
-        Barbarossa.updateDailyRecordSuccess.set(true);
     }
 }

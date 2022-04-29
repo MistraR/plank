@@ -82,11 +82,6 @@ public class Barbarossa implements CommandLineRunner {
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
 
     /**
-     * 更新交易数据成功标记
-     */
-    public static final AtomicBoolean updateDailyRecordSuccess = new AtomicBoolean(false);
-
-    /**
      * 总金额
      */
     public static BigDecimal BALANCE = new BigDecimal(1000000);
@@ -123,9 +118,6 @@ public class Barbarossa implements CommandLineRunner {
         if (DateUtil.hour(new Date(), true) >= 15) {
             // 下午3点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
-            while (!updateDailyRecordSuccess.get()) {
-                Thread.sleep(60 * 1000);
-            }
             stockProcessor.run();
             log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>今日交易数据更新成功，开始分析连板数据");
             // 分析连板数据
