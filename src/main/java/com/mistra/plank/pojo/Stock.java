@@ -43,6 +43,12 @@ public class Stock {
     private BigDecimal currentPrice;
 
     /**
+     * 预计建仓价格
+     */
+    @TableField(value = "purchase_price")
+    private BigDecimal purchasePrice;
+
+    /**
      * 当日成交量（手）
      */
     @TableField(value = "volume")

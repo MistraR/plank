@@ -99,16 +99,16 @@ CREATE TABLE `hold_shares` (
 -- ----------------------------
 -- Table structure for stock
 -- ----------------------------
-DROP TABLE IF EXISTS `stock`;
-CREATE TABLE `stock` (
-  `code` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
-  `name` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券名称',
-  `market_value` bigint NOT NULL COMMENT '市值',
-  `transaction_amount` decimal(14,2) NOT NULL COMMENT '当日成交额',
-  `current_price` decimal(14,2) NOT NULL COMMENT '当前价格',
-  `volume` bigint NOT NULL COMMENT '当日成交量',
-  `modify_time` datetime NOT NULL COMMENT '最近更新日期',
-  PRIMARY KEY (`code`)
+CREATE TABLE `stock`(
+`code`               char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci    NOT NULL COMMENT '证券代码',
+`name`               varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券名称',
+`market_value`       bigint                                                       NOT NULL COMMENT '市值',
+`transaction_amount` decimal(14, 2)                                               NOT NULL COMMENT '当日成交额',
+`current_price`      decimal(14, 2)                                               NOT NULL COMMENT '当前价格',
+`purchase_price`     decimal(14, 2)                                               NOT NULL COMMENT '预计建仓价格',
+`volume`             bigint                                                       NOT NULL COMMENT '当日成交量',
+`modify_time`        datetime                                                     NOT NULL COMMENT '最近更新日期',
+PRIMARY KEY (`code`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------

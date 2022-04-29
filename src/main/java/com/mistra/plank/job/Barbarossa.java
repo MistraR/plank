@@ -102,7 +102,7 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) {
+    public void run(String... args) throws InterruptedException {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
                 .notLike("name", "%ST%").notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%C%")
                 .notLike("name", "%N%").notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%")
@@ -115,6 +115,12 @@ public class Barbarossa implements CommandLineRunner {
         if (DateUtil.hour(new Date(), true) >= 15) {
             // 下午3点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
+            Integer count = 0;
+            while (count < 4040) {
+                Thread.sleep(60 * 1000);
+                count = dailyRecordMapper.selectCount(new QueryWrapper<DailyRecord>().ge("date", DateUtils.addDays(new Date(), -1)));
+            }
+            log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>今日交易数据更新成功，一共:{}条！开始分析连板数据", count);
             // 分析连板数据
             analyze();
         } else {
@@ -135,7 +141,7 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     /**
-     * 实时监测数据
+     * 实时监测数据 显示股票实时涨跌幅度，最高，最低价格
      *
      * @param haveStock haveStock
      */
@@ -163,12 +169,15 @@ public class Barbarossa implements CommandLineRunner {
                         JSONArray list = data.getJSONArray("item");
                         if (org.apache.commons.collections.CollectionUtils.isNotEmpty(list)) {
                             for (Object o : list) {
+                                double v = ((JSONArray) o).getDoubleValue(5);
+                                double rate = -(double) Math.round(((v - stock.getPurchasePrice().doubleValue()) / v) * 100) / 100;
                                 price.put(stock.getName(), "最高:" + ((JSONArray) o).getDoubleValue(3) + " | 最低:" + ((JSONArray) o).getDoubleValue(4) +
-                                        " | 现价:" + ((JSONArray) o).getDoubleValue(5) + " | 涨幅:" + ((JSONArray) o).getDoubleValue(7));
+                                        " | 现价:" + v + " | 建仓价:" + stock.getPurchasePrice() + " | 距离建仓价百分比:" + rate + " | 涨幅:" +
+                                        ((JSONArray) o).getDoubleValue(7));
                             }
                         }
                     }
-                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (Map.Entry<String, String> entry : price.entrySet()) {
                         log.info(entry.getKey() + " " + entry.getValue());
                     }
