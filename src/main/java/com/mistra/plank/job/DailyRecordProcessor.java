@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
  * @author Mistra
  * @ Version: 1.0
  * @ Time: 2021/11/18 22:09
- * @ Description: 更新股票每日成交量
+ * @ Description: 更新股票每日成交数据
  * @ Copyright (c) Mistra,All Rights Reserved.
  * @ Github: https://github.com/MistraR
  * @ CSDN: https://blog.csdn.net/axela30w
@@ -44,7 +44,7 @@ public class DailyRecordProcessor {
     private final PlankConfig plankConfig;
 
     private final ThreadPoolExecutor executorService = new ThreadPoolExecutor(10, 20,
-            0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(5000), new NamedThreadFactory("DailyRecord线程-", false));
+            0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(5000), new NamedThreadFactory("每日交易数据线程-", false));
 
     public DailyRecordProcessor(DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig) {
         this.dailyRecordMapper = dailyRecordMapper;
