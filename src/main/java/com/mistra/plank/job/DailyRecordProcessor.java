@@ -54,10 +54,10 @@ public class DailyRecordProcessor {
     public void run(HashMap<String, String> map) {
         Integer count = dailyRecordMapper.selectCount(new QueryWrapper<DailyRecord>().ge("date", DateUtils.addDays(new Date(), -1)));
         if (count > 0) {
-            log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>今日已经更新过交易数据，一共:{}条！", count);
+            log.info("今日已经更新过交易数据，一共:{}条！", count);
             return;
         }
-        log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>开始更新股票每日成交数据！");
+        log.info("开始更新股票每日成交数据！");
         for (Map.Entry<String, String> entry : map.entrySet()) {
             executorService.submit(() -> {
                 try {
@@ -90,7 +90,7 @@ public class DailyRecordProcessor {
                             dailyRecord.setIncreaseRate(BigDecimal.valueOf(array.getDoubleValue(7)));
                             dailyRecord.setAmount(array.getLongValue(9) / 10000);
                             dailyRecordMapper.insert(dailyRecord);
-                            log.info("更新[{}]近日成交数据完成！", entry.getValue());
+                            log.info("更新[ {} ]近日成交数据完成！", entry.getValue());
                         }
                     }
                     Thread.sleep(3000);
@@ -106,6 +106,6 @@ public class DailyRecordProcessor {
                 interruptedException.printStackTrace();
             }
         }
-        log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>更新股票每日成交数据完成！");
+        log.info("更新股票每日成交数据完成！");
     }
 }

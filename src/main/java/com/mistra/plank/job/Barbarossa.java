@@ -17,7 +17,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateUtil;
@@ -105,25 +104,26 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws InterruptedException {
+    public void run(String... args) {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
                 .notLike("name", "%ST%").notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%C%")
                 .notLike("name", "%N%").notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%")
                 .notLike("code", "%688%")
         );
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
-        log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>一共加载[{}]支股票！", stocks.size());
+        log.info("一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
         if (DateUtil.hour(new Date(), true) >= 15) {
-            // 下午3点后读取当日交易数据
+            // 15点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
+            // 更新每只股票收盘价
             stockProcessor.run();
-            log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>今日交易数据更新成功，开始分析连板数据");
+            log.info("今日交易数据更新成功，开始分析连板数据!");
             // 分析连板数据
             analyze();
         } else {
-            // 3点以前实时监控涨跌
+            // 15点以前实时监控涨跌
             monitor(plankConfig.getMonitor());
         }
     }
