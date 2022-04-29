@@ -66,6 +66,7 @@ public class Barbarossa implements CommandLineRunner {
 
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     private final StockMapper stockMapper;
+    private final StockProcessor stockProcessor;
     private final DailyRecordMapper dailyRecordMapper;
     private final ClearanceMapper clearanceMapper;
     private final TradeRecordMapper tradeRecordMapper;
@@ -88,10 +89,11 @@ public class Barbarossa implements CommandLineRunner {
      */
     public static BigDecimal BALANCE_AVAILABLE = new BigDecimal(1000000);
 
-    public Barbarossa(StockMapper stockMapper, DailyRecordMapper dailyRecordMapper, ClearanceMapper clearanceMapper,
+    public Barbarossa(StockMapper stockMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper, ClearanceMapper clearanceMapper,
                       TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
                       DragonListMapper dragonListMapper, PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor) {
         this.stockMapper = stockMapper;
+        this.stockProcessor = stockProcessor;
         this.dailyRecordMapper = dailyRecordMapper;
         this.clearanceMapper = clearanceMapper;
         this.tradeRecordMapper = tradeRecordMapper;
@@ -120,6 +122,7 @@ public class Barbarossa implements CommandLineRunner {
                 Thread.sleep(60 * 1000);
                 count = dailyRecordMapper.selectCount(new QueryWrapper<DailyRecord>().ge("date", DateUtils.addDays(new Date(), -1)));
             }
+            stockProcessor.run();
             log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>今日交易数据更新成功，一共:{}条！开始分析连板数据", count);
             // 分析连板数据
             analyze();
