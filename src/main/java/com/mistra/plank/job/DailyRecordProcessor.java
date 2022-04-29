@@ -5,7 +5,6 @@ import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -44,7 +43,7 @@ public class DailyRecordProcessor {
     private final DailyRecordMapper dailyRecordMapper;
     private final PlankConfig plankConfig;
 
-    private final ExecutorService executorService = new ThreadPoolExecutor(10, 20,
+    private final ThreadPoolExecutor executorService = new ThreadPoolExecutor(10, 20,
             0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(5000), new NamedThreadFactory("DailyRecord线程-", false));
 
     public DailyRecordProcessor(DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig) {
@@ -53,8 +52,6 @@ public class DailyRecordProcessor {
     }
 
     public void run(HashMap<String, String> map) {
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) this.executorService;
-        executor.allowCoreThreadTimeOut(true);
         Integer count = dailyRecordMapper.selectCount(new QueryWrapper<DailyRecord>().ge("date", DateUtils.addDays(new Date(), -1)));
         if (count > 0) {
             log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>今日已经更新过交易数据，一共:{}条！", count);
@@ -102,7 +99,7 @@ public class DailyRecordProcessor {
                 }
             });
         }
-        while (executor.getQueue().size() != 0) {
+        while (executorService.getQueue().size() != 0) {
             try {
                 Thread.sleep(60 * 1000);
             } catch (InterruptedException interruptedException) {
