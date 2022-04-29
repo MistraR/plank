@@ -52,11 +52,6 @@ public class PlankConfig {
     private Long dragonListTime;
 
     /**
-     * 分析首板一进二，二板二进三胜率 开始日期  2021-11-01
-     */
-    private Long analyzeTime;
-
-    /**
      * 雪球 获取某只股票最近多少天的记录
      */
     private Integer recentDayNumber;

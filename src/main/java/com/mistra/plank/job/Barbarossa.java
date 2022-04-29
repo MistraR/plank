@@ -190,13 +190,13 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     /**
-     * 分析各连板晋级率
+     * 分析最近一个月各连板晋级率
      */
     public void analyze() {
         // 4连板+的股票
         HashSet<String> fourPlankStock = new HashSet<>();
         HashMap<String, Integer> gemPlankStockNumber = new HashMap<>();
-        Date date = new DateTime(plankConfig.getAnalyzeTime()).withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0)
+        Date date = new DateTime(DateUtils.addDays(new Date(), -30)).withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0)
                 .withMillisOfSecond(0).toDate();
         //首板一进二胜率
         HashMap<String, BigDecimal> oneToTwo = new HashMap<>(64);
@@ -311,8 +311,8 @@ public class Barbarossa implements CommandLineRunner {
                 gemPlankStockTwice.add(entry.getKey());
             }
         }
-        log.info("未加入自选的4连板+的股票:{}", fourPlankStock.toString().replace(" ", "").replace("[", ",").replace("]", ""));
-        log.info("未加入自选的创业板涨停2次+的股票:{}", gemPlankStockTwice.toString().replace(" ", "").replace("[", ",").replace("]", ""));
+        log.info("最近一个月4连板+的股票:{}", fourPlankStock.toString().replace(" ", "").replace("[", ",").replace("]", ""));
+        log.info("最近一个月创业板涨停2次+的股票:{}", gemPlankStockTwice.toString().replace(" ", "").replace("[", ",").replace("]", ""));
         log.info("一板>一进二平均胜率：{}", (double) Math.round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
         log.info("二板>二进三平均胜率：{}", (double) Math.round(twoToThree.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
         log.info("三板>三进四平均胜率：{}", (double) Math.round(threeToFour.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
