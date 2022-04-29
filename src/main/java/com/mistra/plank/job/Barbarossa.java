@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalDouble;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -149,7 +150,7 @@ public class Barbarossa implements CommandLineRunner {
             try {
                 List<String> haveStockList = Arrays.asList(haveStock.split(","));
                 List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", haveStockList));
-                HashMap<String, String> price = new HashMap<>();
+                TreeMap<Double, String> price = new TreeMap<>();
                 while (DateUtil.hour(new Date(), true) <= 15 && DateUtil.hour(new Date(), true) >= 9) {
                     for (Stock stock : stocks) {
                         String url = plankConfig.getXueQiuStockDetailUrl();
@@ -170,14 +171,14 @@ public class Barbarossa implements CommandLineRunner {
                             for (Object o : list) {
                                 double v = ((JSONArray) o).getDoubleValue(5);
                                 double rate = -(double) Math.round(((v - stock.getPurchasePrice().doubleValue()) / v) * 100) / 100;
-                                price.put(stock.getName(), "最高:" + ((JSONArray) o).getDoubleValue(3) + " | 最低:" + ((JSONArray) o).getDoubleValue(4) +
+                                price.put(rate, stock.getName() + ": 最高:" + ((JSONArray) o).getDoubleValue(3) + " | 最低:" + ((JSONArray) o).getDoubleValue(4) +
                                         " | 现价:" + v + " | 建仓价:" + stock.getPurchasePrice() + " | 距离建仓价百分比:" + rate + " | 涨幅:" +
                                         ((JSONArray) o).getDoubleValue(7));
                             }
                         }
                     }
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                    for (Map.Entry<String, String> entry : price.entrySet()) {
+                    for (Map.Entry<Double, String> entry : price.entrySet()) {
                         log.info(entry.getKey() + " " + entry.getValue());
                     }
                     Thread.sleep(5000);
