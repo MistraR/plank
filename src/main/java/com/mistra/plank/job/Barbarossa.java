@@ -186,11 +186,16 @@ public class Barbarossa implements CommandLineRunner {
                     Collections.sort(realTimePrices);
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        log.info(realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + ": 高:"
-                            + realTimePrice.getTodayHighestPrice() + " | 低:" + realTimePrice.getTodayLowestPrice()
-                            + " | 建仓价:" + realTimePrice.getPurchasePrice() + " | 现价:"
-                            + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价百分比:" + realTimePrice.getRate()
-                            + "% | 涨幅:" + realTimePrice.getIncreaseRate());
+                        String log = realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "")
+                            + ": 高:" + realTimePrice.getTodayHighestPrice() + " | 低:"
+                            + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + realTimePrice.getPurchasePrice()
+                            + " | 现价:" + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价百分比:"
+                            + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate();
+                        if (realTimePrice.getRate() >= -3) {
+                            Barbarossa.log.warn(log);
+                        } else {
+                            Barbarossa.log.info(log);
+                        }
                     }
                     realTimePrices.clear();
                     Thread.sleep(10000);
