@@ -188,6 +188,8 @@ public class Barbarossa implements CommandLineRunner {
                     realTimePrices =
                         realTimePrices.stream().filter(e -> e.getRate() >= -3).collect(Collectors.toList());
                     Collections.sort(realTimePrices);
+                    Collections.sort(slump);
+                    System.out.println("\n\n\n\n\n\n\n\n");
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~建仓~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         String log = realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "")
@@ -207,7 +209,7 @@ public class Barbarossa implements CommandLineRunner {
                         Barbarossa.log.error(log);
                     }
                     realTimePrices.clear();
-                    Thread.sleep(10000);
+                    Thread.sleep(5000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
