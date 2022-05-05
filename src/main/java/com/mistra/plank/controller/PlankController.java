@@ -1,11 +1,12 @@
 package com.mistra.plank.controller;
 
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.mistra.plank.job.Barbarossa;
 import com.mistra.plank.job.DailyRecordProcessor;
 import com.mistra.plank.job.DragonListProcessor;
 import com.mistra.plank.job.StockProcessor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author mistra@future.com
@@ -19,8 +20,8 @@ public class PlankController {
     private final DragonListProcessor dragonListProcessor;
     private final DailyRecordProcessor dailyRecordProcessor;
 
-    public PlankController(Barbarossa barbarossa, StockProcessor stockProcessor, DragonListProcessor dragonListProcessor,
-                           DailyRecordProcessor dailyRecordProcessor) {
+    public PlankController(Barbarossa barbarossa, StockProcessor stockProcessor,
+        DragonListProcessor dragonListProcessor, DailyRecordProcessor dailyRecordProcessor) {
         this.barbarossa = barbarossa;
         this.stockProcessor = stockProcessor;
         this.dragonListProcessor = dragonListProcessor;
@@ -75,8 +76,7 @@ public class PlankController {
     }
 
     /**
-     * 以历史数据为样本，根据配置的买入，卖出，分仓策略自动交易
-     * 确保龙虎榜数据已经更新到最新日期
+     * 以历史数据为样本，根据配置的买入，卖出，分仓策略自动交易 确保龙虎榜数据已经更新到最新日期
      */
     @PostMapping("/barbarossa")
     public void barbarossa() {

@@ -23,6 +23,6 @@ public class StockInflowSample implements Comparable<StockInflowSample> {
 
     @Override
     public int compareTo(StockInflowSample o) {
-        return (int) (this.money) - (int) (o.money);
+        return (int)(this.money) - (int)(o.money);
     }
 }

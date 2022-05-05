@@ -9,15 +9,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import cn.hutool.core.thread.NamedThreadFactory;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.mistra.plank.config.PlankConfig;
-import com.mistra.plank.mapper.DailyRecordMapper;
-import com.mistra.plank.pojo.DailyRecord;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.http.HttpEntity;
@@ -27,14 +18,20 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.mistra.plank.config.PlankConfig;
+import com.mistra.plank.mapper.DailyRecordMapper;
+import com.mistra.plank.pojo.DailyRecord;
+
+import cn.hutool.core.thread.NamedThreadFactory;
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * @author Mistra
- * @ Version: 1.0
- * @ Time: 2021/11/18 22:09
- * @ Description: 更新股票每日成交数据
- * @ Copyright (c) Mistra,All Rights Reserved.
- * @ Github: https://github.com/MistraR
- * @ CSDN: https://blog.csdn.net/axela30w
+ * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 22:09 @ Description: 更新股票每日成交数据 @ Copyright (c) Mistra,All Rights
+ * Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
  */
 @Slf4j
 @Component
@@ -43,8 +40,8 @@ public class DailyRecordProcessor {
     private final DailyRecordMapper dailyRecordMapper;
     private final PlankConfig plankConfig;
 
-    private final ThreadPoolExecutor executorService = new ThreadPoolExecutor(10, 20,
-            0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(5000), new NamedThreadFactory("每日交易数据线程-", false));
+    private final ThreadPoolExecutor executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
+        new LinkedBlockingQueue<>(5000), new NamedThreadFactory("每日交易数据线程-", false));
 
     public DailyRecordProcessor(DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig) {
         this.dailyRecordMapper = dailyRecordMapper;
@@ -52,7 +49,8 @@ public class DailyRecordProcessor {
     }
 
     public void run(HashMap<String, String> map) {
-        Integer count = dailyRecordMapper.selectCount(new QueryWrapper<DailyRecord>().ge("date", DateUtils.addDays(new Date(), -1)));
+        Integer count = dailyRecordMapper
+            .selectCount(new QueryWrapper<DailyRecord>().ge("date", DateUtils.addDays(new Date(), -1)));
         if (count > 0) {
             log.info("今日已经更新过交易数据，一共:{}条！", count);
             return;
@@ -62,8 +60,9 @@ public class DailyRecordProcessor {
             executorService.submit(() -> {
                 try {
                     String url = plankConfig.getXueQiuStockDetailUrl();
-                    url = url.replace("{code}", entry.getKey()).replace("{time}", String.valueOf(System.currentTimeMillis()))
-                            .replace("{recentDayNumber}", String.valueOf(plankConfig.getRecentDayNumber()));
+                    url = url.replace("{code}", entry.getKey())
+                        .replace("{time}", String.valueOf(System.currentTimeMillis()))
+                        .replace("{recentDayNumber}", String.valueOf(plankConfig.getRecentDayNumber()));
                     DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
                     HttpGet httpGet = new HttpGet(URI.create(url));
                     httpGet.setHeader("Cookie", plankConfig.getXueQiuCookie());
@@ -78,7 +77,7 @@ public class DailyRecordProcessor {
                     if (CollectionUtils.isNotEmpty(list)) {
                         JSONArray array;
                         for (Object o : list) {
-                            array = (JSONArray) o;
+                            array = (JSONArray)o;
                             DailyRecord dailyRecord = new DailyRecord();
                             dailyRecord.setDate(new Date(array.getLongValue(0)));
                             dailyRecord.setCode(entry.getKey());

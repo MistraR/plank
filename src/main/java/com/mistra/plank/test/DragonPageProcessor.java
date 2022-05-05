@@ -3,9 +3,6 @@ package com.mistra.plank.test;
 import java.io.IOException;
 import java.net.URI;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import lombok.SneakyThrows;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -16,6 +13,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
+import lombok.SneakyThrows;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.processor.PageProcessor;
@@ -47,20 +49,25 @@ public class DragonPageProcessor implements PageProcessor {
     }
 
     public static void main(String[] args) throws IOException {
-//        Spider.create(new DragonPageProcessor()).addUrl("http://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112306080694619123275_1635760992000&reportName=RPT_DAILYBILLBOARD_PROFILE&columns=SECURITY_NAME_ABBR%2CCHANGE_RATE%2CTRADE_MARKET_CODE%2CTRADE_DATE%2CSECURITY_CODE&pageNumber=1&pageSize=500&sortTypes=1&sortColumns=SECURITY_CODE&source=WEB&client=WEB&_=1635760992000").thread(1).run();
-//        Spider.create(new GithubRepoPageProcessor()).addUrl("http://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112306080694619123275_1637229792389&reportName=RPT_DAILYBILLBOARD_PROFILE&columns=SECURITY_NAME_ABBR%2CCHANGE_RATE%2CTRADE_MARKET_CODE%2CTRADE_DATE%2CSECURITY_CODE&pageNumber=1&pageSize=500&sortTypes=1&sortColumns=SECURITY_CODE&source=WEB&client=WEB&_=1637229792390").thread(1).run();
-//        Spider.create(new GithubRepoPageProcessor()).addUrl("http://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=SZ002466&begin=1637318960367&period=day&type=before&count=-284&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance").thread(1).run();
+        // Spider.create(new
+        // DragonPageProcessor()).addUrl("http://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112306080694619123275_1635760992000&reportName=RPT_DAILYBILLBOARD_PROFILE&columns=SECURITY_NAME_ABBR%2CCHANGE_RATE%2CTRADE_MARKET_CODE%2CTRADE_DATE%2CSECURITY_CODE&pageNumber=1&pageSize=500&sortTypes=1&sortColumns=SECURITY_CODE&source=WEB&client=WEB&_=1635760992000").thread(1).run();
+        // Spider.create(new
+        // GithubRepoPageProcessor()).addUrl("http://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112306080694619123275_1637229792389&reportName=RPT_DAILYBILLBOARD_PROFILE&columns=SECURITY_NAME_ABBR%2CCHANGE_RATE%2CTRADE_MARKET_CODE%2CTRADE_DATE%2CSECURITY_CODE&pageNumber=1&pageSize=500&sortTypes=1&sortColumns=SECURITY_CODE&source=WEB&client=WEB&_=1637229792390").thread(1).run();
+        // Spider.create(new
+        // GithubRepoPageProcessor()).addUrl("http://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=SZ002466&begin=1637318960367&period=day&type=before&count=-284&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance").thread(1).run();
         test();
         CloseableHttpClient aDefault = HttpClients.createDefault();
         HttpGet request = new HttpGet();
-        request.setURI(URI.create("https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=SZ002466&begin=1637318960367&period=day&type=before&count=-284&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance"));
+        request.setURI(URI.create(
+            "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=SZ002466&begin=1637318960367&period=day&type=before&count=-284&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance"));
         CloseableHttpResponse response = aDefault.execute(request);
         String result = EntityUtils.toString(response.getEntity());
         System.out.println(result);
     }
 
     public static void test() {
-        String url = "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=SZ002466&begin=1637318960367&period=day&type=before&count=-284&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance";
+        String url =
+            "https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=SZ002466&begin=1637318960367&period=day&type=before&count=-284&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance";
         DefaultHttpClient httpClient = new DefaultHttpClient();
         HttpGet httpGet = new HttpGet(url);
         String result = "";

@@ -11,13 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.mistra.plank.config.PlankConfig;
-import com.mistra.plank.mapper.DragonListMapper;
-import com.mistra.plank.pojo.DragonList;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.http.HttpEntity;
@@ -26,6 +19,15 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.mistra.plank.config.PlankConfig;
+import com.mistra.plank.mapper.DragonListMapper;
+import com.mistra.plank.pojo.DragonList;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 抓取每日龙虎榜数据，只取净买入额前20
@@ -77,7 +79,7 @@ public class DragonListProcessor {
                 JSONObject stock;
                 for (Object o : list) {
                     try {
-                        stock = (JSONObject) o;
+                        stock = (JSONObject)o;
                         DragonList dragonList = new DragonList();
                         dragonList.setDate(date);
                         String[] split = stock.getString("SECUCODE").split("\\.");
@@ -98,7 +100,8 @@ public class DragonListProcessor {
                     }
                 }
             }
-            Map<String, List<DragonList>> collect = dragonLists.stream().collect(Collectors.groupingBy(DragonList::getCode));
+            Map<String, List<DragonList>> collect =
+                dragonLists.stream().collect(Collectors.groupingBy(DragonList::getCode));
             for (Map.Entry<String, List<DragonList>> entry : collect.entrySet()) {
                 dragonListMapper.insert(entry.getValue().get(0));
             }
