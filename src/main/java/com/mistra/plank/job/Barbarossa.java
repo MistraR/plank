@@ -192,7 +192,11 @@ public class Barbarossa implements CommandLineRunner {
                     System.out.println("\n\n\n\n\n\n\n\n");
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~建仓~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        Barbarossa.log.info(convertLog(realTimePrice));
+                        if (realTimePrice.getRate() >= -1) {
+                            Barbarossa.log.warn(convertLog(realTimePrice));
+                        } else {
+                            Barbarossa.log.info(convertLog(realTimePrice));
+                        }
                     }
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~暴跌~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (StockRealTimePrice realTimePrice : slump) {
