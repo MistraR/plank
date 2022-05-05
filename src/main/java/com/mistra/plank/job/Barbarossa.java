@@ -183,19 +183,28 @@ public class Barbarossa implements CommandLineRunner {
                             }
                         }
                     }
+                    List<StockRealTimePrice> slump =
+                        realTimePrices.stream().filter(e -> e.getIncreaseRate() < -5).collect(Collectors.toList());
+                    realTimePrices =
+                        realTimePrices.stream().filter(e -> e.getRate() >= -3).collect(Collectors.toList());
                     Collections.sort(realTimePrices);
-                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~建仓~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         String log = realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "")
                             + ": 高:" + realTimePrice.getTodayHighestPrice() + " | 低:"
                             + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + realTimePrice.getPurchasePrice()
                             + " | 现价:" + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价百分比:"
                             + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate();
-                        if (realTimePrice.getRate() >= -3) {
-                            Barbarossa.log.warn(log);
-                        } else {
-                            Barbarossa.log.info(log);
-                        }
+                        Barbarossa.log.info(log);
+                    }
+                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~暴跌~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    for (StockRealTimePrice realTimePrice : slump) {
+                        String log = realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "")
+                            + ": 高:" + realTimePrice.getTodayHighestPrice() + " | 低:"
+                            + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + realTimePrice.getPurchasePrice()
+                            + " | 现价:" + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价百分比:"
+                            + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate();
+                        Barbarossa.log.error(log);
                     }
                     realTimePrices.clear();
                     Thread.sleep(10000);
