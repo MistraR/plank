@@ -190,7 +190,7 @@ public class Barbarossa implements CommandLineRunner {
                             + realTimePrice.getTodayHighestPrice() + " | 低:" + realTimePrice.getTodayLowestPrice()
                             + " | 建仓价:" + realTimePrice.getPurchasePrice() + " | 现价:"
                             + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价百分比:" + realTimePrice.getRate()
-                            + " | 涨幅:" + realTimePrice.getIncreaseRate());
+                            + "% | 涨幅:" + realTimePrice.getIncreaseRate());
                     }
                     realTimePrices.clear();
                     Thread.sleep(10000);
