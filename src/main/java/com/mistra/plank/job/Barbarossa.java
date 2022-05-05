@@ -210,7 +210,7 @@ public class Barbarossa implements CommandLineRunner {
     private String convertLog(StockRealTimePrice realTimePrice) {
         return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "-> 高:"
             + realTimePrice.getTodayHighestPrice() + " | 低:" + realTimePrice.getTodayLowestPrice() + " | 建仓价:"
-            + realTimePrice.getPurchasePrice() + " | 现价:" + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价百分比:"
+            + realTimePrice.getPurchasePrice() + " | 现价:" + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价:"
             + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate();
     }
 
