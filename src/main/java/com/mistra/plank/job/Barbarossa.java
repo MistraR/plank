@@ -192,21 +192,11 @@ public class Barbarossa implements CommandLineRunner {
                     System.out.println("\n\n\n\n\n\n\n\n");
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~建仓~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        String log = realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "")
-                            + ": 高:" + realTimePrice.getTodayHighestPrice() + " | 低:"
-                            + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + realTimePrice.getPurchasePrice()
-                            + " | 现价:" + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价百分比:"
-                            + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate();
-                        Barbarossa.log.info(log);
+                        Barbarossa.log.info(convertLog(realTimePrice));
                     }
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~暴跌~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (StockRealTimePrice realTimePrice : slump) {
-                        String log = realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "")
-                            + ": 高:" + realTimePrice.getTodayHighestPrice() + " | 低:"
-                            + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + realTimePrice.getPurchasePrice()
-                            + " | 现价:" + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价百分比:"
-                            + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate();
-                        Barbarossa.log.error(log);
+                        Barbarossa.log.error(convertLog(realTimePrice));
                     }
                     realTimePrices.clear();
                     Thread.sleep(5000);
@@ -215,6 +205,13 @@ public class Barbarossa implements CommandLineRunner {
                 e.printStackTrace();
             }
         });
+    }
+
+    private String convertLog(StockRealTimePrice realTimePrice) {
+        return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "-> 高:"
+            + realTimePrice.getTodayHighestPrice() + " | 低:" + realTimePrice.getTodayLowestPrice() + " | 建仓价:"
+            + realTimePrice.getPurchasePrice() + " | 现价:" + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价百分比:"
+            + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate();
     }
 
     /**
