@@ -6,6 +6,7 @@ import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,6 +51,7 @@ import com.mistra.plank.pojo.DragonList;
 import com.mistra.plank.pojo.HoldShares;
 import com.mistra.plank.pojo.Stock;
 import com.mistra.plank.pojo.TradeRecord;
+import com.mistra.plank.pojo.dto.StockRealTimePrice;
 import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
 
 import cn.hutool.core.date.DateUtil;
@@ -150,7 +152,7 @@ public class Barbarossa implements CommandLineRunner {
             try {
                 List<String> haveStockList = Arrays.asList(haveStock.split(","));
                 List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", haveStockList));
-                HashMap<String, String> price = new HashMap<>();
+                List<StockRealTimePrice> realTimePrices = new ArrayList<>();
                 while (DateUtil.hour(new Date(), true) <= 15 && DateUtil.hour(new Date(), true) >= 9) {
                     for (Stock stock : stocks) {
                         String url = plankConfig.getXueQiuStockDetailUrl();
@@ -173,19 +175,25 @@ public class Barbarossa implements CommandLineRunner {
                                 double v = ((JSONArray)o).getDoubleValue(5);
                                 double rate =
                                     -(double)Math.round(((v - stock.getPurchasePrice().doubleValue()) / v) * 100) / 100;
-                                price.put(stock.getName(),
-                                    stock.getName() + ": 最高:" + ((JSONArray)o).getDoubleValue(3) + " | 最低:"
-                                        + ((JSONArray)o).getDoubleValue(4) + " | 建仓价:" + stock.getPurchasePrice()
-                                        + " | 现价:" + v + " | 距离建仓价百分比:" + rate + " | 涨幅:"
-                                        + ((JSONArray)o).getDoubleValue(7));
+                                realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v)
+                                    .name(stock.getName()).todayHighestPrice(((JSONArray)o).getDoubleValue(3))
+                                    .todayLowestPrice(((JSONArray)o).getDoubleValue(4))
+                                    .purchasePrice(stock.getPurchasePrice()).rate((int)(rate * 100))
+                                    .increaseRate(((JSONArray)o).getDoubleValue(7)).build());
                             }
                         }
                     }
+                    Collections.sort(realTimePrices);
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                    for (Map.Entry<String, String> entry : price.entrySet()) {
-                        log.info(entry.getValue());
+                    for (StockRealTimePrice realTimePrice : realTimePrices) {
+                        log.info(realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + ": 高:"
+                            + realTimePrice.getTodayHighestPrice() + " | 低:" + realTimePrice.getTodayLowestPrice()
+                            + " | 建仓价:" + realTimePrice.getPurchasePrice() + " | 现价:"
+                            + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价百分比:" + realTimePrice.getRate()
+                            + " | 涨幅:" + realTimePrice.getIncreaseRate());
                     }
-                    Thread.sleep(5000);
+                    realTimePrices.clear();
+                    Thread.sleep(10000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
