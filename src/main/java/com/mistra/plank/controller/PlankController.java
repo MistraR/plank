@@ -36,11 +36,6 @@ public class PlankController {
         dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
     }
 
-    @PostMapping("/replenish")
-    public void replenish() {
-        barbarossa.replenish();
-    }
-
     /**
      * 分析连板晋级率
      */

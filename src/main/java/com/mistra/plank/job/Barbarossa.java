@@ -131,18 +131,6 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     /**
-     * 补充写入今日交易数据
-     */
-    public void replenish() {
-        List<DailyRecord> stocks =
-            dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", DateUtils.addDays(new Date(), -1)));
-        for (DailyRecord stock : stocks) {
-            Barbarossa.STOCK_MAP.remove(stock.getCode());
-        }
-        dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
-    }
-
-    /**
      * 实时监测数据 显示股票实时涨跌幅度，最高，最低价格
      *
      */
