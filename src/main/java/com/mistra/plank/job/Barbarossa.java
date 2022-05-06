@@ -342,9 +342,9 @@ public class Barbarossa implements CommandLineRunner {
                 gemPlankStockTwice.add(entry.getKey());
             }
         }
-        log.info("最近一个月4连板+的股票:{}", fourPlankStock.toString().replace(" ", "").replace("[", ",").replace("]", ""));
+        log.info("最近一个月4连板+的股票:{}", fourPlankStock.toString().replace(" ", "").replace("[", "").replace("]", ""));
         log.info("最近一个月创业板涨停2次+的股票:{}",
-            gemPlankStockTwice.toString().replace(" ", "").replace("[", ",").replace("]", ""));
+            gemPlankStockTwice.toString().replace(" ", "").replace("[", "").replace("]", ""));
         log.info("一板>一进二平均胜率：{}",
             (double)Math
                 .round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
