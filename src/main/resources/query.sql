@@ -4,9 +4,6 @@ WHERE DATE_FORMAT(date, '%Y-%m-%d') = '2022-04-22';
 SELECT count(*)
 FROM daily_record
 WHERE DATE_FORMAT(date, '%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d');
-DELETE
-FROM daily_record
-WHERE DATE_FORMAT(date, '%Y-%m-%d') = '2022-04-22';
 
 #
 白酒
@@ -50,14 +47,12 @@ SELECT *
 FROM stock
 WHERE `name` IN ('爱美客', '贝泰妮', '珀莱雅')
 ORDER BY code;
-
 #
 逼近建仓点的股票
 SELECT *
 FROM stock
 WHERE `name` IN ('东方财富', '爱尔眼科', '药明康德', '贝泰妮', '珀莱雅', '爱美客', '泸州老窖', '康龙化成', '伊利股份', '美的集团')
 ORDER BY code;
-
 UPDATE stock
 SET purchase_price=40
 WHERE `name` = '宁德时代';
