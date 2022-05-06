@@ -5,7 +5,6 @@ import java.math.RoundingMode;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,6 +26,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.assertj.core.util.Lists;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
@@ -126,7 +126,7 @@ public class Barbarossa implements CommandLineRunner {
             analyze();
         } else {
             // 15点以前实时监控涨跌
-            monitor(plankConfig.getMonitor());
+            monitor();
         }
     }
 
@@ -145,13 +145,14 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 实时监测数据 显示股票实时涨跌幅度，最高，最低价格
      *
-     * @param haveStock haveStock
      */
-    public void monitor(String haveStock) {
+    public void monitor() {
         executorService.submit(() -> {
             try {
-                List<String> haveStockList = Arrays.asList(haveStock.split(","));
-                List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", haveStockList));
+                List<String> monitorList = Lists.newArrayList(plankConfig.getMonitor().split(","));
+                List<String> holdList = Lists.newArrayList(plankConfig.getHold().split(","));
+                monitorList.addAll(holdList);
+                List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", monitorList));
                 List<StockRealTimePrice> realTimePrices = new ArrayList<>();
                 while (DateUtil.hour(new Date(), true) <= 15 && DateUtil.hour(new Date(), true) >= 9) {
                     for (Stock stock : stocks) {
@@ -190,17 +191,27 @@ public class Barbarossa implements CommandLineRunner {
                     Collections.sort(realTimePrices);
                     Collections.sort(slump);
                     System.out.println("\n\n\n\n\n\n\n\n");
-                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~建仓~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~持仓~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if (realTimePrice.getRate() >= -1) {
-                            Barbarossa.log.warn(convertLog(realTimePrice));
-                        } else {
-                            Barbarossa.log.info(convertLog(realTimePrice));
+                        if (holdList.contains(realTimePrice.getName())) {
+                            Barbarossa.log.error(convertLog(realTimePrice));
+                        }
+                    }
+                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~接近建仓点~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    for (StockRealTimePrice realTimePrice : realTimePrices) {
+                        if (!holdList.contains(realTimePrice.getName())) {
+                            if (realTimePrice.getRate() >= -1) {
+                                Barbarossa.log.warn(convertLog(realTimePrice));
+                            } else {
+                                Barbarossa.log.info(convertLog(realTimePrice));
+                            }
                         }
                     }
                     log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~暴跌~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     for (StockRealTimePrice realTimePrice : slump) {
-                        Barbarossa.log.error(convertLog(realTimePrice));
+                        if (!holdList.contains(realTimePrice.getName())) {
+                            Barbarossa.log.error(convertLog(realTimePrice));
+                        }
                     }
                     realTimePrices.clear();
                     Thread.sleep(5000);

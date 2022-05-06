@@ -42,16 +42,6 @@ public class PlankController {
     }
 
     /**
-     * 监控指定股票的实时涨跌数据
-     *
-     * @param haveStock 股票中文名,逗号分隔
-     */
-    @PostMapping("/monitor")
-    public void monitor(String haveStock) {
-        barbarossa.monitor(haveStock);
-    }
-
-    /**
      * 分析连板晋级率
      */
     @PostMapping("/analyze")

@@ -2,21 +2,17 @@ package com.mistra.plank.config;
 
 import java.math.BigDecimal;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
- * @author Mistra
- * @ Version: 1.0
- * @ Time: 2021/11/18 21:44
- * @ Description: 配置文件
- * @ Copyright (c) Mistra,All Rights Reserved.
- * @ Github: https://github.com/MistraR
- * @ CSDN: https://blog.csdn.net/axela30w
+ * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 21:44 @ Description: 配置文件 @ Copyright (c) Mistra,All Rights
+ * Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
  */
 @Data
 @Builder
@@ -140,5 +136,10 @@ public class PlankConfig {
      * 监控股票实时涨跌数据
      */
     private String monitor;
+
+    /**
+     * 持仓
+     */
+    private String hold;
 
 }
