@@ -80,7 +80,7 @@ public class Barbarossa implements CommandLineRunner {
     private final DailyRecordProcessor dailyRecordProcessor;
 
     private final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(5000), new NamedThreadFactory("DailyRecord线程-", false));
+        new LinkedBlockingQueue<>(5000), new NamedThreadFactory("滚雪球线程-", false));
 
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
 
