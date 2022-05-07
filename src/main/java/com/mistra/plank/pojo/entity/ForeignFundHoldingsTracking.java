@@ -77,6 +77,12 @@ public class ForeignFundHoldingsTracking {
     private Long fundTotalMarketDynamic;
 
     /**
+     * 外资+基金持股总市值/万 动态
+     */
+    @TableField(value = "foreign_fund_total_market_dynamic")
+    private Long foreignFundTotalMarketDynamic;
+
+    /**
      * 季度均价
      */
     @TableField(value = "average_price")

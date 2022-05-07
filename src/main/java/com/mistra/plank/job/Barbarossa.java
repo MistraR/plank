@@ -772,6 +772,8 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 tracking.setFundTotalMarketDynamic(stockMap.get(tracking.getName()).getCurrentPrice()
                     .multiply(new BigDecimal(tracking.getShareholdingCount())).longValue());
+                tracking.setForeignFundTotalMarketDynamic(
+                    tracking.getFundTotalMarketDynamic() + tracking.getForeignTotalMarketDynamic());
                 tracking.setModifyTime(new Date());
                 fundHoldingsTrackingMapper.updateById(tracking);
             } catch (Exception e) {

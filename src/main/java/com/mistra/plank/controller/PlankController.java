@@ -74,6 +74,10 @@ public class PlankController {
 
     /**
      * 导入基金季度持仓数据
+     * 
+     * @param fundHoldingsParam FundHoldingsParam
+     * @param beginTime 季度开始时间
+     * @param endTime 季度结束时间
      */
     @PostMapping("/fund-holdings/{beginTime}/{endTime}")
     public void fundHoldingsImport(FundHoldingsParam fundHoldingsParam,

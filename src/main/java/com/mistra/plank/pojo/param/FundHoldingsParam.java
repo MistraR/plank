@@ -25,7 +25,7 @@ public class FundHoldingsParam {
     private MultipartFile file;
 
     /**
-     * 季度
+     * 季度 202201
      */
     private Integer quarter;
 
