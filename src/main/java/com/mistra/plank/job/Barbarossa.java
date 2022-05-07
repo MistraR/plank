@@ -125,11 +125,10 @@ public class Barbarossa implements CommandLineRunner {
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
             // 更新每只股票收盘价
             stockProcessor.run();
-            log.info("今日交易数据更新成功，开始分析连板数据!");
-            // 分析连板数据
-            analyze();
             // 更新 外资+基金 持仓
             updateForeignFundShareholding(202201);
+            // 分析连板数据
+            analyze();
         } else {
             // 15点以前实时监控涨跌
             monitor();
