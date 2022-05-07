@@ -44,7 +44,6 @@ import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.ClearanceMapper;
 import com.mistra.plank.mapper.DailyRecordMapper;
 import com.mistra.plank.mapper.DragonListMapper;
-import com.mistra.plank.mapper.ForeignFundShareholdingMapper;
 import com.mistra.plank.mapper.FundHoldingsTrackingMapper;
 import com.mistra.plank.mapper.HoldSharesMapper;
 import com.mistra.plank.mapper.StockMapper;
@@ -53,7 +52,7 @@ import com.mistra.plank.pojo.dto.StockRealTimePrice;
 import com.mistra.plank.pojo.entity.Clearance;
 import com.mistra.plank.pojo.entity.DailyRecord;
 import com.mistra.plank.pojo.entity.DragonList;
-import com.mistra.plank.pojo.entity.FundHoldingsTracking;
+import com.mistra.plank.pojo.entity.ForeignFundHoldingsTracking;
 import com.mistra.plank.pojo.entity.HoldShares;
 import com.mistra.plank.pojo.entity.Stock;
 import com.mistra.plank.pojo.entity.TradeRecord;
@@ -86,7 +85,6 @@ public class Barbarossa implements CommandLineRunner {
     private final PlankConfig plankConfig;
     private final DailyRecordProcessor dailyRecordProcessor;
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
-    private final ForeignFundShareholdingMapper foreignFundShareholdingMapper;
 
     private final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
         new LinkedBlockingQueue<>(5000), new NamedThreadFactory("滚雪球线程-", false));
@@ -105,8 +103,7 @@ public class Barbarossa implements CommandLineRunner {
     public Barbarossa(StockMapper stockMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
         ClearanceMapper clearanceMapper, TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
         DragonListMapper dragonListMapper, PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor,
-        FundHoldingsTrackingMapper fundHoldingsTrackingMapper,
-        ForeignFundShareholdingMapper foreignFundShareholdingMapper) {
+        FundHoldingsTrackingMapper fundHoldingsTrackingMapper) {
         this.stockMapper = stockMapper;
         this.stockProcessor = stockProcessor;
         this.dailyRecordMapper = dailyRecordMapper;
@@ -117,7 +114,6 @@ public class Barbarossa implements CommandLineRunner {
         this.plankConfig = plankConfig;
         this.dailyRecordProcessor = dailyRecordProcessor;
         this.fundHoldingsTrackingMapper = fundHoldingsTrackingMapper;
-        this.foreignFundShareholdingMapper = foreignFundShareholdingMapper;
     }
 
     @Override
@@ -126,7 +122,7 @@ public class Barbarossa implements CommandLineRunner {
             .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%C%").notLike("name", "%N%")
             .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%").notLike("code", "%688%"));
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
-        log.info("一共加载[{}]支股票！", stocks.size());
+        log.warn("一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = BALANCE;
         if (DateUtil.hour(new Date(), true) >= 15) {
@@ -137,9 +133,11 @@ public class Barbarossa implements CommandLineRunner {
             log.info("今日交易数据更新成功，开始分析连板数据!");
             // 分析连板数据
             analyze();
+            // 更新 外资+基金 持仓
+            updateForeignFundShareholding(202201);
         } else {
             // 15点以前实时监控涨跌
-            // monitor();
+            monitor();
         }
     }
 
@@ -713,16 +711,16 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     public void fundHoldingsImport(FundHoldingsParam fundHoldingsParam, Date beginTime, Date endTime) {
-        UploadDataListener<FundHoldingsTracking> uploadDataListener = new UploadDataListener<>(500);
+        UploadDataListener<ForeignFundHoldingsTracking> uploadDataListener = new UploadDataListener<>(500);
         try {
-            EasyExcel.read(fundHoldingsParam.getFile().getInputStream(), FundHoldingsTracking.class, uploadDataListener)
-                .sheet().headRowNumber(2).doRead();
+            EasyExcel.read(fundHoldingsParam.getFile().getInputStream(), ForeignFundHoldingsTracking.class,
+                uploadDataListener).sheet().headRowNumber(2).doRead();
         } catch (IOException e) {
             log.error("read excel file error,file name:{}", fundHoldingsParam.getFile().getName());
         }
-        for (Map.Entry<Integer, FundHoldingsTracking> entry : uploadDataListener.getMap().entrySet()) {
+        for (Map.Entry<Integer, ForeignFundHoldingsTracking> entry : uploadDataListener.getMap().entrySet()) {
             executorService.submit(() -> {
-                FundHoldingsTracking fundHoldingsTracking = entry.getValue();
+                ForeignFundHoldingsTracking fundHoldingsTracking = entry.getValue();
                 try {
                     Stock stock =
                         stockMapper.selectOne(new QueryWrapper<Stock>().eq("name", fundHoldingsTracking.getName()));
@@ -744,11 +742,75 @@ public class Barbarossa implements CommandLineRunner {
                     fundHoldingsTracking
                         .setShareholdingChangeAmount(average * fundHoldingsTracking.getShareholdingChangeCount());
                     fundHoldingsTrackingMapper.insert(fundHoldingsTracking);
-                    log.info("更新[ {} ]{}季报基金持仓数据完成！", stock.getName(), fundHoldingsParam.getQuarter());
+                    log.warn("更新[ {} ]{}季报基金持仓数据完成！", stock.getName(), fundHoldingsParam.getQuarter());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
         }
+    }
+
+    /**
+     * 更新 外资+基金 持仓
+     */
+    private void updateForeignFundShareholding(Integer quarter) {
+        HashMap<String, JSONObject> foreignShareholding = getForeignShareholding();
+        List<ForeignFundHoldingsTracking> fundHoldings = fundHoldingsTrackingMapper
+            .selectList(new QueryWrapper<ForeignFundHoldingsTracking>().eq("quarter", quarter));
+        List<Stock> stocks = stockMapper.selectList(new QueryWrapper<>());
+        if (CollectionUtils.isEmpty(foreignShareholding.values()) || CollectionUtils.isEmpty(fundHoldings)
+            || CollectionUtils.isEmpty(stocks)) {
+            return;
+        }
+        Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
+        for (ForeignFundHoldingsTracking tracking : fundHoldings) {
+            JSONObject jsonObject = foreignShareholding.get(tracking.getName());
+            try {
+                if (Objects.nonNull(jsonObject)) {
+                    long foreignTotalMarket = jsonObject.getLong("HOLD_MARKETCAP_CHG10") / 10000;
+                    tracking.setForeignTotalMarketDynamic(foreignTotalMarket);
+                }
+                tracking.setFundTotalMarketDynamic(stockMap.get(tracking.getName()).getCurrentPrice()
+                    .multiply(new BigDecimal(tracking.getShareholdingCount())).longValue());
+                tracking.setModifyTime(new Date());
+                fundHoldingsTrackingMapper.updateById(tracking);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        log.warn("更新外资最新持仓数据完成！");
+    }
+
+    /**
+     * 获取外资持股明细
+     * 
+     * @return HashMap<String, JSONObject>
+     */
+    private HashMap<String, JSONObject> getForeignShareholding() {
+        HashMap<String, JSONObject> result = new HashMap<>();
+        try {
+            int pageNumber = 1;
+            while (pageNumber <= 30) {
+                String url = plankConfig.getForeignShareholdingUrl().replace("{pageNumber}", pageNumber + "");
+                DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
+                HttpGet httpGet = new HttpGet(URI.create(url));
+                CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
+                HttpEntity entity = response.getEntity();
+                String body = "";
+                if (entity != null) {
+                    body = EntityUtils.toString(entity, "UTF-8");
+                }
+                body = body.substring(body.indexOf("(") + 1, body.indexOf(")"));
+                JSONArray array = JSON.parseObject(body).getJSONObject("result").getJSONArray("data");
+                for (Object o : array) {
+                    JSONObject jsonObject = (JSONObject)o;
+                    result.put(jsonObject.getString("SECURITY_NAME"), jsonObject);
+                }
+                pageNumber++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 }

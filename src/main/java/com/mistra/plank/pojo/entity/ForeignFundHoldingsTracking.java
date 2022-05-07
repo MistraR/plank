@@ -1,6 +1,7 @@
 package com.mistra.plank.pojo.entity;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -23,8 +24,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName(value = "fund_holdings_tracking", autoResultMap = true)
-public class FundHoldingsTracking {
+@TableName(value = "foreign_fund_holdings_tracking", autoResultMap = true)
+public class ForeignFundHoldingsTracking {
 
     @TableId(value = "id", type = IdType.AUTO)
     private String id;
@@ -57,11 +58,23 @@ public class FundHoldingsTracking {
     private Long shareholdingChangeCount;
 
     /**
-     * 持股总市值
+     * 报告期末基金持股总市值/万
      */
     @ExcelProperty(index = 7)
-    @TableField(value = "total_market")
-    private Long totalMarket;
+    @TableField(value = "fund_total_market")
+    private Long fundTotalMarket;
+
+    /**
+     * 外资持股总市值/万 动态
+     */
+    @TableField(value = "foreign_total_market_dynamic")
+    private Long foreignTotalMarketDynamic;
+
+    /**
+     * 基金持股总市值/万 动态
+     */
+    @TableField(value = "fund_total_market_dynamic")
+    private Long fundTotalMarketDynamic;
 
     /**
      * 季度均价
@@ -87,4 +100,10 @@ public class FundHoldingsTracking {
     @ExcelProperty(index = 1)
     @TableField(value = "name")
     private String name;
+
+    /**
+     * 最近更新日期
+     */
+    @TableField(value = "modify_time")
+    private Date modifyTime;
 }

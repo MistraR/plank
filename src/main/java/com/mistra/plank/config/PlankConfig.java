@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 21:44 @ Description: 配置文件 @ Copyright (c) Mistra,All Rights
- * Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
+ *         Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
  */
 @Data
 @Builder
@@ -41,6 +41,11 @@ public class PlankConfig {
      * 东财 抓取每日龙虎榜数据，只取净买入额前20
      */
     private String dragonListUrl;
+
+    /**
+     * 东财 抓取外资持仓数据
+     */
+    private String foreignShareholdingUrl;
 
     /**
      * 东财 抓取从某天以来的龙虎榜数据
