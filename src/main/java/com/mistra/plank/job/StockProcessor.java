@@ -18,13 +18,13 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.StockMapper;
-import com.mistra.plank.pojo.Stock;
+import com.mistra.plank.pojo.entity.Stock;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 22:09 @ Description: 更新股票每日成交量 @ Copyright (c) Mistra,All Rights
- * Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
+ *         Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
  */
 @Slf4j
 @Component

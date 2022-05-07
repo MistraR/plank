@@ -45,13 +45,13 @@ import com.mistra.plank.mapper.DragonListMapper;
 import com.mistra.plank.mapper.HoldSharesMapper;
 import com.mistra.plank.mapper.StockMapper;
 import com.mistra.plank.mapper.TradeRecordMapper;
-import com.mistra.plank.pojo.Clearance;
-import com.mistra.plank.pojo.DailyRecord;
-import com.mistra.plank.pojo.DragonList;
-import com.mistra.plank.pojo.HoldShares;
-import com.mistra.plank.pojo.Stock;
-import com.mistra.plank.pojo.TradeRecord;
 import com.mistra.plank.pojo.dto.StockRealTimePrice;
+import com.mistra.plank.pojo.entity.Clearance;
+import com.mistra.plank.pojo.entity.DailyRecord;
+import com.mistra.plank.pojo.entity.DragonList;
+import com.mistra.plank.pojo.entity.HoldShares;
+import com.mistra.plank.pojo.entity.Stock;
+import com.mistra.plank.pojo.entity.TradeRecord;
 import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
 
 import cn.hutool.core.date.DateUtil;
@@ -126,7 +126,8 @@ public class Barbarossa implements CommandLineRunner {
             analyze();
         } else {
             // 15点以前实时监控涨跌
-            monitor();
+            // monitor();
+            dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
         }
     }
 
@@ -179,13 +180,13 @@ public class Barbarossa implements CommandLineRunner {
                     Collections.sort(realTimePrices);
                     Collections.sort(slump);
                     System.out.println("\n\n\n\n\n\n\n\n");
-                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~持仓~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    log.error("----------------------------------------持仓----------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (holdList.contains(realTimePrice.getName())) {
-                            Barbarossa.log.error(convertLog(realTimePrice));
+                            Barbarossa.log.info(convertLog(realTimePrice));
                         }
                     }
-                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~接近建仓点~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    log.error("--------------------------------------接近建仓点--------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (!holdList.contains(realTimePrice.getName())) {
                             if (realTimePrice.getRate() >= -1) {
@@ -195,10 +196,10 @@ public class Barbarossa implements CommandLineRunner {
                             }
                         }
                     }
-                    log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~暴跌~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    log.error("----------------------------------------暴跌----------------------------------------");
                     for (StockRealTimePrice realTimePrice : slump) {
                         if (!holdList.contains(realTimePrice.getName())) {
-                            Barbarossa.log.error(convertLog(realTimePrice));
+                            Barbarossa.log.info(convertLog(realTimePrice));
                         }
                     }
                     realTimePrices.clear();

@@ -1,4 +1,4 @@
-package com.mistra.plank.pojo;
+package com.mistra.plank.pojo.entity;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -14,17 +14,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 清仓交割单
+ * 描述
  *
  * @author mistra@future.com
- * @date 2021/11/19
+ * @date 2021/11/18
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName(value = "clearance", autoResultMap = true)
-public class Clearance {
+@TableName(value = "trade_record", autoResultMap = true)
+public class TradeRecord {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -39,34 +39,28 @@ public class Clearance {
     private String code;
 
     /**
-     * 买入成本价
+     * 交易类型0-买入1-卖出
      */
-    @TableField(value = "cost_price")
-    private BigDecimal costPrice;
+    @TableField(value = "type")
+    private Integer type;
 
     /**
-     * 建仓股数
+     * 数量
      */
     @TableField(value = "number")
     private Integer number;
 
     /**
-     * 清仓价格
+     * 价格
      */
     @TableField(value = "price")
     private BigDecimal price;
 
     /**
-     * 盈亏比率
+     * 交易金额
      */
-    @TableField(value = "rate")
-    private BigDecimal rate;
-
-    /**
-     * 利润
-     */
-    @TableField(value = "profit")
-    private BigDecimal profit;
+    @TableField(value = "money")
+    private Integer money;
 
     /**
      * 账户余额
@@ -81,20 +75,14 @@ public class Clearance {
     private BigDecimal availableBalance;
 
     /**
-     * 清仓原因
-     */
-    @TableField(value = "reason")
-    private String reason;
-
-    /**
      * 日期
      */
     @TableField(value = "date")
     private Date date;
 
     /**
-     * 持股天数
+     * 交易原因
      */
-    @TableField(value = "day_number")
-    private Integer dayNumber;
+    @TableField(value = "reason")
+    private String reason;
 }

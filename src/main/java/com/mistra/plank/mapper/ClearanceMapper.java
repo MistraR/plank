@@ -1,8 +1,9 @@
 package com.mistra.plank.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.mistra.plank.pojo.Clearance;
 import org.springframework.stereotype.Component;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.mistra.plank.pojo.entity.Clearance;
 
 /**
  * 描述
@@ -11,5 +12,4 @@ import org.springframework.stereotype.Component;
  * @date 2021/11/19
  */
 @Component
-public interface ClearanceMapper extends BaseMapper<Clearance> {
-}
+public interface ClearanceMapper extends BaseMapper<Clearance> {}
