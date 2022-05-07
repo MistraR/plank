@@ -1,5 +1,8 @@
 package com.mistra.plank.controller;
 
+import java.util.Date;
+
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -7,6 +10,7 @@ import com.mistra.plank.job.Barbarossa;
 import com.mistra.plank.job.DailyRecordProcessor;
 import com.mistra.plank.job.DragonListProcessor;
 import com.mistra.plank.job.StockProcessor;
+import com.mistra.plank.pojo.param.FundHoldingsParam;
 
 /**
  * @author mistra@future.com
@@ -66,5 +70,14 @@ public class PlankController {
     @PostMapping("/barbarossa")
     public void barbarossa() {
         barbarossa.barbarossa();
+    }
+
+    /**
+     * 导入基金季度持仓数据
+     */
+    @PostMapping("/fund-holdings/{beginTime}/{endTime}")
+    public void fundHoldingsImport(FundHoldingsParam fundHoldingsParam,
+        @PathVariable(value = "beginTime") Long beginTime, @PathVariable(value = "endTime") Long endTime) {
+        barbarossa.fundHoldingsImport(fundHoldingsParam, new Date(beginTime), new Date(endTime));
     }
 }

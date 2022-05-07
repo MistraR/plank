@@ -1,5 +1,6 @@
 package com.mistra.plank.job;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URI;
@@ -33,6 +34,7 @@ import org.joda.time.LocalDate;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -42,6 +44,8 @@ import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.ClearanceMapper;
 import com.mistra.plank.mapper.DailyRecordMapper;
 import com.mistra.plank.mapper.DragonListMapper;
+import com.mistra.plank.mapper.ForeignFundShareholdingMapper;
+import com.mistra.plank.mapper.FundHoldingsTrackingMapper;
 import com.mistra.plank.mapper.HoldSharesMapper;
 import com.mistra.plank.mapper.StockMapper;
 import com.mistra.plank.mapper.TradeRecordMapper;
@@ -49,10 +53,13 @@ import com.mistra.plank.pojo.dto.StockRealTimePrice;
 import com.mistra.plank.pojo.entity.Clearance;
 import com.mistra.plank.pojo.entity.DailyRecord;
 import com.mistra.plank.pojo.entity.DragonList;
+import com.mistra.plank.pojo.entity.FundHoldingsTracking;
 import com.mistra.plank.pojo.entity.HoldShares;
 import com.mistra.plank.pojo.entity.Stock;
 import com.mistra.plank.pojo.entity.TradeRecord;
 import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
+import com.mistra.plank.pojo.param.FundHoldingsParam;
+import com.mistra.plank.util.UploadDataListener;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.thread.NamedThreadFactory;
@@ -78,6 +85,8 @@ public class Barbarossa implements CommandLineRunner {
     private final DragonListMapper dragonListMapper;
     private final PlankConfig plankConfig;
     private final DailyRecordProcessor dailyRecordProcessor;
+    private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
+    private final ForeignFundShareholdingMapper foreignFundShareholdingMapper;
 
     private final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
         new LinkedBlockingQueue<>(5000), new NamedThreadFactory("滚雪球线程-", false));
@@ -95,7 +104,9 @@ public class Barbarossa implements CommandLineRunner {
 
     public Barbarossa(StockMapper stockMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
         ClearanceMapper clearanceMapper, TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
-        DragonListMapper dragonListMapper, PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor) {
+        DragonListMapper dragonListMapper, PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor,
+        FundHoldingsTrackingMapper fundHoldingsTrackingMapper,
+        ForeignFundShareholdingMapper foreignFundShareholdingMapper) {
         this.stockMapper = stockMapper;
         this.stockProcessor = stockProcessor;
         this.dailyRecordMapper = dailyRecordMapper;
@@ -105,6 +116,8 @@ public class Barbarossa implements CommandLineRunner {
         this.dragonListMapper = dragonListMapper;
         this.plankConfig = plankConfig;
         this.dailyRecordProcessor = dailyRecordProcessor;
+        this.fundHoldingsTrackingMapper = fundHoldingsTrackingMapper;
+        this.foreignFundShareholdingMapper = foreignFundShareholdingMapper;
     }
 
     @Override
@@ -127,7 +140,6 @@ public class Barbarossa implements CommandLineRunner {
         } else {
             // 15点以前实时监控涨跌
             // monitor();
-            dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
         }
     }
 
@@ -698,5 +710,45 @@ public class Barbarossa implements CommandLineRunner {
         holdSharesMapper.delete(new QueryWrapper<HoldShares>().eq("id", holdShare.getId()));
         log.info("{}日清仓 {},总共盈利 {} 元!当前总资产: {} ", sdf.format(date), holdShare.getName(), profit.intValue(),
             BALANCE.intValue());
+    }
+
+    public void fundHoldingsImport(FundHoldingsParam fundHoldingsParam, Date beginTime, Date endTime) {
+        UploadDataListener<FundHoldingsTracking> uploadDataListener = new UploadDataListener<>(500);
+        try {
+            EasyExcel.read(fundHoldingsParam.getFile().getInputStream(), FundHoldingsTracking.class, uploadDataListener)
+                .sheet().headRowNumber(2).doRead();
+        } catch (IOException e) {
+            log.error("read excel file error,file name:{}", fundHoldingsParam.getFile().getName());
+        }
+        for (Map.Entry<Integer, FundHoldingsTracking> entry : uploadDataListener.getMap().entrySet()) {
+            executorService.submit(() -> {
+                FundHoldingsTracking fundHoldingsTracking = entry.getValue();
+                try {
+                    Stock stock =
+                        stockMapper.selectOne(new QueryWrapper<Stock>().eq("name", fundHoldingsTracking.getName()));
+                    fundHoldingsTracking.setCode(stock.getCode());
+                    fundHoldingsTracking.setQuarter(fundHoldingsParam.getQuarter());
+                    List<DailyRecord> dailyRecordList = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
+                        .eq("name", fundHoldingsTracking.getName()).ge("date", beginTime).le("date", endTime));
+                    if (CollectionUtils.isEmpty(dailyRecordList)) {
+                        HashMap<String, String> stockMap = new HashMap<>();
+                        stockMap.put(stock.getCode(), stock.getName());
+                        dailyRecordProcessor.run(stockMap);
+                        Thread.sleep(60 * 1000);
+                        dailyRecordList = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
+                            .eq("name", fundHoldingsTracking.getName()).ge("date", beginTime).le("date", endTime));
+                    }
+                    double average = dailyRecordList.stream().map(DailyRecord::getClosePrice)
+                        .mapToInt(BigDecimal::intValue).average().orElse(0D);
+                    fundHoldingsTracking.setAveragePrice(new BigDecimal(average));
+                    fundHoldingsTracking
+                        .setShareholdingChangeAmount(average * fundHoldingsTracking.getShareholdingChangeCount());
+                    fundHoldingsTrackingMapper.insert(fundHoldingsTracking);
+                    log.info("更新[ {} ]{}季报基金持仓数据完成！", stock.getName(), fundHoldingsParam.getQuarter());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 }

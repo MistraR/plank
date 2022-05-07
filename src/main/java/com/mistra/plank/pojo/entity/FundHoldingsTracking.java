@@ -2,6 +2,8 @@ package com.mistra.plank.pojo.entity;
 
 import java.math.BigDecimal;
 
+import com.alibaba.excel.annotation.ExcelProperty;
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -24,12 +26,13 @@ import lombok.NoArgsConstructor;
 @TableName(value = "fund_holdings_tracking", autoResultMap = true)
 public class FundHoldingsTracking {
 
-    @TableId(value = "id")
+    @TableId(value = "id", type = IdType.AUTO)
     private String id;
 
     /**
      * 持有该股票的基金数
      */
+    @ExcelProperty(index = 2)
     @TableField(value = "fund_count")
     private Integer fundCount;
 
@@ -42,18 +45,21 @@ public class FundHoldingsTracking {
     /**
      * 持股总量
      */
+    @ExcelProperty(index = 3)
     @TableField(value = "shareholding_count")
     private Long shareholdingCount;
 
     /**
      * 持股变动数量
      */
+    @ExcelProperty(index = 4)
     @TableField(value = "shareholding_change_count")
     private Long shareholdingChangeCount;
 
     /**
      * 持股总市值
      */
+    @ExcelProperty(index = 7)
     @TableField(value = "total_market")
     private Long totalMarket;
 
@@ -67,7 +73,7 @@ public class FundHoldingsTracking {
      * 持股变动金额
      */
     @TableField(value = "shareholding_change_amount")
-    private Long shareholdingChangeAmount;
+    private Double shareholdingChangeAmount;
 
     /**
      * 股票代码
@@ -78,6 +84,7 @@ public class FundHoldingsTracking {
     /**
      * 股票名称
      */
+    @ExcelProperty(index = 1)
     @TableField(value = "name")
     private String name;
 }

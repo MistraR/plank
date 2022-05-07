@@ -60,9 +60,9 @@ public class StockProcessor {
                     BigDecimal current = data.getBigDecimal("current");
                     BigDecimal volume = data.getBigDecimal("volume");
                     if (Objects.nonNull(current) && Objects.nonNull(volume)) {
-                        Stock stock =
-                            new Stock(data.getString("symbol"), data.getString("name"), data.getLongValue("mc"),
-                                current, current, volume.longValue(), current.multiply(volume), today);
+                        Stock stock = new Stock(data.getString("symbol"), data.getString("name"),
+                            data.getLongValue("mc"), current, current, volume.longValue(), current.multiply(volume),
+                            today, false, false, "");
                         Stock exist = stockMapper.selectById(stock.getCode());
                         if (Objects.nonNull(exist)) {
                             exist.setVolume(stock.getVolume());
