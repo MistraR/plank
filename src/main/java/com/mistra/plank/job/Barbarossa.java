@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.assertj.core.util.Lists;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
@@ -142,10 +141,8 @@ public class Barbarossa implements CommandLineRunner {
     public void monitor() {
         executorService.submit(() -> {
             try {
-                List<String> monitorList = Lists.newArrayList(plankConfig.getMonitor().split(","));
-                List<String> holdList = Lists.newArrayList(plankConfig.getHold().split(","));
-                monitorList.addAll(holdList);
-                List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", monitorList));
+                List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().eq("track", true));
+                Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
                 List<StockRealTimePrice> realTimePrices = new ArrayList<>();
                 while (DateUtil.hour(new Date(), true) <= 15 && DateUtil.hour(new Date(), true) >= 9) {
                     for (Stock stock : stocks) {
@@ -177,13 +174,13 @@ public class Barbarossa implements CommandLineRunner {
                     System.out.println("\n\n\n\n\n\n\n\n");
                     log.error("----------------------------------------持仓----------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if (holdList.contains(realTimePrice.getName())) {
+                        if (stockMap.get(realTimePrice.getName()).getShareholding()) {
                             Barbarossa.log.info(convertLog(realTimePrice));
                         }
                     }
                     log.error("--------------------------------------接近建仓点--------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if (!holdList.contains(realTimePrice.getName())) {
+                        if (!stockMap.get(realTimePrice.getName()).getShareholding()) {
                             if (realTimePrice.getRate() >= -1) {
                                 Barbarossa.log.warn(convertLog(realTimePrice));
                             } else {
@@ -193,7 +190,7 @@ public class Barbarossa implements CommandLineRunner {
                     }
                     log.error("----------------------------------------暴跌----------------------------------------");
                     for (StockRealTimePrice realTimePrice : slump) {
-                        if (!holdList.contains(realTimePrice.getName())) {
+                        if (!stockMap.get(realTimePrice.getName()).getShareholding()) {
                             Barbarossa.log.info(convertLog(realTimePrice));
                         }
                     }
