@@ -3,7 +3,6 @@ package com.mistra.plank.job;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,11 +21,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.assertj.core.util.Lists;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
@@ -58,6 +52,7 @@ import com.mistra.plank.pojo.entity.Stock;
 import com.mistra.plank.pojo.entity.TradeRecord;
 import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
 import com.mistra.plank.pojo.param.FundHoldingsParam;
+import com.mistra.plank.util.HttpUtil;
 import com.mistra.plank.util.UploadDataListener;
 
 import cn.hutool.core.date.DateUtil;
@@ -155,19 +150,10 @@ public class Barbarossa implements CommandLineRunner {
                 List<StockRealTimePrice> realTimePrices = new ArrayList<>();
                 while (DateUtil.hour(new Date(), true) <= 15 && DateUtil.hour(new Date(), true) >= 9) {
                     for (Stock stock : stocks) {
-                        String url = plankConfig.getXueQiuStockDetailUrl();
-                        url = url.replace("{code}", stock.getCode())
+                        String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", stock.getCode())
                             .replace("{time}", String.valueOf(System.currentTimeMillis()))
                             .replace("{recentDayNumber}", "1");
-                        DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
-                        HttpGet httpGet = new HttpGet(URI.create(url));
-                        httpGet.setHeader("Cookie", plankConfig.getXueQiuCookie());
-                        CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
-                        HttpEntity entity = response.getEntity();
-                        String body = "";
-                        if (entity != null) {
-                            body = EntityUtils.toString(entity, "UTF-8");
-                        }
+                        String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
                         JSONObject data = JSON.parseObject(body).getJSONObject("data");
                         JSONArray list = data.getJSONArray("item");
                         if (org.apache.commons.collections.CollectionUtils.isNotEmpty(list)) {
@@ -793,15 +779,8 @@ public class Barbarossa implements CommandLineRunner {
         try {
             int pageNumber = 1;
             while (pageNumber <= 30) {
-                String url = plankConfig.getForeignShareholdingUrl().replace("{pageNumber}", pageNumber + "");
-                DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
-                HttpGet httpGet = new HttpGet(URI.create(url));
-                CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
-                HttpEntity entity = response.getEntity();
-                String body = "";
-                if (entity != null) {
-                    body = EntityUtils.toString(entity, "UTF-8");
-                }
+                String body = HttpUtil.getHttpGetResponseString(
+                    plankConfig.getForeignShareholdingUrl().replace("{pageNumber}", pageNumber + ""), null);
                 body = body.substring(body.indexOf("(") + 1, body.indexOf(")"));
                 JSONArray array = JSON.parseObject(body).getJSONObject("result").getJSONArray("data");
                 for (Object o : array) {

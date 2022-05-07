@@ -1,7 +1,6 @@
 package com.mistra.plank.job;
 
 import java.math.BigDecimal;
-import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,11 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSON;
@@ -25,6 +19,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.DailyRecordMapper;
 import com.mistra.plank.pojo.entity.DailyRecord;
+import com.mistra.plank.util.HttpUtil;
 
 import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -59,19 +54,10 @@ public class DailyRecordProcessor {
         for (Map.Entry<String, String> entry : map.entrySet()) {
             executorService.submit(() -> {
                 try {
-                    String url = plankConfig.getXueQiuStockDetailUrl();
-                    url = url.replace("{code}", entry.getKey())
+                    String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", entry.getKey())
                         .replace("{time}", String.valueOf(System.currentTimeMillis()))
                         .replace("{recentDayNumber}", String.valueOf(plankConfig.getRecentDayNumber()));
-                    DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
-                    HttpGet httpGet = new HttpGet(URI.create(url));
-                    httpGet.setHeader("Cookie", plankConfig.getXueQiuCookie());
-                    CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
-                    HttpEntity entity = response.getEntity();
-                    String body = "";
-                    if (entity != null) {
-                        body = EntityUtils.toString(entity, "UTF-8");
-                    }
+                    String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
                     JSONObject data = JSON.parseObject(body).getJSONObject("data");
                     JSONArray list = data.getJSONArray("item");
                     if (CollectionUtils.isNotEmpty(list)) {

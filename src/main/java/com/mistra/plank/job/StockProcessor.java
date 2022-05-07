@@ -1,16 +1,10 @@
 package com.mistra.plank.job;
 
 import java.math.BigDecimal;
-import java.net.URI;
 import java.util.Date;
 import java.util.Objects;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSON;
@@ -19,6 +13,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.StockMapper;
 import com.mistra.plank.pojo.entity.Stock;
+import com.mistra.plank.util.HttpUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,15 +36,8 @@ public class StockProcessor {
     public void run() {
         try {
             log.info("开始更新股票每日成交量！");
-            DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
-            HttpGet httpGet = new HttpGet(URI.create(plankConfig.getXueQiuAllStockUrl()));
-            httpGet.setHeader("Cookie", plankConfig.getXueQiuCookie());
-            CloseableHttpResponse response = defaultHttpClient.execute(httpGet);
-            HttpEntity entity = response.getEntity();
-            String body = "";
-            if (entity != null) {
-                body = EntityUtils.toString(entity, "UTF-8");
-            }
+            String body =
+                HttpUtil.getHttpGetResponseString(plankConfig.getXueQiuAllStockUrl(), plankConfig.getXueQiuCookie());
             JSONObject data = JSON.parseObject(body).getJSONObject("data");
             JSONArray list = data.getJSONArray("list");
             Date today = new Date();
