@@ -723,6 +723,9 @@ public class Barbarossa implements CommandLineRunner {
                     fundHoldingsTracking.setAveragePrice(new BigDecimal(average));
                     fundHoldingsTracking
                         .setShareholdingChangeAmount(average * fundHoldingsTracking.getShareholdingChangeCount());
+                    fundHoldingsTracking.setModifyTime(new Date());
+                    fundHoldingsTracking.setForeignTotalMarketDynamic(0L);
+                    fundHoldingsTracking.setForeignFundTotalMarketDynamic(0L);
                     fundHoldingsTrackingMapper.insert(fundHoldingsTracking);
                     log.warn("更新[ {} ]{}季报基金持仓数据完成！", stock.getName(), fundHoldingsParam.getQuarter());
                 } catch (Exception e) {
@@ -766,7 +769,7 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     /**
-     * 获取外资持股明细
+     * 获取外资持股明细 截止昨日的
      * 
      * @return HashMap<String, JSONObject>
      */

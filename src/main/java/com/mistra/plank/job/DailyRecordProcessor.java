@@ -80,7 +80,6 @@ public class DailyRecordProcessor {
                     }
                     Thread.sleep(3000);
                 } catch (Exception e) {
-                    e.printStackTrace();
                 }
             });
         }
