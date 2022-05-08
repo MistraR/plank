@@ -124,7 +124,7 @@ public class Barbarossa implements CommandLineRunner {
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
             // 更新每只股票收盘价
             stockProcessor.run();
-            // 更新 外资+基金 持仓
+            // 更新 外资+基金 持仓 只更新到最新一季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时的
             updateForeignFundShareholding(202201);
             // 分析连板数据
             analyze();
