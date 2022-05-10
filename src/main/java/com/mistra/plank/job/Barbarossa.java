@@ -171,11 +171,11 @@ public class Barbarossa implements CommandLineRunner {
                         realTimePrices.stream().filter(e -> e.getRate() >= -3).collect(Collectors.toList());
                     Collections.sort(realTimePrices);
                     Collections.sort(slump);
-                    System.out.println("\n\n\n\n\n\n\n\n");
+                    System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
                     log.error("----------------------------------------持仓----------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (stockMap.get(realTimePrice.getName()).getShareholding()) {
-                            Barbarossa.log.info(convertLog(realTimePrice));
+                            Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
                     log.error("--------------------------------------接近建仓点--------------------------------------");
@@ -191,7 +191,7 @@ public class Barbarossa implements CommandLineRunner {
                     log.error("----------------------------------------暴跌----------------------------------------");
                     for (StockRealTimePrice realTimePrice : slump) {
                         if (!stockMap.get(realTimePrice.getName()).getShareholding()) {
-                            Barbarossa.log.info(convertLog(realTimePrice));
+                            Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
                     realTimePrices.clear();
