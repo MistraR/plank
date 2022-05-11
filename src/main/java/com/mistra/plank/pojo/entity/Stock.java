@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,7 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @TableName(value = "stock", autoResultMap = true)
 public class Stock {
@@ -78,24 +80,14 @@ public class Stock {
     private Boolean shareholding;
 
     /**
+     * 重点关注
+     */
+    @TableField(value = "focus")
+    private Boolean focus;
+
+    /**
      * 所属板块
      */
     @TableField(value = "classification")
     private String classification;
-
-    public Stock(String code, String name, Long marketValue, BigDecimal currentPrice, BigDecimal purchasePrice,
-        Long volume, BigDecimal transactionAmount, Date modifyTime, Boolean track, Boolean shareholding,
-        String classification) {
-        this.code = code;
-        this.name = name;
-        this.marketValue = marketValue;
-        this.currentPrice = currentPrice;
-        this.purchasePrice = purchasePrice;
-        this.volume = volume;
-        this.transactionAmount = transactionAmount;
-        this.modifyTime = modifyTime;
-        this.track = track;
-        this.shareholding = shareholding;
-        this.classification = classification;
-    }
 }
