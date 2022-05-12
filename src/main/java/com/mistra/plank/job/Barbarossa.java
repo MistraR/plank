@@ -136,6 +136,8 @@ public class Barbarossa implements CommandLineRunner {
 
     /**
      * 实时监测数据 显示股票实时涨跌幅度，最高，最低价格
+     * 
+     * 想要监测哪些股票需要手动在数据库stock表更改track字段为true
      *
      */
     public void monitor() {
@@ -156,7 +158,7 @@ public class Barbarossa implements CommandLineRunner {
                             for (Object o : list) {
                                 double v = ((JSONArray)o).getDoubleValue(5);
                                 double rate =
-                                    -(double)Math.round(((v - stock.getPurchasePrice().doubleValue()) / v) * 100) / 100;
+                                    (double)Math.round(((stock.getPurchasePrice().doubleValue() - v) / v) * 100) / 100;
                                 realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v)
                                     .name(stock.getName()).todayHighestPrice(((JSONArray)o).getDoubleValue(3))
                                     .todayLowestPrice(((JSONArray)o).getDoubleValue(4))
