@@ -143,7 +143,8 @@ public class Barbarossa implements CommandLineRunner {
     public void monitor() {
         executorService.submit(() -> {
             try {
-                List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().eq("track", true));
+                List<Stock> stocks =
+                    stockMapper.selectList(new QueryWrapper<Stock>().eq("track", true).or().eq("shareholding", true));
                 Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
                 List<StockRealTimePrice> realTimePrices = new ArrayList<>();
                 while (DateUtil.hour(new Date(), true) <= 15 && DateUtil.hour(new Date(), true) >= 9) {
