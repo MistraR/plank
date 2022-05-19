@@ -176,7 +176,7 @@ public class Barbarossa implements CommandLineRunner {
                     Collections.sort(realTimePrices);
                     Collections.sort(slump);
                     Collections.sort(buy);
-                    System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+                    System.out.println("\n\n\n");
                     log.error("----------------------------------------持仓----------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (stockMap.get(realTimePrice.getName()).getShareholding()) {
