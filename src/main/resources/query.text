@@ -28,3 +28,9 @@ WHERE f.quarter=202201 AND f.foreign_fund_total_market_dynamic>1000000 ORDER BY 
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度增减市值/万'
 FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
 WHERE s.focus=1 AND f.quarter=202201 ORDER BY f.foreign_fund_total_market_dynamic DESC
+# 查询持仓
+SELECT * FROM stock WHERE name IN ('招商轮船','天顺风能','中天科技','特变电工');
+
+# 查询监控股票
+SELECT * FROM stock WHERE track = 1 AND classification is null;
+
