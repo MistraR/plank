@@ -170,7 +170,7 @@ public class Barbarossa implements CommandLineRunner {
                     }
                     // 暴跌
                     List<StockRealTimePrice> slump =
-                        realTimePrices.stream().filter(e -> e.getIncreaseRate() < -5).collect(Collectors.toList());
+                        realTimePrices.stream().filter(e -> e.getIncreaseRate() < -4).collect(Collectors.toList());
                     List<StockRealTimePrice> buy =
                         realTimePrices.stream().filter(e -> e.getRate() >= -3).collect(Collectors.toList());
                     Collections.sort(realTimePrices);
