@@ -81,7 +81,7 @@ public class Barbarossa implements CommandLineRunner {
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
 
     private final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(5000), new NamedThreadFactory("滚雪球线程-", false));
+        new LinkedBlockingQueue<>(5000), new NamedThreadFactory("โ๏∀๏ใ-", false));
 
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
 
@@ -209,9 +209,9 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private String convertLog(StockRealTimePrice realTimePrice) {
-        return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "-> 高:"
-            + realTimePrice.getTodayHighestPrice() + " | 低:" + realTimePrice.getTodayLowestPrice() + " | 建仓价:"
-            + realTimePrice.getPurchasePrice() + " | 现价:" + realTimePrice.getTodayRealTimePrice() + " | 距离建仓价:"
+        return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "[高:"
+            + realTimePrice.getTodayHighestPrice() + " | 现:" + realTimePrice.getTodayRealTimePrice() + " | 低:"
+            + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + realTimePrice.getPurchasePrice() + " | 距离建仓价:"
             + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate();
     }
 
@@ -229,28 +229,28 @@ public class Barbarossa implements CommandLineRunner {
         // 二板二进三胜率
         HashMap<String, BigDecimal> twoToThree = new HashMap<>(64);
         // 三板三进四胜率
-        HashMap<String, BigDecimal> threeToFour = new HashMap<>(64);
+        HashMap<String, BigDecimal> threeToFour = new HashMap<>(32);
         // 四板四进五胜率
-        HashMap<String, BigDecimal> fourToFive = new HashMap<>(64);
+        HashMap<String, BigDecimal> fourToFive = new HashMap<>(16);
         // 五板五进六胜率
-        HashMap<String, BigDecimal> fiveToSix = new HashMap<>(64);
+        HashMap<String, BigDecimal> fiveToSix = new HashMap<>(16);
         // 六板六进七胜率
-        HashMap<String, BigDecimal> sixToSeven = new HashMap<>(64);
+        HashMap<String, BigDecimal> sixToSeven = new HashMap<>(16);
         List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", date));
         Map<String, List<DailyRecord>> dateListMap =
             dailyRecords.stream().collect(Collectors.groupingBy(dailyRecord -> sdf.format(dailyRecord.getDate())));
         // 昨日首板
         HashMap<String, Double> yesterdayOne = new HashMap<>(64);
         // 昨日二板
-        HashMap<String, Double> yesterdayTwo = new HashMap<>(64);
+        HashMap<String, Double> yesterdayTwo = new HashMap<>(32);
         // 昨日三板
-        HashMap<String, Double> yesterdayThree = new HashMap<>(64);
+        HashMap<String, Double> yesterdayThree = new HashMap<>(16);
         // 昨日四板
-        HashMap<String, Double> yesterdayFour = new HashMap<>(64);
+        HashMap<String, Double> yesterdayFour = new HashMap<>(8);
         // 昨日五板
-        HashMap<String, Double> yesterdayFive = new HashMap<>(64);
+        HashMap<String, Double> yesterdayFive = new HashMap<>(4);
         // 昨日六板
-        HashMap<String, Double> yesterdaySix = new HashMap<>(64);
+        HashMap<String, Double> yesterdaySix = new HashMap<>(4);
         do {
             List<DailyRecord> records = dateListMap.get(sdf.format(date));
             if (CollectionUtils.isNotEmpty(records)) {
