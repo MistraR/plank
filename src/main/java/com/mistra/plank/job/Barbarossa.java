@@ -219,8 +219,8 @@ public class Barbarossa implements CommandLineRunner {
      * 分析最近一个月各连板晋级率
      */
     public void analyze() {
-        // 4连板+的股票
-        HashSet<String> fourPlankStock = new HashSet<>();
+        // 5连板+的股票
+        HashSet<String> fivePlankStock = new HashSet<>();
         HashMap<String, Integer> gemPlankStockNumber = new HashMap<>();
         Date date = new DateTime(DateUtils.addDays(new Date(), -30)).withHourOfDay(0).withMinuteOfHour(0)
             .withSecondOfMinute(0).withMillisOfSecond(0).toDate();
@@ -317,7 +317,7 @@ public class Barbarossa implements CommandLineRunner {
                     new ArrayList<>(todayFour.keySet()), todayFive.keySet().size(), new ArrayList<>(todayFive.keySet()),
                     todaySix.keySet().size(), new ArrayList<>(todaySix.keySet()), todaySeven.keySet().size(),
                     new ArrayList<>(todaySeven.keySet()));
-                fourPlankStock.addAll(todayFour.keySet());
+                fivePlankStock.addAll(todayFive.keySet());
                 yesterdayOne.clear();
                 yesterdayOne.putAll(todayOne);
                 yesterdayTwo.clear();
@@ -339,7 +339,7 @@ public class Barbarossa implements CommandLineRunner {
                 gemPlankStockTwice.add(entry.getKey());
             }
         }
-        log.info("最近一个月4连板+的股票:{}", fourPlankStock.toString().replace(" ", "").replace("[", "").replace("]", ""));
+        log.info("最近一个月5连板+的股票:{}", fivePlankStock.toString().replace(" ", "").replace("[", "").replace("]", ""));
         log.info("最近一个月创业板涨停2次+的股票:{}",
             gemPlankStockTwice.toString().replace(" ", "").replace("[", "").replace("]", ""));
         log.info("一板>一进二平均胜率：{}",
