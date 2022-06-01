@@ -1,7 +1,7 @@
 SELECT count(id) FROM	daily_record WHERE	DATE_FORMAT(date,'%Y-%m-%d') = '2022-05-05';
 SELECT count(id) FROM	daily_record WHERE	DATE_FORMAT(date,'%Y-%m-%d') = DATE_FORMAT(now(),'%Y-%m-%d');
-# 根据板块查询公司   白酒 光伏 半导体 医疗服务 锂电池 医美 龙头
-SELECT * FROM stock WHERE classification='锂电池' ORDER BY RIGHT(code,6) DESC;
+# 根据板块查询公司   白酒 光伏 半导体 医疗服务 锂电池 医美 龙头 电力设备 整车 果链 煤炭 电力 整车 化肥
+SELECT * FROM stock WHERE classification='医疗服务' ORDER BY RIGHT(code,6) DESC;
 # 重点关注的十家公司
 SELECT * FROM stock WHERE focus=1 ORDER BY classification;
 # 查看基金对某支股票的 季度增减持仓明细
@@ -28,9 +28,13 @@ WHERE f.quarter=202201 AND f.foreign_fund_total_market_dynamic>1000000 ORDER BY 
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度增减市值/万'
 FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
 WHERE s.focus=1 AND f.quarter=202201 ORDER BY f.foreign_fund_total_market_dynamic DESC
-# 查询持仓
-SELECT * FROM stock WHERE name IN ('招商轮船','天顺风能','中天科技','特变电工');
 
 # 查询监控股票
-SELECT * FROM stock WHERE track = 1 AND classification is null;
+SELECT * FROM stock WHERE track = 1;
+# 按行业查询股票
+SELECT * FROM stock WHERE classification ='果链';
+# 查询持仓
+SELECT * FROM stock WHERE name IN ('江淮汽车','金风科技','航发控制','中航机电','怡亚通','联创电子');
+# 查询趋势关注
+SELECT * FROM stock WHERE name IN ('中国电建','中粮科技','粤水电','航发控制','伊戈尔','许继电气','中航高科','中兵红箭','川恒股份','中天科技','天顺风能','');
 
