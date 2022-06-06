@@ -81,7 +81,7 @@ public class Barbarossa implements CommandLineRunner {
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
 
     private final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(5000), new NamedThreadFactory("โ๏∀๏ใ-", false));
+        new LinkedBlockingQueue<>(5000), new NamedThreadFactory("滚雪球-", false));
 
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
 
