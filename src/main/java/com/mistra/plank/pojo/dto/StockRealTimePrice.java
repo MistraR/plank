@@ -35,6 +35,6 @@ public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
 
     @Override
     public int compareTo(StockRealTimePrice o) {
-        return (o.rate) - (this.rate);
+        return (int)((o.increaseRate * 100) - (this.increaseRate * 100));
     }
 }
