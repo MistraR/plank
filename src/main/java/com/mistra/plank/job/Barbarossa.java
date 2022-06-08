@@ -41,6 +41,7 @@ import com.mistra.plank.mapper.FundHoldingsTrackingMapper;
 import com.mistra.plank.mapper.HoldSharesMapper;
 import com.mistra.plank.mapper.StockMapper;
 import com.mistra.plank.mapper.TradeRecordMapper;
+import com.mistra.plank.pojo.dto.StockMainFundSample;
 import com.mistra.plank.pojo.dto.StockRealTimePrice;
 import com.mistra.plank.pojo.entity.Clearance;
 import com.mistra.plank.pojo.entity.DailyRecord;
@@ -143,11 +144,15 @@ public class Barbarossa implements CommandLineRunner {
     public void monitor() {
         executorService.submit(() -> {
             try {
-                List<Stock> stocks =
-                    stockMapper.selectList(new QueryWrapper<Stock>().eq("track", true).or().eq("shareholding", true));
-                Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
                 List<StockRealTimePrice> realTimePrices = new ArrayList<>();
                 while (DateUtil.hour(new Date(), true) <= 15 && DateUtil.hour(new Date(), true) >= 9) {
+                    List<Stock> stocks = stockMapper
+                        .selectList(new QueryWrapper<Stock>().eq("track", true).or().eq("shareholding", true));
+                    Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
+                    List<StockMainFundSample> mainFundData = this.getMainFundData().stream()
+                        .filter(e -> Objects.nonNull(e) && !e.getF12().startsWith("688")).collect(Collectors.toList());
+                    Map<String, StockMainFundSample> mainFundSampleMap =
+                        mainFundData.stream().collect(Collectors.toMap(StockMainFundSample::getF14, e -> e));
                     for (Stock stock : stocks) {
                         String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", stock.getCode())
                             .replace("{time}", String.valueOf(System.currentTimeMillis()))
@@ -163,27 +168,39 @@ public class Barbarossa implements CommandLineRunner {
                                 realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v)
                                     .name(stock.getName()).todayHighestPrice(((JSONArray)o).getDoubleValue(3))
                                     .todayLowestPrice(((JSONArray)o).getDoubleValue(4))
+                                    .mainFund(mainFundSampleMap.containsKey(stock.getName())
+                                        ? mainFundSampleMap.get(stock.getName()).getF62() / 10000 : 0)
                                     .purchasePrice(stock.getPurchasePrice()).rate((int)(rate * 100))
                                     .increaseRate(((JSONArray)o).getDoubleValue(7)).build());
                             }
                         }
                     }
+                    Collections.sort(mainFundData);
+                    mainFundData = mainFundData.subList(0, 10);
                     // 暴跌
                     List<StockRealTimePrice> slump =
-                        realTimePrices.stream().filter(e -> e.getIncreaseRate() < -4).collect(Collectors.toList());
+                        realTimePrices.stream().filter(e -> e.getIncreaseRate() < -5).collect(Collectors.toList());
                     List<StockRealTimePrice> buy =
                         realTimePrices.stream().filter(e -> e.getRate() >= -3).collect(Collectors.toList());
                     Collections.sort(realTimePrices);
                     Collections.sort(slump);
                     Collections.sort(buy);
                     System.out.println("\n\n\n");
-                    log.error("----------------------------------------持仓----------------------------------------");
+                    log.error(
+                        "----------------------------------------主力净流入前10----------------------------------------");
+                    for (StockMainFundSample mainFundDatum : mainFundData) {
+                        Barbarossa.log.warn(mainFundDatum.getF14() + "[" + mainFundDatum.getF62() / 10000 + "万] | 涨幅:"
+                            + mainFundDatum.getF3());
+                    }
+                    log.error(
+                        "---------------------------------------------持仓---------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (stockMap.get(realTimePrice.getName()).getShareholding()) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
-                    log.error("--------------------------------------接近建仓点--------------------------------------");
+                    log.error(
+                        "-------------------------------------------接近建仓点------------------------------------------");
                     for (StockRealTimePrice realTimePrice : buy) {
                         if (!stockMap.get(realTimePrice.getName()).getShareholding()) {
                             if (realTimePrice.getRate() >= -1) {
@@ -193,14 +210,14 @@ public class Barbarossa implements CommandLineRunner {
                             }
                         }
                     }
-                    log.error("----------------------------------------暴跌----------------------------------------");
+                    log.error(
+                        "---------------------------------------------暴跌---------------------------------------------");
                     for (StockRealTimePrice realTimePrice : slump) {
                         if (!stockMap.get(realTimePrice.getName()).getShareholding()) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
                     realTimePrices.clear();
-                    Thread.sleep(6000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -208,11 +225,25 @@ public class Barbarossa implements CommandLineRunner {
         });
     }
 
+    private List<StockMainFundSample> getMainFundData() {
+        String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
+        JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
+        List<StockMainFundSample> result = new ArrayList<>();
+        array.parallelStream().forEach(e -> {
+            try {
+                result.add(JSONObject.parseObject(e.toString(), StockMainFundSample.class));
+            } catch (Exception ee) {
+            }
+        });
+        return result;
+    }
+
     private String convertLog(StockRealTimePrice realTimePrice) {
         return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "[高:"
             + realTimePrice.getTodayHighestPrice() + " | 现:" + realTimePrice.getTodayRealTimePrice() + " | 低:"
             + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + realTimePrice.getPurchasePrice() + " | 距离建仓价:"
-            + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate();
+            + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate() + " | 主力流入:"
+            + realTimePrice.getMainFund() + "万";
     }
 
     /**

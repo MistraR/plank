@@ -33,6 +33,11 @@ public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
 
     private Double increaseRate;
 
+    /**
+     * 今日主力流入
+     */
+    private Long mainFund;
+
     @Override
     public int compareTo(StockRealTimePrice o) {
         return (int)((o.increaseRate * 100) - (this.increaseRate * 100));

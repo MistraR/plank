@@ -38,6 +38,11 @@ public class PlankConfig {
     private String xueQiuStockDetailUrl;
 
     /**
+     * 雪球 某只股票当日资金流入趋势接口 {code}=SZ300750
+     */
+    private String todayFundTrendUrl;
+
+    /**
      * 东财 抓取每日龙虎榜数据，只取净买入额前20
      */
     private String dragonListUrl;
@@ -46,6 +51,11 @@ public class PlankConfig {
      * 东财 抓取外资持仓数据
      */
     private String foreignShareholdingUrl;
+
+    /**
+     * 东财 抓取主力流入，5、10、20天连续流入数据，当天实时流入数据
+     */
+    private String mainFundUrl;
 
     /**
      * 东财 抓取从某天以来的龙虎榜数据
