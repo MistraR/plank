@@ -143,7 +143,7 @@ public class Barbarossa implements CommandLineRunner {
 
     /**
      * 实时监测数据 显示股票实时涨跌幅度，最高，最低价格
-     * 
+     *
      * 想要监测哪些股票需要手动在数据库stock表更改track字段为true
      *
      */
@@ -450,6 +450,10 @@ public class Barbarossa implements CommandLineRunner {
         BALANCE = new BigDecimal(1000000);
         BALANCE_AVAILABLE = new BigDecimal(1000000);
         Date date = new Date(beginDay);
+        DateUtils.setHours(date, 0);
+        DateUtils.setMinutes(date, 0);
+        DateUtils.setSeconds(date, 0);
+        DateUtils.setMilliseconds(date, 0);
         do {
             this.barbarossa(date, fundsPart);
             date = DateUtils.addDays(date, 1);
@@ -840,7 +844,7 @@ public class Barbarossa implements CommandLineRunner {
 
     /**
      * 获取外资持股明细 截止昨日的
-     * 
+     *
      * @return HashMap<String, JSONObject>
      */
     private HashMap<String, JSONObject> getForeignShareholding() {
