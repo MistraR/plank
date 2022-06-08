@@ -564,7 +564,7 @@ public class Barbarossa implements CommandLineRunner {
                     tradeRecord.setNumber(number * 100);
                     tradeRecord.setType(0);
                     tradeRecordMapper.insert(tradeRecord);
-                    log.error("{}日建仓 [{}]", sdf.format(date), holdShare.getName());
+                    log.warn("{}日建仓 [{}]", sdf.format(date), holdShare.getName());
                 }
             }
         }
@@ -693,7 +693,7 @@ public class Barbarossa implements CommandLineRunner {
         holdShare.setRate(todayRecord.getClosePrice().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(),
             2, RoundingMode.HALF_UP));
         holdSharesMapper.updateById(holdShare);
-        log.error("{}日减仓 [{}],目前盈利 {} 元!", sdf.format(date), holdShare.getName(),
+        log.warn("{}日减仓 [{}],目前盈利 {} 元!", sdf.format(date), holdShare.getName(),
             holdShare.getProfit().add(profit).intValue());
     }
 
@@ -754,7 +754,7 @@ public class Barbarossa implements CommandLineRunner {
             Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime())).getDays());
         clearanceMapper.insert(clearance);
         holdSharesMapper.delete(new QueryWrapper<HoldShares>().eq("id", holdShare.getId()));
-        log.error("{}日清仓 [{}],总共盈利 [{}] 元!当前总资产: {} ", sdf.format(date), holdShare.getName(), profit.intValue(),
+        log.warn("{}日清仓 [{}],总共盈利 [{}] 元!当前总资产: {} ", sdf.format(date), holdShare.getName(), profit.intValue(),
             BALANCE.intValue());
     }
 
