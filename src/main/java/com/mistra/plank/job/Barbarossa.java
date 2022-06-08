@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalDouble;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -83,8 +85,12 @@ public class Barbarossa implements CommandLineRunner {
 
     private final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
         new LinkedBlockingQueue<>(5000), new NamedThreadFactory("滚雪球-", false));
-
+    // 主力趋势流入 过滤金额 >3亿
+    private final Integer mainFundFilterAmount = 300000000;
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
+
+    public static final CopyOnWriteArrayList<StockMainFundSample> mainFundData = new CopyOnWriteArrayList<>();
+    public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataMap = new ConcurrentHashMap<>(6400);
 
     /**
      * 总金额
@@ -149,10 +155,6 @@ public class Barbarossa implements CommandLineRunner {
                     List<Stock> stocks = stockMapper
                         .selectList(new QueryWrapper<Stock>().eq("track", true).or().eq("shareholding", true));
                     Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
-                    List<StockMainFundSample> mainFundData = this.getMainFundData().stream()
-                        .filter(e -> Objects.nonNull(e) && !e.getF12().startsWith("688")).collect(Collectors.toList());
-                    Map<String, StockMainFundSample> mainFundSampleMap =
-                        mainFundData.stream().collect(Collectors.toMap(StockMainFundSample::getF14, e -> e));
                     for (Stock stock : stocks) {
                         String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", stock.getCode())
                             .replace("{time}", String.valueOf(System.currentTimeMillis()))
@@ -168,15 +170,16 @@ public class Barbarossa implements CommandLineRunner {
                                 realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v)
                                     .name(stock.getName()).todayHighestPrice(((JSONArray)o).getDoubleValue(3))
                                     .todayLowestPrice(((JSONArray)o).getDoubleValue(4))
-                                    .mainFund(mainFundSampleMap.containsKey(stock.getName())
-                                        ? mainFundSampleMap.get(stock.getName()).getF62() / 10000 : 0)
+                                    .mainFund(mainFundDataMap.containsKey(stock.getName())
+                                        ? mainFundDataMap.get(stock.getName()).getF62() / 10000 : 0)
                                     .purchasePrice(stock.getPurchasePrice()).rate((int)(rate * 100))
                                     .increaseRate(((JSONArray)o).getDoubleValue(7)).build());
                             }
                         }
                     }
                     Collections.sort(mainFundData);
-                    mainFundData = mainFundData.subList(0, 10);
+                    List<StockMainFundSample> mainFundSamplesTopTen =
+                        mainFundData.size() > 10 ? mainFundData.subList(0, 10) : new ArrayList<>();
                     // 暴跌
                     List<StockRealTimePrice> slump =
                         realTimePrices.stream().filter(e -> e.getIncreaseRate() < -5).collect(Collectors.toList());
@@ -188,10 +191,16 @@ public class Barbarossa implements CommandLineRunner {
                     System.out.println("\n\n\n");
                     log.error(
                         "----------------------------------------主力净流入前10----------------------------------------");
-                    for (StockMainFundSample mainFundDatum : mainFundData) {
-                        Barbarossa.log.warn(mainFundDatum.getF14() + "[" + mainFundDatum.getF62() / 10000 + "万] | 涨幅:"
-                            + mainFundDatum.getF3());
-                    }
+                    log.warn(mainFundSamplesTopTen.stream()
+                        .map(e -> e.getF14() + "[" + e.getF62() / 10000 + "万] | 涨幅:" + e.getF3())
+                        .collect(Collectors.toSet()).toString().replace(" ", "").replace("[", "").replace("]", ""));
+                    log.error(
+                        "------------------------------------3||5||10日主力流入>3亿-------------------------------------");
+                    log.warn(mainFundData.parallelStream()
+                        .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
+                            || e.getF174() > mainFundFilterAmount)
+                        .map(StockMainFundSample::getF14).collect(Collectors.toSet()).toString().replace(" ", "")
+                        .replace("[", "").replace("]", ""));
                     log.error(
                         "---------------------------------------------持仓---------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
@@ -223,19 +232,36 @@ public class Barbarossa implements CommandLineRunner {
                 e.printStackTrace();
             }
         });
+        executorService.submit(this::queryMainFundData);
     }
 
-    private List<StockMainFundSample> getMainFundData() {
-        String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
-        JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
-        List<StockMainFundSample> result = new ArrayList<>();
-        array.parallelStream().forEach(e -> {
+    /**
+     * 查询主力实时流入数据
+     */
+    private void queryMainFundData() {
+        while (DateUtil.hour(new Date(), true) <= 15 && DateUtil.hour(new Date(), true) >= 9) {
+            String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
+            JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
+            List<StockMainFundSample> result = new ArrayList<>();
+            array.parallelStream().forEach(e -> {
+                try {
+                    StockMainFundSample mainFundSample =
+                        JSONObject.parseObject(e.toString(), StockMainFundSample.class);
+                    if (STOCK_MAP.containsKey(mainFundSample.getF14())) {
+                        result.add(mainFundSample);
+                        mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
+                    }
+                } catch (Exception exception) {
+                }
+            });
+            mainFundData.clear();
+            mainFundData.addAll(result);
             try {
-                result.add(JSONObject.parseObject(e.toString(), StockMainFundSample.class));
-            } catch (Exception ee) {
+                Thread.sleep(10000);
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
             }
-        });
-        return result;
+        }
     }
 
     private String convertLog(StockRealTimePrice realTimePrice) {
