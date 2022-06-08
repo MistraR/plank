@@ -125,16 +125,16 @@ public class Barbarossa implements CommandLineRunner {
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
         log.warn("一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
-        BALANCE_AVAILABLE = BALANCE;
+        BALANCE_AVAILABLE = new BigDecimal(plankConfig.getFunds());
         if (DateUtil.hour(new Date(), true) >= 15) {
             // 15点后读取当日交易数据
-            dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
-            // 更新每只股票收盘价
-            stockProcessor.run();
-            // 更新 外资+基金 持仓 只更新到最新一季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时的
-            updateForeignFundShareholding(202201);
-            // 分析连板数据
-            analyze();
+            // dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
+            // // 更新每只股票收盘价
+            // stockProcessor.run();
+            // // 更新 外资+基金 持仓 只更新到最新一季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时的
+            // updateForeignFundShareholding(202201);
+            // // 分析连板数据
+            // analyze();
         } else {
             // 15点以前实时监控涨跌
             monitor();
@@ -556,15 +556,16 @@ public class Barbarossa implements CommandLineRunner {
                     tradeRecord.setCode(holdShare.getCode());
                     tradeRecord.setDate(DateUtils.addHours(dailyRecord.getDate(), 9));
                     tradeRecord.setMoney((int)(number * 100 * dailyRecord.getOpenPrice().doubleValue()));
-                    tradeRecord.setReason("买入" + holdShare.getName() + number * 100 + "股，花费" + cost + "元，当前可用余额"
-                        + BALANCE_AVAILABLE.intValue());
+                    String note = "以" + dailyRecord.getOpenPrice().doubleValue() + "价格建仓" + holdShare.getName()
+                        + number * 100 + "股，花费" + (int)cost + "，当前可用余额" + BALANCE_AVAILABLE.intValue();
+                    tradeRecord.setReason(note);
                     tradeRecord.setBalance(BALANCE.setScale(2, RoundingMode.HALF_UP));
                     tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, RoundingMode.HALF_UP));
                     tradeRecord.setPrice(dailyRecord.getOpenPrice());
                     tradeRecord.setNumber(number * 100);
                     tradeRecord.setType(0);
                     tradeRecordMapper.insert(tradeRecord);
-                    log.warn("{}日建仓 [{}]", sdf.format(date), holdShare.getName());
+                    log.warn("{}日建仓{}", sdf.format(date), note);
                 }
             }
         }
@@ -610,9 +611,10 @@ public class Barbarossa implements CommandLineRunner {
                     }
                     if (holdShare.getFifteenProfit()
                         && profitLowRatio <= plankConfig.getProfitClearanceRatio().doubleValue()) {
-                        // 收益回撤到10个点止盈清仓
+                        // 收益回撤到plankConfig.getProfitClearanceRatio()个点止盈清仓
                         this.clearanceStock(holdShare, ClearanceReasonEnum.TAKE_PROFIT, date,
-                            holdShare.getBuyPrice().doubleValue() * 1.1);
+                            holdShare.getBuyPrice().doubleValue()
+                                * plankConfig.getProfitClearanceRatio().doubleValue());
                         continue;
                     }
                     // 盘中最高收益率
@@ -663,10 +665,12 @@ public class Barbarossa implements CommandLineRunner {
         int number = holdShare.getNumber() <= 100 ? 100 : holdShare.getNumber() / 2;
         // 卖出金额
         double money = number * sellPrice;
-        // 本次卖出部分盈利金额
+        // 本次卖出部分盈亏金额
         BigDecimal profit = new BigDecimal(number * (sellPrice - holdShare.getBuyPrice().doubleValue()));
         // 可用金额
         BALANCE_AVAILABLE = BALANCE_AVAILABLE.add(new BigDecimal(money));
+        // 总金额
+        BALANCE = BALANCE.add(profit);
         TradeRecord tradeRecord = new TradeRecord();
         tradeRecord.setName(holdShare.getName());
         tradeRecord.setCode(holdShare.getCode());
@@ -693,8 +697,8 @@ public class Barbarossa implements CommandLineRunner {
         holdShare.setRate(todayRecord.getClosePrice().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(),
             2, RoundingMode.HALF_UP));
         holdSharesMapper.updateById(holdShare);
-        log.warn("{}日减仓 [{}],目前盈利 {} 元!", sdf.format(date), holdShare.getName(),
-            holdShare.getProfit().add(profit).intValue());
+        log.warn("{}日减仓 [{}],目前总盈利[{}] | 总金额 [{}] | 可用金额 [{}]", sdf.format(date), holdShare.getName(),
+            holdShare.getProfit().add(profit).intValue(), BALANCE.intValue(), BALANCE_AVAILABLE.intValue());
     }
 
     /**
@@ -713,13 +717,13 @@ public class Barbarossa implements CommandLineRunner {
         }
         // 卖出金额
         double money = holdShare.getNumber() * sellPrice;
-        // 本次卖出部分盈利金额
+        // 本次卖出部分盈亏金额
         BigDecimal profit =
             BigDecimal.valueOf(holdShare.getNumber() * (sellPrice - holdShare.getBuyPrice().doubleValue()));
-        // 总盈利
-        profit = holdShare.getProfit().add(profit);
         // 总资产
         BALANCE = BALANCE.add(profit);
+        // 总盈利
+        profit = holdShare.getProfit().add(profit);
         // 可用金额
         BALANCE_AVAILABLE = BALANCE_AVAILABLE.add(new BigDecimal(money));
         TradeRecord tradeRecord = new TradeRecord();
@@ -754,8 +758,8 @@ public class Barbarossa implements CommandLineRunner {
             Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime())).getDays());
         clearanceMapper.insert(clearance);
         holdSharesMapper.delete(new QueryWrapper<HoldShares>().eq("id", holdShare.getId()));
-        log.warn("{}日清仓 [{}],总共盈利 [{}] 元!当前总资产: {} ", sdf.format(date), holdShare.getName(), profit.intValue(),
-            BALANCE.intValue());
+        log.warn("{}日清仓 [{}],目前总盈利[{}] | 总金额 [{}] | 可用金额 [{}]", sdf.format(date), holdShare.getName(),
+            profit.intValue(), BALANCE.intValue(), BALANCE_AVAILABLE.intValue());
     }
 
     public void fundHoldingsImport(FundHoldingsParam fundHoldingsParam, Date beginTime, Date endTime) {

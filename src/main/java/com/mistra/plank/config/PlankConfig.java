@@ -73,11 +73,6 @@ public class PlankConfig {
     private Integer funds;
 
     /**
-     * 每日仓位层数上限
-     */
-    private Integer fundsPartLimit;
-
-    /**
      * 止盈清仓比率
      */
     private BigDecimal profitUpperRatio;

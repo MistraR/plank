@@ -1,0 +1,25 @@
+plank.profitUpperRatio=0.55
+# 阶段止盈减至1/4仓比率
+plank.profitQuarterRatio=0.45
+# 阶段止盈减半仓比率
+plank.profitHalfRatio=0.4
+# 阶段止盈回撤清仓比率
+plank.profitClearanceRatio=0.15
+# 止损比率
+plank.deficitRatio=-0.05
+# 止损均线 5日线
+plank.deficitMovingAverage=5
+# 介入比率下限 2日涨幅
+plank.joinIncreaseRatioLowerLimit=0.15
+# 介入比率上限 6日涨幅
+plank.joinIncreaseRatioUpperLimit=0.90
+# 股价上限
+plank.stockPriceUpperLimit=200
+# 股价下限
+plank.stockPriceLowerLimit=10
+# 可打板涨幅比率
+plank.buyPlankRatioLimit=0.096
+# 最长持股天数限制
+plank.clearanceDay=3
+
+2144086
