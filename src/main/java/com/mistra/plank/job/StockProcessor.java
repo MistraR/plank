@@ -35,7 +35,7 @@ public class StockProcessor {
 
     public void run() {
         try {
-            log.info("开始更新股票每日成交量！");
+            log.warn("开始更新股票每日成交量！");
             String body =
                 HttpUtil.getHttpGetResponseString(plankConfig.getXueQiuAllStockUrl(), plankConfig.getXueQiuCookie());
             JSONObject data = JSON.parseObject(body).getJSONObject("data");
@@ -65,7 +65,7 @@ public class StockProcessor {
                     }
                 }
             }
-            log.info("更新股票每日成交量完成！");
+            log.warn("更新股票每日成交量完成！");
         } catch (Exception e) {
             e.printStackTrace();
         }

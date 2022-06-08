@@ -68,19 +68,9 @@ public class PlankConfig {
     private Integer recentDayNumber;
 
     /**
-     * 开始操盘日期
-     */
-    private Long beginDay;
-
-    /**
      * 起始资金
      */
     private Integer funds;
-
-    /**
-     * 资金分层数
-     */
-    private Integer fundsPart;
 
     /**
      * 每日仓位层数上限

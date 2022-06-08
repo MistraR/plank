@@ -65,11 +65,17 @@ public class PlankController {
     }
 
     /**
-     * 以历史数据为样本，根据配置的买入，卖出，分仓策略自动交易 确保龙虎榜数据已经更新到最新日期
+     * 以历史数据为样本，根据配置的买入，卖出，分仓策略自动交易 确保龙虎榜数据已经更新到最新日期 localhost:8088/barbarossa/2/1619109414000
+     * 
+     * localhost:8088/barbarossa/2/1619109414000
+     * 
+     * @param fundsPart 资金分层数（最多同时买多少只票）
+     * @param beginDay 开始回测日期
      */
-    @PostMapping("/barbarossa")
-    public void barbarossa() {
-        barbarossa.barbarossa();
+    @PostMapping("/barbarossa/{fundsPart}/{beginDay}")
+    public void barbarossa(@PathVariable(value = "fundsPart") Integer fundsPart,
+        @PathVariable(value = "beginDay") Long beginDay) {
+        barbarossa.barbarossa(fundsPart, beginDay);
     }
 
     /**

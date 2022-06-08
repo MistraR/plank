@@ -442,24 +442,27 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 以历史数据为样本，根据配置的买入，卖出，分仓策略自动交易
      */
-    public void barbarossa() {
+    public void barbarossa(Integer fundsPart, Long beginDay) {
         // 清除老数据
         holdSharesMapper.delete(new QueryWrapper<>());
         clearanceMapper.delete(new QueryWrapper<>());
-        Date date = new Date(plankConfig.getBeginDay());
+        tradeRecordMapper.delete(new QueryWrapper<>());
+        BALANCE = new BigDecimal(1000000);
+        BALANCE_AVAILABLE = new BigDecimal(1000000);
+        Date date = new Date(beginDay);
         do {
-            this.barbarossa(date);
+            this.barbarossa(date, fundsPart);
             date = DateUtils.addDays(date, 1);
         } while (date.getTime() < System.currentTimeMillis());
     }
 
-    private void barbarossa(Date date) {
+    private void barbarossa(Date date, Integer fundsPart) {
         int week = DateUtil.dayOfWeek(date);
         if (week < 7 && week > 1) {
             // 工作日
             List<Stock> stocks = this.checkCanBuyStock(date);
             if (CollectionUtils.isNotEmpty(stocks) && BALANCE_AVAILABLE.intValue() > 10000) {
-                this.buyStock(stocks, date);
+                this.buyStock(stocks, date, fundsPart);
             }
             this.sellStock(date);
         }
@@ -515,10 +518,10 @@ public class Barbarossa implements CommandLineRunner {
         return result;
     }
 
-    private void buyStock(List<Stock> stocks, Date date) {
+    private void buyStock(List<Stock> stocks, Date date, Integer fundsPart) {
         for (Stock stock : stocks) {
             List<HoldShares> holdShares = holdSharesMapper.selectList(new QueryWrapper<>());
-            if (holdShares.size() >= plankConfig.getFundsPart()) {
+            if (holdShares.size() >= fundsPart) {
                 log.info("仓位已打满！无法开新仓！");
                 return;
             }
@@ -537,7 +540,7 @@ public class Barbarossa implements CommandLineRunner {
                 // 低开2个点以下不买
                 HoldShares one = holdSharesMapper.selectOne(new QueryWrapper<HoldShares>().eq("code", stock.getCode()));
                 if (Objects.isNull(one)) {
-                    int money = BALANCE.intValue() / plankConfig.getFundsPart();
+                    int money = BALANCE.intValue() / fundsPart;
                     money = Math.min(money, BALANCE_AVAILABLE.intValue());
                     int number = money / dailyRecord.getOpenPrice().multiply(new BigDecimal(100)).intValue();
                     double cost = number * 100 * dailyRecord.getOpenPrice().doubleValue();
@@ -561,6 +564,7 @@ public class Barbarossa implements CommandLineRunner {
                     tradeRecord.setNumber(number * 100);
                     tradeRecord.setType(0);
                     tradeRecordMapper.insert(tradeRecord);
+                    log.error("{}日建仓 [{}]", sdf.format(date), holdShare.getName());
                 }
             }
         }
@@ -689,7 +693,7 @@ public class Barbarossa implements CommandLineRunner {
         holdShare.setRate(todayRecord.getClosePrice().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(),
             2, RoundingMode.HALF_UP));
         holdSharesMapper.updateById(holdShare);
-        log.info("{}日减仓 {},目前盈利 {} 元!", sdf.format(date), holdShare.getName(),
+        log.error("{}日减仓 [{}],目前盈利 {} 元!", sdf.format(date), holdShare.getName(),
             holdShare.getProfit().add(profit).intValue());
     }
 
@@ -750,7 +754,7 @@ public class Barbarossa implements CommandLineRunner {
             Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime())).getDays());
         clearanceMapper.insert(clearance);
         holdSharesMapper.delete(new QueryWrapper<HoldShares>().eq("id", holdShare.getId()));
-        log.info("{}日清仓 {},总共盈利 {} 元!当前总资产: {} ", sdf.format(date), holdShare.getName(), profit.intValue(),
+        log.error("{}日清仓 [{}],总共盈利 [{}] 元!当前总资产: {} ", sdf.format(date), holdShare.getName(), profit.intValue(),
             BALANCE.intValue());
     }
 
@@ -789,7 +793,7 @@ public class Barbarossa implements CommandLineRunner {
                     fundHoldingsTracking.setForeignTotalMarketDynamic(0L);
                     fundHoldingsTracking.setForeignFundTotalMarketDynamic(0L);
                     fundHoldingsTrackingMapper.insert(fundHoldingsTracking);
-                    log.warn("更新[ {} ]{}季报基金持仓数据完成！", stock.getName(), fundHoldingsParam.getQuarter());
+                    log.warn("更新 [{}] {}季报基金持仓数据完成！", stock.getName(), fundHoldingsParam.getQuarter());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
