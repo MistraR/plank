@@ -62,6 +62,24 @@ public class Stock {
     private BigDecimal transactionAmount;
 
     /**
+     * 5日均线
+     */
+    @TableField(value = "ma5")
+    private BigDecimal ma5;
+
+    /**
+     * 10日均线
+     */
+    @TableField(value = "ma10")
+    private BigDecimal ma10;
+
+    /**
+     * 20日均线
+     */
+    @TableField(value = "ma20")
+    private BigDecimal ma20;
+
+    /**
      * 最近更新日期
      */
     @TableField(value = "modify_time")

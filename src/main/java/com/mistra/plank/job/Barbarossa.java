@@ -84,7 +84,7 @@ public class Barbarossa implements CommandLineRunner {
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
 
     private final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(5000), new NamedThreadFactory("滚雪球-", false));
+        new LinkedBlockingQueue<>(5000), new NamedThreadFactory("T", false));
     // 主力趋势流入 过滤金额 >3亿
     private final Integer mainFundFilterAmount = 300000000;
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
@@ -128,12 +128,13 @@ public class Barbarossa implements CommandLineRunner {
         stocks.stream().filter(e -> e.getShareholding() || e.getTrack())
             .forEach(stock -> TRACK_STOCK_SET.add(stock.getName()));
         log.warn("一共加载[{}]支股票！", stocks.size());
+        log.warn("一共加载[{}]支监控股票！", TRACK_STOCK_SET.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = new BigDecimal(plankConfig.getFunds());
         if (DateUtil.hour(new Date(), true) >= 15) {
             // 15点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
-            // 更新每只股票收盘价
+            // 更新每只股票收盘价，MA5 MA10 MA20
             stockProcessor.run();
             // 更新 外资+基金 持仓 只更新到最新一季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时的
             updateForeignFundShareholding(202201);
