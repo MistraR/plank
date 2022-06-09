@@ -87,9 +87,10 @@ public class Barbarossa implements CommandLineRunner {
         new LinkedBlockingQueue<>(5000), new NamedThreadFactory("T", false));
     // 主力趋势流入 过滤金额 >3亿
     private final Integer mainFundFilterAmount = 300000000;
+    // 所有股票 key-code value-name
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
-    // 需要监控关注的票
-    public static final HashSet<String> TRACK_STOCK_SET = new HashSet<>();
+    // 需要监控关注的票 key-name value-Stock
+    public static final HashMap<String, Stock> TRACK_STOCK_MAP = new HashMap<>();
 
     public static final CopyOnWriteArrayList<StockMainFundSample> mainFundData = new CopyOnWriteArrayList<>();
     public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataMap = new ConcurrentHashMap<>(6400);
@@ -126,9 +127,9 @@ public class Barbarossa implements CommandLineRunner {
             .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%").notLike("code", "%688%"));
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
         stocks.stream().filter(e -> e.getShareholding() || e.getTrack())
-            .forEach(stock -> TRACK_STOCK_SET.add(stock.getName()));
+            .forEach(stock -> TRACK_STOCK_MAP.put(stock.getName(), stock));
         log.warn("一共加载[{}]支股票！", stocks.size());
-        log.warn("一共加载[{}]支监控股票！", TRACK_STOCK_SET.size());
+        log.warn("一共加载[{}]支监控股票！", TRACK_STOCK_MAP.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = new BigDecimal(plankConfig.getFunds());
         if (DateUtil.hour(new Date(), true) >= 15) {
@@ -161,6 +162,10 @@ public class Barbarossa implements CommandLineRunner {
                         .selectList(new QueryWrapper<Stock>().eq("track", true).or().eq("shareholding", true));
                     Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
                     for (Stock stock : stocks) {
+                        List<DailyRecord> dailyRecords = dailyRecordMapper
+                            .selectPage(new Page<>(1, 9),
+                                new QueryWrapper<DailyRecord>().eq("code", stock.getCode()).orderByDesc("date"))
+                            .getRecords();
                         String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", stock.getCode())
                             .replace("{time}", String.valueOf(System.currentTimeMillis()))
                             .replace("{recentDayNumber}", "1");
@@ -170,29 +175,42 @@ public class Barbarossa implements CommandLineRunner {
                         if (org.apache.commons.collections.CollectionUtils.isNotEmpty(list)) {
                             for (Object o : list) {
                                 double v = ((JSONArray)o).getDoubleValue(5);
-                                double rate =
-                                    (double)Math.round(((stock.getPurchasePrice().doubleValue() - v) / v) * 100) / 100;
+                                double ma10Rate, ma5Rate = 0;
+                                if (dailyRecords.size() >= 4) {
+                                    List<BigDecimal> collect = dailyRecords.subList(0, 4).stream()
+                                        .map(DailyRecord::getClosePrice).collect(Collectors.toList());
+                                    collect.add(new BigDecimal(v));
+                                    Double ma5 =
+                                        collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
+                                    ma5Rate = (double)Math.round(((ma5 - v) / v) * 100) / 100;
+                                }
+                                if (dailyRecords.size() >= 9) {
+                                    List<BigDecimal> collect = dailyRecords.stream().map(DailyRecord::getClosePrice)
+                                        .collect(Collectors.toList());
+                                    collect.add(new BigDecimal(v));
+                                    Double ma10 =
+                                        collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
+                                    ma10Rate = (double)Math.round(((ma10 - v) / v) * 100) / 100;
+                                } else {
+                                    ma10Rate =
+                                        (double)Math.round(((stock.getPurchasePrice().doubleValue() - v) / v) * 100)
+                                            / 100;
+                                }
                                 realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v)
                                     .name(stock.getName()).todayHighestPrice(((JSONArray)o).getDoubleValue(3))
                                     .todayLowestPrice(((JSONArray)o).getDoubleValue(4))
                                     .mainFund(mainFundDataMap.containsKey(stock.getName())
                                         ? mainFundDataMap.get(stock.getName()).getF62() / 10000 : 0)
-                                    .purchasePrice(stock.getPurchasePrice()).rate((int)(rate * 100))
-                                    .increaseRate(((JSONArray)o).getDoubleValue(7)).build());
+                                    .purchasePrice(stock.getPurchasePrice()).ma10Rate((int)(ma10Rate * 100))
+                                    .ma5Rate((int)(ma5Rate * 100)).increaseRate(((JSONArray)o).getDoubleValue(7))
+                                    .build());
                             }
                         }
                     }
                     Collections.sort(mainFundData);
                     List<StockMainFundSample> mainFundSamplesTopTen =
                         mainFundData.size() > 10 ? mainFundData.subList(0, 10) : new ArrayList<>();
-                    // 暴跌
-                    List<StockRealTimePrice> slump =
-                        realTimePrices.stream().filter(e -> e.getIncreaseRate() < -5).collect(Collectors.toList());
-                    List<StockRealTimePrice> buy =
-                        realTimePrices.stream().filter(e -> e.getRate() >= -3).collect(Collectors.toList());
                     Collections.sort(realTimePrices);
-                    Collections.sort(slump);
-                    Collections.sort(buy);
                     System.out.println("\n\n\n");
                     log.error(
                         "--------------------------------------今日主力净流入前10---------------------------------------");
@@ -213,21 +231,25 @@ public class Barbarossa implements CommandLineRunner {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
+                    realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
                     log.error(
-                        "-------------------------------------------接近建仓点------------------------------------------");
-                    for (StockRealTimePrice realTimePrice : buy) {
-                        if (!stockMap.get(realTimePrice.getName()).getShareholding()) {
-                            if (realTimePrice.getRate() >= -1) {
-                                Barbarossa.log.warn(convertLog(realTimePrice));
-                            } else {
-                                Barbarossa.log.info(convertLog(realTimePrice));
-                            }
+                        "----------------------------------------接近建仓点(MA5)----------------------------------------");
+                    for (StockRealTimePrice realTimePrice : realTimePrices) {
+                        if (realTimePrice.getMa5Rate() >= -1 && realTimePrice.getMa5Rate() < 1) {
+                            Barbarossa.log.warn(convertLog(realTimePrice, realTimePrice.getMa5Rate()));
+                        }
+                    }
+                    log.error(
+                        "----------------------------------------接近建仓点(MA10)----------------------------------------");
+                    for (StockRealTimePrice realTimePrice : realTimePrices) {
+                        if (realTimePrice.getMa10Rate() >= -3 && realTimePrice.getMa10Rate() < 3) {
+                            Barbarossa.log.warn(convertLog(realTimePrice, realTimePrice.getMa10Rate()));
                         }
                     }
                     log.error(
                         "---------------------------------------------暴跌---------------------------------------------");
-                    for (StockRealTimePrice realTimePrice : slump) {
-                        if (!stockMap.get(realTimePrice.getName()).getShareholding()) {
+                    for (StockRealTimePrice realTimePrice : realTimePrices) {
+                        if (realTimePrice.getIncreaseRate() < -5) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
@@ -252,7 +274,7 @@ public class Barbarossa implements CommandLineRunner {
                 try {
                     StockMainFundSample mainFundSample =
                         JSONObject.parseObject(e.toString(), StockMainFundSample.class);
-                    if (TRACK_STOCK_SET.contains(mainFundSample.getF14())) {
+                    if (TRACK_STOCK_MAP.containsKey(mainFundSample.getF14())) {
                         result.add(mainFundSample);
                         mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
                     }
@@ -269,11 +291,18 @@ public class Barbarossa implements CommandLineRunner {
         }
     }
 
+    private String convertLog(StockRealTimePrice realTimePrice, int rate) {
+        return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "[高:"
+            + realTimePrice.getTodayHighestPrice() + " | 现:" + realTimePrice.getTodayRealTimePrice() + " | 低:"
+            + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + realTimePrice.getPurchasePrice() + " | 距离建仓价:" + rate
+            + "% | 涨幅:" + realTimePrice.getIncreaseRate() + " | 主力流入:" + realTimePrice.getMainFund() + "万";
+    }
+
     private String convertLog(StockRealTimePrice realTimePrice) {
         return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "[高:"
             + realTimePrice.getTodayHighestPrice() + " | 现:" + realTimePrice.getTodayRealTimePrice() + " | 低:"
             + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + realTimePrice.getPurchasePrice() + " | 距离建仓价:"
-            + realTimePrice.getRate() + "% | 涨幅:" + realTimePrice.getIncreaseRate() + " | 主力流入:"
+            + realTimePrice.getMa10Rate() + "% | 涨幅:" + realTimePrice.getIncreaseRate() + " | 主力流入:"
             + realTimePrice.getMainFund() + "万";
     }
 

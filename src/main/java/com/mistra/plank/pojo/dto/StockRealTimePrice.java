@@ -25,12 +25,29 @@ public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
 
     private Double todayLowestPrice;
 
+    /**
+     * 实时价格
+     */
     private Double todayRealTimePrice;
 
+    /**
+     * 建仓价 每日更新股票会更新为当日的MA10均价
+     */
     private BigDecimal purchasePrice;
 
-    private int rate;
+    /**
+     * 距离MA10的比率
+     */
+    private int ma10Rate;
 
+    /**
+     * 距离MA5的比率
+     */
+    private int ma5Rate;
+
+    /**
+     * 当前涨幅
+     */
     private Double increaseRate;
 
     /**
