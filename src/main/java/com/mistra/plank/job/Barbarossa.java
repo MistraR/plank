@@ -88,6 +88,8 @@ public class Barbarossa implements CommandLineRunner {
     // 主力趋势流入 过滤金额 >3亿
     private final Integer mainFundFilterAmount = 300000000;
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
+    // 需要监控关注的票
+    public static final HashSet<String> TRACK_STOCK_SET = new HashSet<>();
 
     public static final CopyOnWriteArrayList<StockMainFundSample> mainFundData = new CopyOnWriteArrayList<>();
     public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataMap = new ConcurrentHashMap<>(6400);
@@ -123,6 +125,8 @@ public class Barbarossa implements CommandLineRunner {
             .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%C%").notLike("name", "%N%")
             .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%").notLike("code", "%688%"));
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
+        stocks.stream().filter(e -> e.getShareholding() || e.getTrack())
+            .forEach(stock -> TRACK_STOCK_SET.add(stock.getName()));
         log.warn("一共加载[{}]支股票！", stocks.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = new BigDecimal(plankConfig.getFunds());
@@ -190,12 +194,12 @@ public class Barbarossa implements CommandLineRunner {
                     Collections.sort(buy);
                     System.out.println("\n\n\n");
                     log.error(
-                        "----------------------------------------主力净流入前10----------------------------------------");
+                        "--------------------------------------今日主力净流入前10---------------------------------------");
                     log.warn(mainFundSamplesTopTen.stream()
-                        .map(e -> e.getF14() + "[" + e.getF62() / 10000 + "万] | 涨幅:" + e.getF3())
-                        .collect(Collectors.toSet()).toString().replace(" ", "").replace("[", "").replace("]", ""));
+                        .map(e -> e.getF14() + "[" + e.getF62() / 10000 + "万]" + e.getF3() + "%|")
+                        .collect(Collectors.toList()).toString().replace(" ", "").replace("[", "").replace("]", ""));
                     log.error(
-                        "------------------------------------3||5||10日主力流入>3亿-------------------------------------");
+                        "------------------------------------3|5|10日主力净流入>3亿-------------------------------------");
                     log.warn(mainFundData.parallelStream()
                         .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
                             || e.getF174() > mainFundFilterAmount)
@@ -247,7 +251,7 @@ public class Barbarossa implements CommandLineRunner {
                 try {
                     StockMainFundSample mainFundSample =
                         JSONObject.parseObject(e.toString(), StockMainFundSample.class);
-                    if (STOCK_MAP.containsKey(mainFundSample.getF14())) {
+                    if (TRACK_STOCK_SET.contains(mainFundSample.getF14())) {
                         result.add(mainFundSample);
                         mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
                     }
