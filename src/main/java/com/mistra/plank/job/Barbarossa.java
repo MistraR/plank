@@ -240,9 +240,9 @@ public class Barbarossa implements CommandLineRunner {
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         // if ((realTimePrice.getMa5Rate() >= -1 && realTimePrice.getMa5Rate() < 1)
                         // || (realTimePrice.getMa10Rate() >= -3 && realTimePrice.getMa10Rate() < 3)) {
-                        if (realTimePrice.getMa10Rate() >= -3 && realTimePrice.getMa10Rate() < 3) {
+                        if (realTimePrice.getMa10Rate() >= -3 && realTimePrice.getMa10Rate() <= 3) {
                             Barbarossa.log
-                                .warn(convertLog(realTimePrice, realTimePrice.getMa5Rate(), realTimePrice.getMa5()));
+                                .warn(convertLog(realTimePrice, realTimePrice.getMa10Rate(), realTimePrice.getMa10()));
                         }
                     }
                     log.error(
