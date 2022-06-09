@@ -292,11 +292,14 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private String convertLog(StockRealTimePrice realTimePrice) {
-        return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "[高:"
-            + realTimePrice.getTodayHighestPrice() + "|低:" + realTimePrice.getTodayLowestPrice() + "|现:"
-            + realTimePrice.getTodayRealTimePrice() + "|MA10:" + realTimePrice.getMa10() + "|MA5:"
-            + realTimePrice.getMa5() + "|距离MA10:" + realTimePrice.getMa10Rate() + "%|涨跌"
-            + realTimePrice.getIncreaseRate() + "|主力流入:" + realTimePrice.getMainFund() + "万";
+        StringBuilder builder = new StringBuilder().append(realTimePrice.getName())
+            .append((realTimePrice.getName().length() == 3 ? "  " : "")).append("[高:")
+            .append(realTimePrice.getTodayHighestPrice()).append("|低:").append(realTimePrice.getTodayLowestPrice())
+            .append("|现:").append(realTimePrice.getTodayRealTimePrice()).append("|MA10:")
+            .append(realTimePrice.getMa10()).append("|MA5:").append(realTimePrice.getMa5()).append("|距离MA10:")
+            .append(realTimePrice.getMa10Rate()).append("%|涨跌").append(realTimePrice.getIncreaseRate()).append("|主力流入:")
+            .append(realTimePrice.getMainFund()).append("万]");
+        return builder.toString();
     }
 
     /**
