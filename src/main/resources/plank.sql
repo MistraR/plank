@@ -1,7 +1,7 @@
 /*
- Navicat MySQL Data Transfer
+ Navicat Premium Data Transfer
 
- Source Server         : localhost
+ Source Server         : LOCAL
  Source Server Type    : MySQL
  Source Server Version : 80028
  Source Host           : localhost:3306
@@ -11,7 +11,7 @@
  Target Server Version : 80028
  File Encoding         : 65001
 
- Date: 07/05/2022 16:24:17
+ Date: 09/06/2022 09:13:04
 */
 
 SET NAMES utf8mb4;
@@ -38,7 +38,7 @@ CREATE TABLE `clearance`
     `profit`            decimal(10, 2)                                                NOT NULL COMMENT '盈亏利润',
     `day_number`        int                                                           NOT NULL COMMENT '持股天数',
     PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=6200 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11122 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for daily_record
@@ -58,7 +58,7 @@ CREATE TABLE `daily_record`
     `amount`        bigint         NOT NULL COMMENT '成交额',
     PRIMARY KEY (`id`),
     UNIQUE KEY `unique` (`code`,`date`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=6790365 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6882218 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for dragon_list
@@ -78,7 +78,7 @@ CREATE TABLE `dragon_list`
     `accum_amount` bigint                                                    NOT NULL COMMENT '成交额',
     `change_rate`  decimal(10, 2)                                            NOT NULL COMMENT '涨跌幅',
     PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=37444 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=41247 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for foreign_fund_holdings_tracking
@@ -86,22 +86,23 @@ CREATE TABLE `dragon_list`
 DROP TABLE IF EXISTS `foreign_fund_holdings_tracking`;
 CREATE TABLE `foreign_fund_holdings_tracking`
 (
-    `id`                           bigint                                 NOT NULL AUTO_INCREMENT,
-    `fund_count`                   int                                    NOT NULL COMMENT '持有该股票的基金数',
-    `quarter`                      int                                    NOT NULL COMMENT '季度 202201',
-    `shareholding_count`           bigint                                 NOT NULL COMMENT '持股总量/万股',
-    `shareholding_change_count`    bigint                                 NOT NULL COMMENT '持股变动数量/万股',
-    `fund_total_market`            bigint                                 NOT NULL COMMENT '报告期末基金持股总市值/万',
-    `fund_total_market_dynamic`    bigint                                 NOT NULL COMMENT '基金持股总市值/万 动态',
-    `foreign_total_market_dynamic` bigint                                 NOT NULL COMMENT '外资持股总市值/万 动态',
-    `average_price`                decimal(7, 2)                          NOT NULL COMMENT '季度均价',
-    `shareholding_change_amount`   bigint                                 NOT NULL COMMENT '持股变动金额/万',
-    `code`                         varchar(64) COLLATE utf8mb4_general_ci NOT NULL COMMENT '股票代码',
-    `name`                         varchar(64) COLLATE utf8mb4_general_ci NOT NULL COMMENT '股票名称',
-    `modify_time`                  datetime DEFAULT NULL COMMENT '最近更新日期',
+    `id`                                bigint                                                       NOT NULL AUTO_INCREMENT,
+    `code`                              varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '股票代码',
+    `name`                              varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '股票名称',
+    `fund_count`                        int                                                          NOT NULL COMMENT '持有该股票的基金数',
+    `quarter`                           int                                                          NOT NULL COMMENT '季度 202201',
+    `shareholding_count`                bigint                                                       NOT NULL COMMENT '持股总量/万股',
+    `shareholding_change_count`         bigint                                                       NOT NULL COMMENT '持股变动数量/万股',
+    `fund_total_market`                 bigint                                                       NOT NULL COMMENT '报告期末基金持股总市值/万',
+    `fund_total_market_dynamic`         bigint                                                       NOT NULL COMMENT '基金持股总市值/万 动态',
+    `foreign_total_market_dynamic`      bigint                                                       NOT NULL COMMENT '外资持股总市值/万 动态',
+    `foreign_fund_total_market_dynamic` bigint                                                       NOT NULL COMMENT '外资+基金持股总市值/万 动态',
+    `average_price`                     decimal(7, 2)                                                NOT NULL COMMENT '季度均价',
+    `shareholding_change_amount`        bigint                                                       NOT NULL COMMENT '持股变动金额/万',
+    `modify_time`                       datetime                                                     NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '最近更新日期',
     PRIMARY KEY (`id`) USING BTREE,
     UNIQUE KEY `uidx` (`quarter`,`code`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='基金持仓追踪';
+) ENGINE=InnoDB AUTO_INCREMENT=945 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='基金持仓追踪';
 
 -- ----------------------------
 -- Table structure for hold_shares
@@ -122,7 +123,7 @@ CREATE TABLE `hold_shares`
     `buy_number`     int                                                       NOT NULL COMMENT '建仓数量',
     `profit`         decimal(10, 2)                                            NOT NULL COMMENT '利润',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6261 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11185 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for stock
@@ -139,10 +140,11 @@ CREATE TABLE `stock`
     `volume`             bigint                                                       NOT NULL COMMENT '当日成交量',
     `modify_time`        datetime                                                     NOT NULL COMMENT '最近更新日期',
     `track`              tinyint(1) unsigned zerofill NOT NULL COMMENT '是否关注',
+    `focus`              tinyint(1) unsigned zerofill NOT NULL COMMENT '重点关注',
     `shareholding`       tinyint(1) unsigned zerofill NOT NULL COMMENT '是否持仓',
-    `classification`     varchar(16)                                                           DEFAULT NULL COMMENT '所属板块',
+    `classification`     varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci          DEFAULT NULL COMMENT '所属板块',
     PRIMARY KEY (`code`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ----------------------------
 -- Table structure for trade_record
@@ -162,7 +164,7 @@ CREATE TABLE `trade_record`
     `reason`            varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '交易原因',
     `available_balance` decimal(10, 2)                                                NOT NULL COMMENT '可用余额',
     PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=13564 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23566 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for trade_record_real
