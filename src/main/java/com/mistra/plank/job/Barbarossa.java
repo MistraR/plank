@@ -236,26 +236,19 @@ public class Barbarossa implements CommandLineRunner {
                         }
                     }
                     realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
-                    log.error(
-                        "----------------------------------------接近建仓点(MA5)----------------------------------------");
+                    log.error("------------------------------------接近建仓点(MA10)-------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if (realTimePrice.getMa5Rate() >= -1 && realTimePrice.getMa5Rate() < 1) {
+                        // if ((realTimePrice.getMa5Rate() >= -1 && realTimePrice.getMa5Rate() < 1)
+                        // || (realTimePrice.getMa10Rate() >= -3 && realTimePrice.getMa10Rate() < 3)) {
+                        if (realTimePrice.getMa10Rate() >= -3 && realTimePrice.getMa10Rate() < 3) {
                             Barbarossa.log
                                 .warn(convertLog(realTimePrice, realTimePrice.getMa5Rate(), realTimePrice.getMa5()));
                         }
                     }
                     log.error(
-                        "----------------------------------------接近建仓点(MA10)----------------------------------------");
-                    for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if (realTimePrice.getMa10Rate() >= -3 && realTimePrice.getMa10Rate() < 3) {
-                            Barbarossa.log
-                                .warn(convertLog(realTimePrice, realTimePrice.getMa10Rate(), realTimePrice.getMa10()));
-                        }
-                    }
-                    log.error(
                         "---------------------------------------------暴跌---------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if (realTimePrice.getIncreaseRate() < -5) {
+                        if (realTimePrice.getIncreaseRate() < -6.5) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
@@ -300,14 +293,14 @@ public class Barbarossa implements CommandLineRunner {
     private String convertLog(StockRealTimePrice realTimePrice, int rate, BigDecimal purchasePrice) {
         return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "[高:"
             + realTimePrice.getTodayHighestPrice() + " | 现:" + realTimePrice.getTodayRealTimePrice() + " | 低:"
-            + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + purchasePrice + " | 距离建仓价:" + rate + "% | 涨幅:"
+            + realTimePrice.getTodayLowestPrice() + " | MA10:" + purchasePrice + " | 距离建仓价:" + rate + "% | 涨幅:"
             + realTimePrice.getIncreaseRate() + " | 主力流入:" + realTimePrice.getMainFund() + "万";
     }
 
     private String convertLog(StockRealTimePrice realTimePrice) {
         return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "[高:"
             + realTimePrice.getTodayHighestPrice() + " | 现:" + realTimePrice.getTodayRealTimePrice() + " | 低:"
-            + realTimePrice.getTodayLowestPrice() + " | 建仓价:" + realTimePrice.getPurchasePrice() + " | 距离建仓价:"
+            + realTimePrice.getTodayLowestPrice() + " | MA10:" + realTimePrice.getPurchasePrice() + " | 距离建仓价:"
             + realTimePrice.getMa10Rate() + "% | 涨幅:" + realTimePrice.getIncreaseRate() + " | 主力流入:"
             + realTimePrice.getMainFund() + "万";
     }
