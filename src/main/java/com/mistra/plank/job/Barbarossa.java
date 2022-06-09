@@ -219,7 +219,7 @@ public class Barbarossa implements CommandLineRunner {
                     log.error(
                         "--------------------------------------今日主力净流入前10---------------------------------------");
                     log.warn(mainFundSamplesTopTen.stream()
-                        .map(e -> e.getF14() + "[" + e.getF62() / 10000 + "万]" + e.getF3() + "%|")
+                        .map(e -> e.getF14() + "[" + e.getF62() / 10000 + "万]" + e.getF3() + "%")
                         .collect(Collectors.toList()).toString().replace(" ", "").replace("[", "").replace("]", ""));
                     log.error(
                         "------------------------------------3|5|10日主力净流入>3亿-------------------------------------");
