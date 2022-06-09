@@ -62,7 +62,7 @@ import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 巴巴罗萨计划
+ * 涨停先锋
  *
  * @author mistra@future.com
  * @date 2021/11/19
@@ -85,11 +85,18 @@ public class Barbarossa implements CommandLineRunner {
 
     private final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
         new LinkedBlockingQueue<>(5000), new NamedThreadFactory("T", false));
-    // 主力趋势流入 过滤金额 >3亿
+    /**
+     * 主力趋势流入 过滤金额 >3亿
+     */
     private final Integer mainFundFilterAmount = 300000000;
-    // 所有股票 key-code value-name
+    private static final Integer W = 10000;
+    /**
+     * 所有股票 key-code value-name
+     */
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
-    // 需要监控关注的票 key-name value-Stock
+    /**
+     * 需要监控关注的票 key-name value-Stock
+     */
     public static final HashMap<String, Stock> TRACK_STOCK_MAP = new HashMap<>();
 
     public static final CopyOnWriteArrayList<StockMainFundSample> mainFundData = new CopyOnWriteArrayList<>();
@@ -98,11 +105,11 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 总金额
      */
-    public static BigDecimal BALANCE = new BigDecimal(1000000);
+    public static BigDecimal BALANCE = new BigDecimal(100 * W);
     /**
      * 可用金额
      */
-    public static BigDecimal BALANCE_AVAILABLE = new BigDecimal(1000000);
+    public static BigDecimal BALANCE_AVAILABLE = new BigDecimal(100 * W);
 
     public Barbarossa(StockMapper stockMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
         ClearanceMapper clearanceMapper, TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
@@ -133,6 +140,7 @@ public class Barbarossa implements CommandLineRunner {
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = new BigDecimal(plankConfig.getFunds());
         if (DateUtil.hour(new Date(), true) >= 15) {
+            executorService.submit(this::queryMainFundData);
             // 15点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
             // 更新每只股票收盘价，MA5 MA10 MA20
@@ -140,7 +148,9 @@ public class Barbarossa implements CommandLineRunner {
             // 更新 外资+基金 持仓 只更新到最新一季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时的
             updateForeignFundShareholding(202201);
             // 分析连板数据
-            analyze();
+            analyzePlank();
+            // 分析主力流入数据
+            analyzeMainFund();
         } else {
             // 15点以前实时监控涨跌
             monitor();
@@ -216,7 +226,7 @@ public class Barbarossa implements CommandLineRunner {
                                     .name(stock.getName()).todayHighestPrice(((JSONArray)o).getDoubleValue(3))
                                     .todayLowestPrice(((JSONArray)o).getDoubleValue(4)).ma10(ma10Price).ma5(ma5Price)
                                     .mainFund(mainFundDataMap.containsKey(stock.getName())
-                                        ? mainFundDataMap.get(stock.getName()).getF62() / 10000 : 0)
+                                        ? mainFundDataMap.get(stock.getName()).getF62() / W : 0)
                                     .purchasePrice(stock.getPurchasePrice()).ma10Rate((int)(ma10Rate * 100))
                                     .ma5Rate((int)(ma5Rate * 100)).increaseRate(((JSONArray)o).getDoubleValue(7))
                                     .ma20(ma20Price).ma20Rate((int)(ma20Rate * 100)).build());
@@ -231,15 +241,8 @@ public class Barbarossa implements CommandLineRunner {
                     log.error(
                         "--------------------------------------今日主力净流入前10---------------------------------------");
                     log.warn(mainFundSamplesTopTen.stream()
-                        .map(e -> e.getF14() + "[" + e.getF62() / 10000 + "万]" + e.getF3() + "%")
+                        .map(e -> e.getF14() + "[" + e.getF62() / W + "万]" + e.getF3() + "%")
                         .collect(Collectors.toList()).toString().replace(" ", "").replace("[", "").replace("]", ""));
-                    log.error(
-                        "------------------------------------3|5|10日主力净流入>3亿-------------------------------------");
-                    log.warn(mainFundData.parallelStream()
-                        .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
-                            || e.getF174() > mainFundFilterAmount)
-                        .map(StockMainFundSample::getF14).collect(Collectors.toSet()).toString().replace(" ", "")
-                        .replace("[", "").replace("]", ""));
                     log.error(
                         "-----------------------------------------------持仓-----------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
@@ -295,7 +298,7 @@ public class Barbarossa implements CommandLineRunner {
             mainFundData.clear();
             mainFundData.addAll(result);
             try {
-                Thread.sleep(10000);
+                Thread.sleep(W);
             } catch (InterruptedException interruptedException) {
                 interruptedException.printStackTrace();
             }
@@ -313,10 +316,19 @@ public class Barbarossa implements CommandLineRunner {
         return builder.toString();
     }
 
+    private void analyzeMainFund() {
+        log.error("------------------------------------3|5|10日主力净流入>3亿-------------------------------------");
+        log.warn(mainFundData.parallelStream()
+            .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
+                || e.getF174() > mainFundFilterAmount)
+            .map(StockMainFundSample::getF14).collect(Collectors.toSet()).toString().replace(" ", "").replace("[", "")
+            .replace("]", ""));
+    }
+
     /**
      * 分析最近一个月各连板晋级率
      */
-    public void analyze() {
+    public void analyzePlank() {
         // 5连板+的股票
         HashSet<String> fivePlankStock = new HashSet<>();
         HashMap<String, Integer> gemPlankStockNumber = new HashMap<>();
@@ -488,8 +500,8 @@ public class Barbarossa implements CommandLineRunner {
         holdSharesMapper.delete(new QueryWrapper<>());
         clearanceMapper.delete(new QueryWrapper<>());
         tradeRecordMapper.delete(new QueryWrapper<>());
-        BALANCE = new BigDecimal(1000000);
-        BALANCE_AVAILABLE = new BigDecimal(1000000);
+        BALANCE = new BigDecimal(100 * W);
+        BALANCE_AVAILABLE = new BigDecimal(100 * W);
         Date date = new Date(beginDay);
         DateUtils.setHours(date, 0);
         DateUtils.setMinutes(date, 0);
@@ -506,7 +518,7 @@ public class Barbarossa implements CommandLineRunner {
         if (week < 7 && week > 1) {
             // 工作日
             List<Stock> stocks = this.checkCanBuyStock(date);
-            if (CollectionUtils.isNotEmpty(stocks) && BALANCE_AVAILABLE.intValue() > 10000) {
+            if (CollectionUtils.isNotEmpty(stocks) && BALANCE_AVAILABLE.intValue() > W) {
                 this.buyStock(stocks, date, fundsPart);
             }
             this.sellStock(date);
@@ -581,7 +593,7 @@ public class Barbarossa implements CommandLineRunner {
                 (selectPage.getRecords().get(1).getOpenPrice().subtract(selectPage.getRecords().get(0).getClosePrice()))
                     .divide(selectPage.getRecords().get(0).getClosePrice(), 2, RoundingMode.HALF_UP).doubleValue();
             if (openRatio > -0.03 && openRatio < plankConfig.getBuyPlankRatioLimit().doubleValue()
-                && BALANCE_AVAILABLE.intValue() > 10000) {
+                && BALANCE_AVAILABLE.intValue() > W) {
                 // 低开2个点以下不买
                 HoldShares one = holdSharesMapper.selectOne(new QueryWrapper<HoldShares>().eq("code", stock.getCode()));
                 if (Objects.isNull(one)) {
@@ -867,7 +879,7 @@ public class Barbarossa implements CommandLineRunner {
             JSONObject jsonObject = foreignShareholding.get(tracking.getName());
             try {
                 if (Objects.nonNull(jsonObject)) {
-                    long foreignTotalMarket = jsonObject.getLong("HOLD_MARKETCAP_CHG10") / 10000;
+                    long foreignTotalMarket = jsonObject.getLong("HOLD_MARKETCAP_CHG10") / W;
                     tracking.setForeignTotalMarketDynamic(foreignTotalMarket);
                 }
                 tracking.setFundTotalMarketDynamic(stockMap.get(tracking.getName()).getCurrentPrice()

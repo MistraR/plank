@@ -45,7 +45,7 @@ public class PlankController {
      */
     @PostMapping("/analyze")
     public void analyze() {
-        barbarossa.analyze();
+        barbarossa.analyzePlank();
     }
 
     /**
