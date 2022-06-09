@@ -186,50 +186,46 @@ public class Barbarossa implements CommandLineRunner {
                         JSONArray list = data.getJSONArray("item");
                         if (org.apache.commons.collections.CollectionUtils.isNotEmpty(list)) {
                             for (Object o : list) {
-                                double v = ((JSONArray)o).getDoubleValue(5);
-                                double ma20Rate = 0, ma10Rate = 0, ma5Rate = 0;
+                                double v = ((JSONArray) o).getDoubleValue(5);
                                 BigDecimal ma5Price = new BigDecimal(0);
                                 if (dailyRecords.size() >= 4) {
                                     List<BigDecimal> collect = dailyRecords.subList(0, 4).stream()
-                                        .map(DailyRecord::getClosePrice).collect(Collectors.toList());
+                                            .map(DailyRecord::getClosePrice).collect(Collectors.toList());
                                     collect.add(new BigDecimal(v));
                                     double ma5 =
-                                        collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
-                                    ma5Rate = (double)Math.round(((ma5 - v) / v) * 100) / 100;
+                                            collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
                                     ma5Price = new BigDecimal(ma5).setScale(2, RoundingMode.HALF_UP);
                                 }
                                 BigDecimal ma10Price = new BigDecimal(0);
                                 if (dailyRecords.size() >= 9) {
                                     List<BigDecimal> collect = dailyRecords.subList(0, 9).stream()
-                                        .map(DailyRecord::getClosePrice).collect(Collectors.toList());
+                                            .map(DailyRecord::getClosePrice).collect(Collectors.toList());
                                     collect.add(new BigDecimal(v));
                                     double ma10 =
-                                        collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
-                                    ma10Rate = (double)Math.round(((ma10 - v) / v) * 100) / 100;
+                                            collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
                                     ma10Price = new BigDecimal(ma10).setScale(2, RoundingMode.HALF_UP);
-                                } else {
-                                    ma10Rate =
-                                        (double)Math.round(((stock.getPurchasePrice().doubleValue() - v) / v) * 100)
-                                            / 100;
                                 }
                                 BigDecimal ma20Price = new BigDecimal(0);
                                 if (dailyRecords.size() >= 19) {
                                     List<BigDecimal> collect = dailyRecords.subList(0, 19).stream()
-                                        .map(DailyRecord::getClosePrice).collect(Collectors.toList());
+                                            .map(DailyRecord::getClosePrice).collect(Collectors.toList());
                                     collect.add(new BigDecimal(v));
                                     double ma20 =
-                                        collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
-                                    ma20Rate = (double)Math.round(((ma20 - v) / v) * 100) / 100;
+                                            collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
                                     ma20Price = new BigDecimal(ma20).setScale(2, RoundingMode.HALF_UP);
                                 }
+                                // 默认以 MA10为建仓基准价，若设置过基准类型，则以设置的基准类型为准
+                                BigDecimal purchasePrice = stock.getPurchaseType() == 2 || stock.getPurchaseType() == 0 ? ma10Price : (stock.getPurchaseType() == 1 ? ma5Price : ma20Price);
+                                double purchaseRate =
+                                        (double) Math.round(((purchasePrice.doubleValue() - v) / v) * 100)
+                                                / 100;
                                 realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v)
-                                    .name(stock.getName()).todayHighestPrice(((JSONArray)o).getDoubleValue(3))
-                                    .todayLowestPrice(((JSONArray)o).getDoubleValue(4)).ma10(ma10Price).ma5(ma5Price)
-                                    .mainFund(mainFundDataMap.containsKey(stock.getName())
-                                        ? mainFundDataMap.get(stock.getName()).getF62() / W : 0)
-                                    .purchasePrice(stock.getPurchasePrice()).ma10Rate((int)(ma10Rate * 100))
-                                    .ma5Rate((int)(ma5Rate * 100)).increaseRate(((JSONArray)o).getDoubleValue(7))
-                                    .ma20(ma20Price).ma20Rate((int)(ma20Rate * 100)).build());
+                                        .name(stock.getName()).todayHighestPrice(((JSONArray) o).getDoubleValue(3))
+                                        .todayLowestPrice(((JSONArray) o).getDoubleValue(4)).ma10(ma10Price).ma5(ma5Price)
+                                        .mainFund(mainFundDataMap.containsKey(stock.getName())
+                                                ? mainFundDataMap.get(stock.getName()).getF62() / W : 0)
+                                        .purchasePrice(purchasePrice).increaseRate(((JSONArray) o).getDoubleValue(7))
+                                        .ma20(ma20Price).purchaseRate((int) (purchaseRate * 100)).build());
                             }
                         }
                     }
@@ -254,9 +250,7 @@ public class Barbarossa implements CommandLineRunner {
                     log.error(
                         "-----------------------------------------接近建仓点------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if ((realTimePrice.getMa5Rate() >= -1 && realTimePrice.getMa5Rate() < 1)
-                            || (realTimePrice.getMa10Rate() >= -1.5 && realTimePrice.getMa10Rate() < 1.5)
-                            || (realTimePrice.getMa20Rate() >= -2 && realTimePrice.getMa20Rate() < 1)) {
+                        if (realTimePrice.getPurchaseRate() >= -3 && realTimePrice.getPurchaseRate() < 1) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
@@ -310,8 +304,8 @@ public class Barbarossa implements CommandLineRunner {
             .append((realTimePrice.getName().length() == 3 ? "  " : "")).append("[高:")
             .append(realTimePrice.getTodayHighestPrice()).append("|低:").append(realTimePrice.getTodayLowestPrice())
             .append("|现:").append(realTimePrice.getTodayRealTimePrice()).append("|MA10:")
-            .append(realTimePrice.getMa10()).append("|MA5:").append(realTimePrice.getMa5()).append("|距离MA10:")
-            .append(realTimePrice.getMa10Rate()).append("%|涨跌").append(realTimePrice.getIncreaseRate()).append("|主力流入:")
+            .append(realTimePrice.getMa10()).append("|MA5:").append(realTimePrice.getMa5()).append("|距离建仓价:")
+            .append(realTimePrice.getPurchaseRate()).append("%|涨跌").append(realTimePrice.getIncreaseRate()).append("|主力流入:")
             .append(realTimePrice.getMainFund()).append("万]");
         return builder.toString();
     }

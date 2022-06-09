@@ -51,19 +51,9 @@ public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
     private BigDecimal ma5;
 
     /**
-     * 距离MA20的比率
+     * 距离建仓价比率
      */
-    private int ma20Rate;
-
-    /**
-     * 距离MA10的比率
-     */
-    private int ma10Rate;
-
-    /**
-     * 距离MA5的比率
-     */
-    private int ma5Rate;
+    private int purchaseRate;
 
     /**
      * 当前涨幅
@@ -77,6 +67,6 @@ public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
 
     @Override
     public int compareTo(StockRealTimePrice o) {
-        return (int)((o.ma10Rate * 100) - (this.ma10Rate * 100));
+        return (int)((o.purchaseRate * 100) - (this.purchaseRate * 100));
     }
 }

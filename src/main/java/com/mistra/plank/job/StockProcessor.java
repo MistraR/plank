@@ -78,8 +78,6 @@ public class StockProcessor {
                                 exist.setMa5(BigDecimal.valueOf(ma5.stream().map(DailyRecord::getClosePrice)
                                     .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
                                 exist.setMa10(ma10);
-                                // 默认更新MA10为建仓点
-                                exist.setPurchasePrice(ma10);
                                 exist.setMa20(BigDecimal.valueOf(ma20.stream().map(DailyRecord::getClosePrice)
                                     .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
                             }
