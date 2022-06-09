@@ -36,6 +36,16 @@ public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
     private BigDecimal purchasePrice;
 
     /**
+     * MA10
+     */
+    private BigDecimal ma10;
+
+    /**
+     * MA5
+     */
+    private BigDecimal ma5;
+
+    /**
      * 距离MA10的比率
      */
     private int ma10Rate;
