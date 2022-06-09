@@ -157,7 +157,7 @@ public class Barbarossa implements CommandLineRunner {
         executorService.submit(() -> {
             try {
                 List<StockRealTimePrice> realTimePrices = new ArrayList<>();
-                while (DateUtil.hour(new Date(), true) <= 15 && DateUtil.hour(new Date(), true) >= 9) {
+                while (DateUtil.hour(new Date(), true) < 15 && DateUtil.hour(new Date(), true) >= 9) {
                     List<Stock> stocks = stockMapper
                         .selectList(new QueryWrapper<Stock>().eq("track", true).or().eq("shareholding", true));
                     Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
@@ -177,7 +177,7 @@ public class Barbarossa implements CommandLineRunner {
                         if (org.apache.commons.collections.CollectionUtils.isNotEmpty(list)) {
                             for (Object o : list) {
                                 double v = ((JSONArray)o).getDoubleValue(5);
-                                double ma10Rate, ma5Rate = 0;
+                                double ma20Rate = 0, ma10Rate = 0, ma5Rate = 0;
                                 BigDecimal ma5Price = new BigDecimal(0);
                                 if (dailyRecords.size() >= 4) {
                                     List<BigDecimal> collect = dailyRecords.subList(0, 4).stream()
@@ -202,6 +202,16 @@ public class Barbarossa implements CommandLineRunner {
                                         (double)Math.round(((stock.getPurchasePrice().doubleValue() - v) / v) * 100)
                                             / 100;
                                 }
+                                BigDecimal ma20Price = new BigDecimal(0);
+                                if (dailyRecords.size() >= 19) {
+                                    List<BigDecimal> collect = dailyRecords.subList(0, 19).stream()
+                                        .map(DailyRecord::getClosePrice).collect(Collectors.toList());
+                                    collect.add(new BigDecimal(v));
+                                    double ma20 =
+                                        collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
+                                    ma20Rate = (double)Math.round(((ma20 - v) / v) * 100) / 100;
+                                    ma20Price = new BigDecimal(ma20).setScale(2, RoundingMode.HALF_UP);
+                                }
                                 realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v)
                                     .name(stock.getName()).todayHighestPrice(((JSONArray)o).getDoubleValue(3))
                                     .todayLowestPrice(((JSONArray)o).getDoubleValue(4)).ma10(ma10Price).ma5(ma5Price)
@@ -209,7 +219,7 @@ public class Barbarossa implements CommandLineRunner {
                                         ? mainFundDataMap.get(stock.getName()).getF62() / 10000 : 0)
                                     .purchasePrice(stock.getPurchasePrice()).ma10Rate((int)(ma10Rate * 100))
                                     .ma5Rate((int)(ma5Rate * 100)).increaseRate(((JSONArray)o).getDoubleValue(7))
-                                    .build());
+                                    .ma20(ma20Price).ma20Rate((int)(ma20Rate * 100)).build());
                             }
                         }
                     }
@@ -231,23 +241,24 @@ public class Barbarossa implements CommandLineRunner {
                         .map(StockMainFundSample::getF14).collect(Collectors.toSet()).toString().replace(" ", "")
                         .replace("[", "").replace("]", ""));
                     log.error(
-                        "---------------------------------------------持仓---------------------------------------------");
+                        "-----------------------------------------------持仓-----------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (stockMap.get(realTimePrice.getName()).getShareholding()) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
                     realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
-                    log.error("------------------------------------接近建仓点(MA10)-------------------------------------");
+                    log.error(
+                        "-----------------------------------------接近建仓点------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        // if ((realTimePrice.getMa5Rate() >= -1 && realTimePrice.getMa5Rate() < 1)
-                        // || (realTimePrice.getMa10Rate() >= -3 && realTimePrice.getMa10Rate() < 3)) {
-                        if (realTimePrice.getMa10Rate() >= -1.5 && realTimePrice.getMa10Rate() <= 3) {
+                        if ((realTimePrice.getMa5Rate() >= -1 && realTimePrice.getMa5Rate() < 1)
+                            || (realTimePrice.getMa10Rate() >= -1.5 && realTimePrice.getMa10Rate() < 1.5)
+                            || (realTimePrice.getMa20Rate() >= -2 && realTimePrice.getMa20Rate() < 1)) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
                     log.error(
-                        "---------------------------------------------暴跌---------------------------------------------");
+                        "-----------------------------------------------暴跌-----------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (realTimePrice.getIncreaseRate() < -6.5) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
