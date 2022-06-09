@@ -136,13 +136,16 @@ CREATE TABLE `stock`
     `market_value`       bigint                                                       NOT NULL COMMENT '市值',
     `transaction_amount` decimal(14, 2)                                               NOT NULL COMMENT '当日成交额',
     `current_price`      decimal(14, 2)                                               NOT NULL COMMENT '当前价格',
-    `purchase_price`     decimal(6, 2)                                                NOT NULL DEFAULT '0.00' COMMENT '预计建仓价格',
+    `purchase_price`     decimal(10, 2)                                               NOT NULL DEFAULT '0.00' COMMENT '预计建仓价格',
     `volume`             bigint                                                       NOT NULL COMMENT '当日成交量',
     `modify_time`        datetime                                                     NOT NULL COMMENT '最近更新日期',
-    `track`              tinyint(1) unsigned zerofill NOT NULL COMMENT '是否关注',
+    `track`              tinyint(1) unsigned zerofill NOT NULL COMMENT '是否开启建仓点监控',
     `focus`              tinyint(1) unsigned zerofill NOT NULL COMMENT '重点关注',
     `shareholding`       tinyint(1) unsigned zerofill NOT NULL COMMENT '是否持仓',
     `classification`     varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci          DEFAULT NULL COMMENT '所属板块',
+    `ma5`                decimal(10, 2)                                                        DEFAULT NULL COMMENT '5日均线',
+    `ma10`               decimal(10, 2)                                                        DEFAULT NULL COMMENT '10日均线',
+    `ma20`               decimal(10, 2)                                                        DEFAULT NULL COMMENT '20日均线',
     PRIMARY KEY (`code`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
