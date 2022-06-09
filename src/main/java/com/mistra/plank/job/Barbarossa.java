@@ -162,10 +162,12 @@ public class Barbarossa implements CommandLineRunner {
                         .selectList(new QueryWrapper<Stock>().eq("track", true).or().eq("shareholding", true));
                     Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
                     for (Stock stock : stocks) {
-                        List<DailyRecord> dailyRecords = dailyRecordMapper
-                            .selectPage(new Page<>(1, 9),
-                                new QueryWrapper<DailyRecord>().eq("code", stock.getCode()).orderByDesc("date"))
-                            .getRecords();
+                        List<DailyRecord> dailyRecords =
+                            dailyRecordMapper
+                                .selectPage(new Page<>(1, 9),
+                                    new QueryWrapper<DailyRecord>().eq("code", stock.getCode())
+                                        .ge("date", DateUtils.addDays(new Date(), -40)).orderByDesc("date"))
+                                .getRecords();
                         String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", stock.getCode())
                             .replace("{time}", String.valueOf(System.currentTimeMillis()))
                             .replace("{recentDayNumber}", "1");
@@ -188,8 +190,8 @@ public class Barbarossa implements CommandLineRunner {
                                 }
                                 BigDecimal ma10Price = new BigDecimal(0);
                                 if (dailyRecords.size() >= 9) {
-                                    List<BigDecimal> collect = dailyRecords.stream().map(DailyRecord::getClosePrice)
-                                        .collect(Collectors.toList());
+                                    List<BigDecimal> collect = dailyRecords.subList(0, 9).stream()
+                                        .map(DailyRecord::getClosePrice).collect(Collectors.toList());
                                     collect.add(new BigDecimal(v));
                                     double ma10 =
                                         collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
@@ -240,9 +242,8 @@ public class Barbarossa implements CommandLineRunner {
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         // if ((realTimePrice.getMa5Rate() >= -1 && realTimePrice.getMa5Rate() < 1)
                         // || (realTimePrice.getMa10Rate() >= -3 && realTimePrice.getMa10Rate() < 3)) {
-                        if (realTimePrice.getMa10Rate() >= -3 && realTimePrice.getMa10Rate() <= 3) {
-                            Barbarossa.log
-                                .warn(convertLog(realTimePrice, realTimePrice.getMa10Rate(), realTimePrice.getMa10()));
+                        if (realTimePrice.getMa10Rate() >= -1.5 && realTimePrice.getMa10Rate() <= 3) {
+                            Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
                     log.error(
@@ -290,19 +291,12 @@ public class Barbarossa implements CommandLineRunner {
         }
     }
 
-    private String convertLog(StockRealTimePrice realTimePrice, int rate, BigDecimal purchasePrice) {
-        return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "[高:"
-            + realTimePrice.getTodayHighestPrice() + " | 现:" + realTimePrice.getTodayRealTimePrice() + " | 低:"
-            + realTimePrice.getTodayLowestPrice() + " | MA10:" + purchasePrice + " | 距离建仓价:" + rate + "% | 涨幅:"
-            + realTimePrice.getIncreaseRate() + " | 主力流入:" + realTimePrice.getMainFund() + "万";
-    }
-
     private String convertLog(StockRealTimePrice realTimePrice) {
         return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") + "[高:"
-            + realTimePrice.getTodayHighestPrice() + " | 现:" + realTimePrice.getTodayRealTimePrice() + " | 低:"
-            + realTimePrice.getTodayLowestPrice() + " | MA10:" + realTimePrice.getPurchasePrice() + " | 距离建仓价:"
-            + realTimePrice.getMa10Rate() + "% | 涨幅:" + realTimePrice.getIncreaseRate() + " | 主力流入:"
-            + realTimePrice.getMainFund() + "万";
+            + realTimePrice.getTodayHighestPrice() + "|低:" + realTimePrice.getTodayLowestPrice() + "|现:"
+            + realTimePrice.getTodayRealTimePrice() + "|MA10:" + realTimePrice.getMa10() + "|MA5:"
+            + realTimePrice.getMa5() + "|距离MA10:" + realTimePrice.getMa10Rate() + "%|涨跌"
+            + realTimePrice.getIncreaseRate() + "|主力流入:" + realTimePrice.getMainFund() + "万";
     }
 
     /**

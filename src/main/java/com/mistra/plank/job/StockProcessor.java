@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSON;
@@ -59,9 +60,11 @@ public class StockProcessor {
                     if (Objects.nonNull(current) && Objects.nonNull(volume)) {
                         Stock exist = stockMapper.selectById(data.getString("symbol"));
                         if (Objects.nonNull(exist)) {
-                            List<DailyRecord> dailyRecords =
-                                dailyRecordMapper.selectPage(new Page<>(1, 20), new QueryWrapper<DailyRecord>()
-                                    .eq("code", data.getString("symbol")).orderByDesc("date")).getRecords();
+                            List<DailyRecord> dailyRecords = dailyRecordMapper
+                                .selectPage(new Page<>(1, 20),
+                                    new QueryWrapper<DailyRecord>().eq("code", data.getString("symbol"))
+                                        .ge("date", DateUtils.addDays(new Date(), -40)).orderByDesc("date"))
+                                .getRecords();
                             exist.setVolume(volume.longValue());
                             exist.setModifyTime(today);
                             exist.setCurrentPrice(current);
