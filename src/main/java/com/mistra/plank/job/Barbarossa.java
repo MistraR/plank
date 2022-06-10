@@ -226,7 +226,6 @@ public class Barbarossa implements CommandLineRunner {
                     log.warn(this.collectionToString(mainFundSamplesTopTen.stream()
                         .map(e -> e.getF14() + "[" + e.getF62() / W + "万]" + e.getF3() + "%")
                         .collect(Collectors.toList())));
-                    analyzeMainFund();
                     log.error("----------------------------------------持仓-------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (stockMap.get(realTimePrice.getName()).getShareholding()) {
