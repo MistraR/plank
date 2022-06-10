@@ -146,6 +146,7 @@ CREATE TABLE `stock`
     `ma5`                decimal(10, 2)                                                        DEFAULT NULL COMMENT '5日均线',
     `ma10`               decimal(10, 2)                                                        DEFAULT NULL COMMENT '10日均线',
     `ma20`               decimal(10, 2)                                                        DEFAULT NULL COMMENT '20日均线',
+    `purchase_type`      tinyint unsigned NOT NULL DEFAULT '10' COMMENT '基准价类型 10即以MA10为基准价',
     PRIMARY KEY (`code`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

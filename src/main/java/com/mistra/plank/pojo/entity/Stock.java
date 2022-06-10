@@ -68,7 +68,7 @@ public class Stock {
     private BigDecimal ma5;
 
     /**
-     * 买点类型 1-MA5 2-MA10 3-MA20
+     * 买点类型 5-MA5 10-MA10 20-MA20
      */
     @TableField(value = "purchase_type")
     private Integer purchaseType;
