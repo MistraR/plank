@@ -100,7 +100,10 @@ public class Barbarossa implements CommandLineRunner {
     public static final HashMap<String, Stock> TRACK_STOCK_MAP = new HashMap<>();
 
     public static final CopyOnWriteArrayList<StockMainFundSample> mainFundData = new CopyOnWriteArrayList<>();
-    public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataMap = new ConcurrentHashMap<>(6400);
+    public static final CopyOnWriteArrayList<StockMainFundSample> mainFundDataAll = new CopyOnWriteArrayList<>();
+    public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataMap = new ConcurrentHashMap<>(64);
+    public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataAllMap =
+        new ConcurrentHashMap<>(6400);
 
     /**
      * 总金额
@@ -214,9 +217,8 @@ public class Barbarossa implements CommandLineRunner {
                             }
                         }
                     }
-                    Collections.sort(mainFundData);
                     List<StockMainFundSample> mainFundSamplesTopTen =
-                        mainFundData.size() > 10 ? mainFundData.subList(0, 10) : new ArrayList<>();
+                        mainFundDataAll.size() > 10 ? mainFundDataAll.subList(0, 10) : new ArrayList<>();
                     Collections.sort(realTimePrices);
                     System.out.println("\n\n\n");
                     log.error(
@@ -235,7 +237,7 @@ public class Barbarossa implements CommandLineRunner {
                     log.error(
                         "-----------------------------------------接近建仓点------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if (realTimePrice.getPurchaseRate() >= -3 && realTimePrice.getPurchaseRate() < 1) {
+                        if (realTimePrice.getPurchaseRate() >= -2) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
@@ -265,15 +267,21 @@ public class Barbarossa implements CommandLineRunner {
         array.parallelStream().forEach(e -> {
             try {
                 StockMainFundSample mainFundSample = JSONObject.parseObject(e.toString(), StockMainFundSample.class);
+                result.add(mainFundSample);
+                mainFundDataAllMap.put(mainFundSample.getF14(), mainFundSample);
                 if (TRACK_STOCK_MAP.containsKey(mainFundSample.getF14())) {
-                    result.add(mainFundSample);
                     mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
                 }
             } catch (Exception exception) {
             }
         });
+        Collections.sort(result);
+        mainFundDataAll.clear();
+        mainFundDataAll.addAll(result);
         mainFundData.clear();
-        mainFundData.addAll(result);
+        mainFundData
+            .addAll(result.stream().filter(e -> TRACK_STOCK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
+
         try {
             Thread.sleep(W);
         } catch (InterruptedException interruptedException) {
@@ -294,7 +302,7 @@ public class Barbarossa implements CommandLineRunner {
 
     private void analyzeMainFund() {
         log.error("------------------------------------3|5|10日主力净流入>3亿-------------------------------------");
-        log.warn(mainFundData.parallelStream()
+        log.warn(mainFundDataAll.parallelStream()
             .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
                 || e.getF174() > mainFundFilterAmount)
             .map(StockMainFundSample::getF14).collect(Collectors.toSet()).toString().replace(" ", "").replace("[", "")
