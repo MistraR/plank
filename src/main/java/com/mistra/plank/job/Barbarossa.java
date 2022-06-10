@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -221,28 +222,25 @@ public class Barbarossa implements CommandLineRunner {
                         mainFundDataAll.size() > 10 ? mainFundDataAll.subList(0, 10) : new ArrayList<>();
                     Collections.sort(realTimePrices);
                     System.out.println("\n\n\n");
-                    log.error(
-                        "--------------------------------------今日主力净流入前10---------------------------------------");
-                    log.warn(mainFundSamplesTopTen.stream()
+                    log.error("-----------------------------------今日主力净流入前10-----------------------------------");
+                    log.warn(this.collectionToString(mainFundSamplesTopTen.stream()
                         .map(e -> e.getF14() + "[" + e.getF62() / W + "万]" + e.getF3() + "%")
-                        .collect(Collectors.toList()).toString().replace(" ", "").replace("[", "").replace("]", ""));
-                    log.error(
-                        "-----------------------------------------------持仓-----------------------------------------------");
+                        .collect(Collectors.toList())));
+                    analyzeMainFund();
+                    log.error("----------------------------------------持仓-------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (stockMap.get(realTimePrice.getName()).getShareholding()) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
                     realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
-                    log.error(
-                        "-----------------------------------------接近建仓点------------------------------------------");
+                    log.error("-------------------------------------接近建仓点-----------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (realTimePrice.getPurchaseRate() >= -2) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
-                    log.error(
-                        "-----------------------------------------------暴跌-----------------------------------------------");
+                    log.error("---------------------------------------暴跌---------------------------------------------");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (realTimePrice.getIncreaseRate() < -6.5) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
@@ -301,12 +299,12 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private void analyzeMainFund() {
-        log.error("------------------------------------3|5|10日主力净流入>3亿-------------------------------------");
-        log.warn(mainFundDataAll.parallelStream()
-            .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
-                || e.getF174() > mainFundFilterAmount)
-            .map(StockMainFundSample::getF14).collect(Collectors.toSet()).toString().replace(" ", "").replace("[", "")
-            .replace("]", ""));
+        log.error("--------------------------------3|5|10日主力净流入>3亿----------------------------------");
+        log.warn(
+            this.collectionToString(mainFundDataAll.parallelStream()
+                .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
+                    || e.getF174() > mainFundFilterAmount)
+                .map(StockMainFundSample::getF14).collect(Collectors.toSet())));
     }
 
     /**
@@ -433,9 +431,8 @@ public class Barbarossa implements CommandLineRunner {
                 gemPlankStockTwice.add(entry.getKey());
             }
         }
-        log.info("最近一个月5连板+的股票:{}", fivePlankStock.toString().replace(" ", "").replace("[", "").replace("]", ""));
-        log.info("最近一个月创业板涨停2次+的股票:{}",
-            gemPlankStockTwice.toString().replace(" ", "").replace("[", "").replace("]", ""));
+        log.info("最近一个月5连板+的股票:{}", this.collectionToString(fivePlankStock));
+        log.info("最近一个月创业板涨停2次+的股票:{}", this.collectionToString(gemPlankStockTwice));
         log.info("一板>一进二平均胜率：{}",
             (double)Math
                 .round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
@@ -903,5 +900,9 @@ public class Barbarossa implements CommandLineRunner {
             e.printStackTrace();
         }
         return result;
+    }
+
+    private String collectionToString(Collection collection) {
+        return collection.toString().replace(" ", "").replace("[", "").replace("]", "");
     }
 }
