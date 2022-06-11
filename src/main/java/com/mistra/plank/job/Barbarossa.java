@@ -174,6 +174,7 @@ public class Barbarossa implements CommandLineRunner {
      */
     private void analyzeUpwardTrend() {
         List<UpwardTrendSample> samples = new ArrayList<>(STOCK_MAP.size());
+        List<String> failed = new ArrayList<>();
         for (Map.Entry<String, String> entry : STOCK_MAP.entrySet()) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, entry.getKey()));
             if (stock.getTransactionAmount().doubleValue() < mainFundFilterAmount) {
@@ -183,7 +184,7 @@ public class Barbarossa implements CommandLineRunner {
                 .selectList(new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, entry.getKey())
                     .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -200)).orderByDesc(DailyRecord::getDate));
             if (dailyRecords.size() < 100) {
-                log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)，不够{}个交易日数据！请先爬取交易数据！", entry.getKey(), 100);
+                failed.add(entry.getKey());
                 continue;
             }
             dailyRecords = dailyRecords.subList(0, 100);
@@ -210,6 +211,9 @@ public class Barbarossa implements CommandLineRunner {
                     .ma20(new BigDecimal(ma20).setScale(2, RoundingMode.HALF_UP)).name(entry.getValue())
                     .code(entry.getKey()).variance(variance).build());
             }
+        }
+        if (CollectionUtils.isNotEmpty(failed)) {
+            log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
         }
         Collections.sort(samples);
         log.warn("上升趋势的股票一共{}支:{}", samples.size(),
