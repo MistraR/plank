@@ -217,7 +217,7 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 求方差
      * 
-     * @param 数组
+     * @param x 数组
      * @return 方差
      */
     public static double variance(double[] x) {
@@ -470,10 +470,7 @@ public class Barbarossa implements CommandLineRunner {
                 this.promotion(fourToFive, todayFive, yesterdayFour, date);
                 this.promotion(fiveToSix, todaySix, yesterdayFive, date);
                 this.promotion(sixToSeven, todaySeven, yesterdaySix, date);
-                log.info(
-                    "\n-------------------------------------------------------------------------------------------{}日-------------------------------------------------------------------------------------------"
-                        + "\n一板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}\n七板{}支:{}"
-                        + "\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------",
+                log.warn("{}日连板数据：" + "\n一板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}\n七板{}支:{}",
                     sdf.format(date), todayOne.keySet().size(), new ArrayList<>(todayOne.keySet()),
                     todayTwo.keySet().size(), new ArrayList<>(todayTwo.keySet()), todayThree.keySet().size(),
                     new ArrayList<>(todayThree.keySet()), todayFour.keySet().size(),
@@ -502,29 +499,29 @@ public class Barbarossa implements CommandLineRunner {
                 gemPlankStockTwice.add(entry.getKey());
             }
         }
-        log.info("最近一个月5连板+的股票:{}", this.collectionToString(fivePlankStock));
-        log.info("最近一个月创业板涨停2次+的股票:{}", this.collectionToString(gemPlankStockTwice));
-        log.info("一板>一进二平均胜率：{}",
+        log.warn("最近一个月5连板+的股票:{}", this.collectionToString(fivePlankStock));
+        log.warn("最近一个月创业板涨停2次+的股票:{}", this.collectionToString(gemPlankStockTwice));
+        log.error("一板>一进二平均胜率：{}",
             (double)Math
                 .round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
                 / 100);
-        log.info("二板>二进三平均胜率：{}",
+        log.error("二板>二进三平均胜率：{}",
             (double)Math
                 .round(twoToThree.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
                 / 100);
-        log.info("三板>三进四平均胜率：{}",
+        log.error("三板>三进四平均胜率：{}",
             (double)Math
                 .round(threeToFour.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
                 / 100);
-        log.info("四板>四进五平均胜率：{}",
+        log.error("四板>四进五平均胜率：{}",
             (double)Math
                 .round(fourToFive.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
                 / 100);
-        log.info("五板>五进六平均胜率：{}",
+        log.error("五板>五进六平均胜率：{}",
             (double)Math
                 .round(fiveToSix.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
                 / 100);
-        log.info("六板>六进七平均胜率：{}",
+        log.error("六板>六进七平均胜率：{}",
             (double)Math
                 .round(sixToSeven.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
                 / 100);
