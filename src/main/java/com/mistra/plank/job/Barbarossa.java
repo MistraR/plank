@@ -169,6 +169,8 @@ public class Barbarossa implements CommandLineRunner {
      * 找出周均线向上发散，上升趋势的股票
      * 
      * 周均线MA03>MA05>MA10>MA20
+     * 
+     * 上市不足20个交易日的次新股就不计算了
      */
     private void analyzeUpwardTrend() {
         List<UpwardTrendSample> samples = new ArrayList<>(STOCK_MAP.size());
