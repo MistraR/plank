@@ -225,12 +225,12 @@ public class Barbarossa implements CommandLineRunner {
     public static double variance(double[] x) {
         int m = x.length;
         double sum = 0;
-        for (int i = 0; i < m; i++) {// 求和
+        for (int i = 0; i < m; i++) {
             sum += x[i];
         }
-        double dAve = sum / m;// 求平均值
+        double dAve = sum / m;
         double dVar = 0;
-        for (int i = 0; i < m; i++) {// 求方差
+        for (int i = 0; i < m; i++) {
             dVar += (x[i] - dAve) * (x[i] - dAve);
         }
         return dVar / m;
@@ -249,84 +249,85 @@ public class Barbarossa implements CommandLineRunner {
      *
      */
     public void monitor() {
-        executorService.submit(() -> {
-            try {
-                List<StockRealTimePrice> realTimePrices = new ArrayList<>();
-                while (DateUtil.hour(new Date(), true) < 15 && DateUtil.hour(new Date(), true) >= 9) {
-                    List<Stock> stocks = stockMapper
-                        .selectList(new QueryWrapper<Stock>().eq("track", true).or().eq("shareholding", true));
-                    Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
-                    for (Stock stock : stocks) {
-                        // 默认把MA10作为建仓基准价格
-                        int purchaseType = Objects.isNull(stock.getPurchaseType()) || stock.getPurchaseType() == 0 ? 10
-                            : stock.getPurchaseType();
-                        List<DailyRecord> dailyRecords =
-                            dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().eq("code", stock.getCode())
-                                .ge("date", DateUtils.addDays(new Date(), -50)).orderByDesc("date"));
-                        if (dailyRecords.size() < purchaseType) {
-                            log.error("{}的交易数据不完整，不够{}个交易日数据！请先爬取交易数据！", stock.getCode(), stock.getPurchaseType());
-                            continue;
-                        }
-                        String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", stock.getCode())
-                            .replace("{time}", String.valueOf(System.currentTimeMillis()))
-                            .replace("{recentDayNumber}", "1");
-                        String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
-                        JSONObject data = JSON.parseObject(body).getJSONObject("data");
-                        JSONArray list = data.getJSONArray("item");
-                        if (CollectionUtils.isNotEmpty(list)) {
-                            for (Object o : list) {
-                                double v = ((JSONArray)o).getDoubleValue(5);
-                                List<BigDecimal> collect = dailyRecords.subList(0, purchaseType - 1).stream()
-                                    .map(DailyRecord::getClosePrice).collect(Collectors.toList());
-                                collect.add(new BigDecimal(v));
-                                double ma =
-                                    collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
-                                BigDecimal maPrice = new BigDecimal(ma).setScale(2, RoundingMode.HALF_UP);
-                                double purchaseRate = (double)Math.round(((maPrice.doubleValue() - v) / v) * 100) / 100;
-                                realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v)
-                                    .name(stock.getName()).todayHighestPrice(((JSONArray)o).getDoubleValue(3))
-                                    .todayLowestPrice(((JSONArray)o).getDoubleValue(4))
-                                    .mainFund(mainFundDataMap.containsKey(stock.getName())
-                                        ? mainFundDataMap.get(stock.getName()).getF62() / W : 0)
-                                    .purchasePrice(maPrice).increaseRate(((JSONArray)o).getDoubleValue(7))
-                                    .purchaseRate((int)(purchaseRate * 100)).build());
-                            }
-                        }
-                    }
-                    List<StockMainFundSample> mainFundSamplesTopTen =
-                        mainFundDataAll.size() > 10 ? mainFundDataAll.subList(0, 10) : new ArrayList<>();
-                    Collections.sort(realTimePrices);
-                    System.out.println("\n\n\n");
-                    log.error("今日主力净流入前10：");
-                    log.warn(this.collectionToString(mainFundSamplesTopTen.stream()
-                        .map(e -> e.getF14() + "[" + e.getF62() / W + "万]" + e.getF3() + "%")
-                        .collect(Collectors.toList())));
-                    log.error("持仓：");
-                    for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if (stockMap.get(realTimePrice.getName()).getShareholding()) {
-                            Barbarossa.log.warn(convertLog(realTimePrice));
-                        }
-                    }
-                    realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
-                    log.error("接近建仓点：");
-                    for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if (realTimePrice.getPurchaseRate() >= -3) {
-                            Barbarossa.log.warn(convertLog(realTimePrice));
-                        }
-                    }
-                    log.error("暴跌：");
-                    for (StockRealTimePrice realTimePrice : realTimePrices) {
-                        if (realTimePrice.getIncreaseRate() < -5) {
-                            Barbarossa.log.warn(convertLog(realTimePrice));
-                        }
-                    }
-                    realTimePrices.clear();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        executorService.submit(this::monitorStock);
         executorService.submit(this::queryMainFundData);
+    }
+
+    private void monitorStock() {
+        try {
+            List<StockRealTimePrice> realTimePrices = new ArrayList<>();
+            while (DateUtil.hour(new Date(), true) < 15 && DateUtil.hour(new Date(), true) >= 9) {
+                List<Stock> stocks =
+                    stockMapper.selectList(new QueryWrapper<Stock>().eq("track", true).or().eq("shareholding", true));
+                Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
+                for (Stock stock : stocks) {
+                    // 默认把MA10作为建仓基准价格
+                    int purchaseType = Objects.isNull(stock.getPurchaseType()) || stock.getPurchaseType() == 0 ? 10
+                        : stock.getPurchaseType();
+                    List<DailyRecord> dailyRecords =
+                        dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().eq("code", stock.getCode())
+                            .ge("date", DateUtils.addDays(new Date(), -50)).orderByDesc("date"));
+                    if (dailyRecords.size() < purchaseType) {
+                        log.error("{}的交易数据不完整，不够{}个交易日数据！请先爬取交易数据！", stock.getCode(), stock.getPurchaseType());
+                        continue;
+                    }
+                    String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", stock.getCode())
+                        .replace("{time}", String.valueOf(System.currentTimeMillis()))
+                        .replace("{recentDayNumber}", "1");
+                    String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
+                    JSONObject data = JSON.parseObject(body).getJSONObject("data");
+                    JSONArray list = data.getJSONArray("item");
+                    if (CollectionUtils.isNotEmpty(list)) {
+                        for (Object o : list) {
+                            double v = ((JSONArray)o).getDoubleValue(5);
+                            List<BigDecimal> collect = dailyRecords.subList(0, purchaseType - 1).stream()
+                                .map(DailyRecord::getClosePrice).collect(Collectors.toList());
+                            collect.add(new BigDecimal(v));
+                            double ma = collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
+                            BigDecimal maPrice = new BigDecimal(ma).setScale(2, RoundingMode.HALF_UP);
+                            double purchaseRate = (double)Math.round(((maPrice.doubleValue() - v) / v) * 100) / 100;
+                            realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v).name(stock.getName())
+                                .todayHighestPrice(((JSONArray)o).getDoubleValue(3))
+                                .todayLowestPrice(((JSONArray)o).getDoubleValue(4))
+                                .mainFund(mainFundDataMap.containsKey(stock.getName())
+                                    ? mainFundDataMap.get(stock.getName()).getF62() / W : 0)
+                                .purchasePrice(maPrice).increaseRate(((JSONArray)o).getDoubleValue(7))
+                                .purchaseRate((int)(purchaseRate * 100)).build());
+                        }
+                    }
+                }
+                List<StockMainFundSample> mainFundSamplesTopTen =
+                    mainFundDataAll.size() > 10 ? mainFundDataAll.subList(0, 10) : new ArrayList<>();
+                Collections.sort(realTimePrices);
+                System.out.println("\n\n\n");
+                log.error("今日主力净流入前10：");
+                log.warn(this.collectionToString(
+                    mainFundSamplesTopTen.stream().map(e -> e.getF14() + "[" + e.getF62() / W + "万]" + e.getF3() + "%")
+                        .collect(Collectors.toList())));
+                log.error("持仓：");
+                for (StockRealTimePrice realTimePrice : realTimePrices) {
+                    if (stockMap.get(realTimePrice.getName()).getShareholding()) {
+                        Barbarossa.log.warn(convertLog(realTimePrice));
+                    }
+                }
+                realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
+                log.error("接近建仓点：");
+                for (StockRealTimePrice realTimePrice : realTimePrices) {
+                    if (realTimePrice.getPurchaseRate() >= -3) {
+                        Barbarossa.log.warn(convertLog(realTimePrice));
+                    }
+                }
+                log.error("暴跌：");
+                for (StockRealTimePrice realTimePrice : realTimePrices) {
+                    if (realTimePrice.getIncreaseRate() < -5) {
+                        Barbarossa.log.warn(convertLog(realTimePrice));
+                    }
+                }
+                realTimePrices.clear();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
