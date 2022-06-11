@@ -34,6 +34,7 @@ import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.config.PlankConfig;
@@ -46,6 +47,7 @@ import com.mistra.plank.mapper.StockMapper;
 import com.mistra.plank.mapper.TradeRecordMapper;
 import com.mistra.plank.pojo.dto.StockMainFundSample;
 import com.mistra.plank.pojo.dto.StockRealTimePrice;
+import com.mistra.plank.pojo.dto.UpwardTrendSample;
 import com.mistra.plank.pojo.entity.Clearance;
 import com.mistra.plank.pojo.entity.DailyRecord;
 import com.mistra.plank.pojo.entity.DragonList;
@@ -147,18 +149,89 @@ public class Barbarossa implements CommandLineRunner {
             executorService.submit(this::queryMainFundData);
             // 15点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
-            // 更新每只股票收盘价，MA5 MA10 MA20
+            // 更新每只股票收盘价，当日成交量，MA5 MA10 MA20
             stockProcessor.run();
-            // 更新 外资+基金 持仓 只更新到最新一季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时的
+            // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
             updateForeignFundShareholding(202201);
             // 分析连板数据
             analyzePlank();
             // 分析主力流入数据
             analyzeMainFund();
+            // 分析上升趋势的股票
+            analyzeUpwardTrend();
         } else {
             // 15点以前实时监控涨跌
             monitor();
         }
+    }
+
+    /**
+     * 找出周均线向上发散，上升趋势的股票
+     * 
+     * 周均线MA03>MA05>MA10>MA20
+     */
+    private void analyzeUpwardTrend() {
+        List<UpwardTrendSample> samples = new ArrayList<>(STOCK_MAP.size());
+        for (Map.Entry<String, String> entry : STOCK_MAP.entrySet()) {
+            Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, entry.getKey()));
+            if (stock.getTransactionAmount().doubleValue() < mainFundFilterAmount) {
+                continue;
+            }
+            List<DailyRecord> dailyRecords = dailyRecordMapper
+                .selectList(new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, entry.getKey())
+                    .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -200)).orderByDesc(DailyRecord::getDate));
+            if (dailyRecords.size() < 100) {
+                log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)，不够{}个交易日数据！请先爬取交易数据！", entry.getKey(), 100);
+                continue;
+            }
+            dailyRecords = dailyRecords.subList(0, 100);
+            // 计算周k线，直接取5天为默认一周，不按自然周计算。先把100条日交易记录转换为20周k线。周五收盘价即为当前周收盘价。
+            List<BigDecimal> week = new ArrayList<>();
+            for (int i = 0; i < dailyRecords.size(); i += 5) {
+                week.add(dailyRecords.get(i).getClosePrice());
+            }
+            // 计算MA3
+            double ma3 = week.subList(0, 3).stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
+            // 计算MA5
+            double ma5 = week.subList(0, 5).stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
+            // 计算MA10
+            double ma10 = week.subList(0, 10).stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
+            // 计算MA20
+            double ma20 = week.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
+            if (ma3 > ma5 && ma5 > ma10 && ma10 > ma20) {
+                double[] x = new double[] {ma3, ma5, ma10, ma20};
+                // 计算方差
+                double variance = variance(x);
+                samples.add(UpwardTrendSample.builder().ma3(new BigDecimal(ma3).setScale(2, RoundingMode.HALF_UP))
+                    .ma5(new BigDecimal(ma5).setScale(2, RoundingMode.HALF_UP))
+                    .ma10(new BigDecimal(ma10).setScale(2, RoundingMode.HALF_UP))
+                    .ma20(new BigDecimal(ma20).setScale(2, RoundingMode.HALF_UP)).name(entry.getValue())
+                    .code(entry.getKey()).variance(variance).build());
+            }
+        }
+        Collections.sort(samples);
+        log.warn("上升趋势的股票一共{}支:{}", samples.size(),
+            collectionToString(samples.stream().map(UpwardTrendSample::getCode).collect(Collectors.toSet())));
+    }
+
+    /**
+     * 求方差
+     * 
+     * @param 数组
+     * @return 方差
+     */
+    public static double variance(double[] x) {
+        int m = x.length;
+        double sum = 0;
+        for (int i = 0; i < m; i++) {// 求和
+            sum += x[i];
+        }
+        double dAve = sum / m;// 求平均值
+        double dVar = 0;
+        for (int i = 0; i < m; i++) {// 求方差
+            dVar += (x[i] - dAve) * (x[i] - dAve);
+        }
+        return dVar / m;
     }
 
     /**
@@ -222,24 +295,24 @@ public class Barbarossa implements CommandLineRunner {
                         mainFundDataAll.size() > 10 ? mainFundDataAll.subList(0, 10) : new ArrayList<>();
                     Collections.sort(realTimePrices);
                     System.out.println("\n\n\n");
-                    log.error("-----------------------------------今日主力净流入前10-----------------------------------");
+                    log.error("今日主力净流入前10：");
                     log.warn(this.collectionToString(mainFundSamplesTopTen.stream()
                         .map(e -> e.getF14() + "[" + e.getF62() / W + "万]" + e.getF3() + "%")
                         .collect(Collectors.toList())));
-                    log.error("----------------------------------------持仓-------------------------------------------");
+                    log.error("持仓：");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (stockMap.get(realTimePrice.getName()).getShareholding()) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
                     realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
-                    log.error("-------------------------------------接近建仓点-----------------------------------------");
+                    log.error("接近建仓点：");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (realTimePrice.getPurchaseRate() >= -3) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
                         }
                     }
-                    log.error("---------------------------------------暴跌---------------------------------------------");
+                    log.error("暴跌：");
                     for (StockRealTimePrice realTimePrice : realTimePrices) {
                         if (realTimePrice.getIncreaseRate() < -5) {
                             Barbarossa.log.warn(convertLog(realTimePrice));
@@ -298,9 +371,8 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private void analyzeMainFund() {
-        log.error("--------------------------------3|5|10日主力净流入>3亿----------------------------------");
         log.warn(
-            this.collectionToString(mainFundDataAll.parallelStream()
+            "3|5|10日主力净流入>3亿：" + this.collectionToString(mainFundDataAll.parallelStream()
                 .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
                     || e.getF174() > mainFundFilterAmount)
                 .map(StockMainFundSample::getF14).collect(Collectors.toSet())));

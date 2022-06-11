@@ -73,7 +73,7 @@ public class StockProcessor {
                                 List<DailyRecord> ma5 = dailyRecords.subList(0, 5);
                                 BigDecimal ma10 = BigDecimal
                                     .valueOf(dailyRecords.subList(0, 10).stream().map(DailyRecord::getClosePrice)
-                                        .collect(Collectors.averagingDouble(BigDecimal::doubleValue)));;
+                                        .collect(Collectors.averagingDouble(BigDecimal::doubleValue)));
                                 List<DailyRecord> ma20 = dailyRecords.subList(0, 20);
                                 exist.setMa5(BigDecimal.valueOf(ma5.stream().map(DailyRecord::getClosePrice)
                                     .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
