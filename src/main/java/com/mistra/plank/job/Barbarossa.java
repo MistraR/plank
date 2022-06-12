@@ -106,7 +106,7 @@ public class Barbarossa implements CommandLineRunner {
     public static final CopyOnWriteArrayList<StockMainFundSample> mainFundDataAll = new CopyOnWriteArrayList<>();
     public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataMap = new ConcurrentHashMap<>(64);
     public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataAllMap =
-        new ConcurrentHashMap<>(6400);
+        new ConcurrentHashMap<>(5000);
 
     /**
      * 总金额
@@ -171,6 +171,8 @@ public class Barbarossa implements CommandLineRunner {
      * 周均线MA03>MA05>MA10>MA20
      * 
      * 上市不足20个交易日的次新股就不计算了
+     * 
+     * 趋势股选出来之后我一般会直接用.txt文档导入到东方财富windows版客户端，再来人为筛选一遍k线好看的票
      */
     private void analyzeUpwardTrend() {
         List<UpwardTrendSample> samples = new ArrayList<>(STOCK_MAP.size());
