@@ -137,7 +137,7 @@ public class Barbarossa implements CommandLineRunner {
     public void run(String... args) {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().notLike("name", "%ST%")
             .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%C%").notLike("name", "%N%")
-            .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%").notLike("code", "%688%"));
+            .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
         stocks.stream().filter(e -> e.getShareholding() || e.getTrack())
             .forEach(stock -> TRACK_STOCK_MAP.put(stock.getName(), stock));
