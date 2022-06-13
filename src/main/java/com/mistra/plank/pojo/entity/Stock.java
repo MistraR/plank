@@ -92,6 +92,12 @@ public class Stock {
     private Date modifyTime;
 
     /**
+     * 是否忽略监控该股票
+     */
+    @TableField(value = "ignore_monitor")
+    private Boolean ignoreMonitor;
+
+    /**
      * 是否关注
      */
     @TableField(value = "track")

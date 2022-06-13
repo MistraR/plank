@@ -117,18 +117,6 @@ public class Barbarossa implements CommandLineRunner {
      */
     public static BigDecimal BALANCE_AVAILABLE = new BigDecimal(100 * W);
 
-    /**
-     * 最近走上升趋势的股票
-     */
-    private static final String UPWARD_TREND_STOCK =
-        "SZ000957,SZ000713,SZ002738,SZ002060,SH601001,SH600395,SH601088,SH600273,SZ002056,SH600795,SZ000151,SZ002176,SZ300179,SZ002053,SH600313,SH601127,SZ000833,SH600438,SZ000830,SZ002578,SZ000552,SZ000968,SH605399,SZ002192,SH601199,SH600141,SH600389,SH600026,SH601872,SZ000680,SH600546,SH601238,SZ002183,SH600820,SH600028,SZ002865,SH603815,SZ002588,SH601918,SH603938,SZ000683,SZ000738,SZ000572,SZ002594,SZ300751,SH600610,SH600732,SH601666,SZ000733,SZ000975,SZ300759,SZ002478,SZ002476,SZ002630,SZ300507,SZ000628,SZ000625,SH600283,SZ000909,SH600284,SH600163,SZ300189,SZ300861,SZ002121,SH600206,SH601898,SZ002923,SH600328,SZ300505,SH600603,SZ000983,SZ002125,SZ000519,SZ000999,SZ002539,SH605366,SH603069,SZ300012,SH600873,SH600598,SH600199,SH600596,SH600354,SH600513,SH600359,SH600997,SH603227,SZ000756,SH600758,SZ300532,SZ300015,SZ002258,SZ300896,SZ000595,SZ002895,SH603906,SH603299,SH600063,SH600188,SH600101,SH600502,SH600348,SH603612,SH600985,SH601958,SH600900,SZ002943,SZ300803,SH600508,SH603619,SZ000937,SZ000933,SH600096,SH600251,SH601225,SH600256,SZ002277,SH600777,SH601228,SZ000810,SZ300957,SZ000707,SH600481,SZ002562,SH600089,SH600486,SH600123,SH600403,SZ002041,SZ002163,SH600888,SH601975,SH600127,SH600248,SZ002207,SZ000822,SH600929,SZ002443,SZ300700";
-
-    /**
-     * 最近3|5|10日主力净流入>3亿的股票
-     */
-    private static final String MAIN_FUND_INFLOW_STOCK =
-        "通威股份,兴业银行,宝钢股份,五粮液,恒生电子,洛阳钼业,福耀玻璃,爱尔眼科,广发证券,中科曙光,铜陵有色,宁德时代,宁波银行,新潮能源,联泓新科,司尔特,舍得酒业,中国宝安,长安汽车,华东医药,兴发集团,西藏矿业,上机数控,天齐锂业,海康威视,贵州茅台,新安股份,中国软件,横店东磁,五矿稀土,老白干酒,光大证券,华友钴业,广晟有色,小康股份,新和成,东方盛虹,中环股份,山西汾酒,东方财富,和邦生物,长江电力,酒鬼酒,特变电工,荣盛石化,立讯精密,C昱能,泸州老窖,赣锋锂业,C华海,陕西煤业,浙文互联,云天化,亿纬锂能,北方稀土,中芯国际,川恒股份,天赐材料,招商南油,分众传媒,比亚迪";
-
     public Barbarossa(StockMapper stockMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
         ClearanceMapper clearanceMapper, TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
         DragonListMapper dragonListMapper, PlankConfig plankConfig, DailyRecordProcessor dailyRecordProcessor,
@@ -149,7 +137,7 @@ public class Barbarossa implements CommandLineRunner {
     public void run(String... args) {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().notLike("name", "%ST%")
             .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%C%").notLike("name", "%N%")
-            .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
+            .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%").notLike("code", "%688%"));
         stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
         stocks.stream().filter(e -> e.getShareholding() || e.getTrack())
             .forEach(stock -> TRACK_STOCK_MAP.put(stock.getName(), stock));
@@ -191,8 +179,7 @@ public class Barbarossa implements CommandLineRunner {
         List<String> failed = new ArrayList<>();
         for (Map.Entry<String, String> entry : STOCK_MAP.entrySet()) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, entry.getKey()));
-            if (stock.getTransactionAmount().doubleValue() < 500000000
-                || UPWARD_TREND_STOCK.contains(stock.getCode())) {
+            if (stock.getIgnoreMonitor() || stock.getTransactionAmount().doubleValue() < 500000000) {
                 continue;
             }
             List<DailyRecord> dailyRecords = dailyRecordMapper
@@ -407,10 +394,11 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private void analyzeMainFund() {
-        log.warn("3|5|10日主力净流入>3亿：" + this.collectionToString(mainFundDataAll.parallelStream()
-            .filter(e -> !MAIN_FUND_INFLOW_STOCK.contains(e.getF14()) && (e.getF267() > mainFundFilterAmount
-                || e.getF164() > mainFundFilterAmount || e.getF174() > mainFundFilterAmount))
-            .map(StockMainFundSample::getF14).collect(Collectors.toSet())));
+        log.warn(
+            "最近3|5|10日主力净流入>3亿：" + this.collectionToString(mainFundDataAll.parallelStream()
+                .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
+                    || e.getF174() > mainFundFilterAmount)
+                .map(StockMainFundSample::getF12).collect(Collectors.toSet())));
     }
 
     /**
