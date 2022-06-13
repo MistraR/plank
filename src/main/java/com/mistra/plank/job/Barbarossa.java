@@ -142,7 +142,7 @@ public class Barbarossa implements CommandLineRunner {
         stocks.stream().filter(e -> e.getShareholding() || e.getTrack())
             .forEach(stock -> TRACK_STOCK_MAP.put(stock.getName(), stock));
         log.warn("一共加载[{}]支股票！", stocks.size());
-        log.warn("一共加载[{}]支监控股票！", TRACK_STOCK_MAP.size());
+        log.warn("一共加载[{}]支需要监控的股票！", TRACK_STOCK_MAP.size());
         BALANCE = new BigDecimal(plankConfig.getFunds());
         BALANCE_AVAILABLE = new BigDecimal(plankConfig.getFunds());
         if (DateUtil.hour(new Date(), true) >= 15) {
@@ -215,7 +215,7 @@ public class Barbarossa implements CommandLineRunner {
             }
         }
         if (CollectionUtils.isNotEmpty(failed)) {
-            log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
+            // log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
         }
         Collections.sort(samples);
         log.warn("上升趋势的股票一共{}支:{}", samples.size(),
@@ -395,7 +395,7 @@ public class Barbarossa implements CommandLineRunner {
 
     private void analyzeMainFund() {
         log.warn(
-            "最近3|5|10日主力净流入>3亿：" + this.collectionToString(mainFundDataAll.parallelStream()
+            "3|5|10日主力净流入>3亿:" + this.collectionToString(mainFundDataAll.parallelStream()
                 .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
                     || e.getF174() > mainFundFilterAmount)
                 .map(StockMainFundSample::getF12).collect(Collectors.toSet())));
@@ -964,7 +964,7 @@ public class Barbarossa implements CommandLineRunner {
                 e.printStackTrace();
             }
         }
-        log.warn("更新外资最新持仓数据完成！");
+        log.warn("股票最新外资持仓市值更新完成！");
     }
 
     /**
