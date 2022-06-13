@@ -83,7 +83,7 @@ public class StockProcessor {
                         } else {
                             stockMapper.insert(Stock.builder().code(data.getString("symbol"))
                                 .name(data.getString("name")).marketValue(data.getLongValue("mc")).currentPrice(current)
-                                .purchasePrice(current).volume(volume.longValue()).ma5(zero).ma10(zero).ma20(zero)
+                                .volume(volume.longValue()).ma5(zero).ma10(zero).ma20(zero)
                                 .transactionAmount(current.multiply(volume)).modifyTime(today).track(false)
                                 .shareholding(false).focus(false).classification("").build());
                         }
