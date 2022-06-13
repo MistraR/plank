@@ -220,6 +220,13 @@ public class Barbarossa implements CommandLineRunner {
         Collections.sort(samples);
         log.warn("上升趋势的股票一共{}支:{}", samples.size(),
             collectionToString(samples.stream().map(UpwardTrendSample::getCode).collect(Collectors.toSet())));
+        // 找出来之后直接更新这些股票为监控股票
+        List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getCode,
+            samples.stream().map(UpwardTrendSample::getCode).collect(Collectors.toSet())));
+        for (Stock stock : stocks) {
+            stock.setTrack(true);
+            stockMapper.updateById(stock);
+        }
     }
 
     /**
@@ -290,6 +297,11 @@ public class Barbarossa implements CommandLineRunner {
                                 .map(DailyRecord::getClosePrice).collect(Collectors.toList());
                             collect.add(new BigDecimal(v));
                             double ma = collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
+                            // 如果手动设置了purchasePrice，则以stock.purchasePrice 和均线价格 2个当中更低的价格为基准价
+                            if (Objects.nonNull(stock.getPurchasePrice())
+                                && stock.getPurchasePrice().doubleValue() > 0) {
+                                ma = Math.min(stock.getPurchasePrice().doubleValue(), ma);
+                            }
                             BigDecimal maPrice = new BigDecimal(ma).setScale(2, RoundingMode.HALF_UP);
                             double purchaseRate = (double)Math.round(((maPrice.doubleValue() - v) / v) * 100) / 100;
                             realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v).name(stock.getName())
@@ -319,7 +331,7 @@ public class Barbarossa implements CommandLineRunner {
                 realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
                 log.error("接近建仓点：");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
-                    if (realTimePrice.getPurchaseRate() >= -3) {
+                    if (realTimePrice.getPurchaseRate() >= -4) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }

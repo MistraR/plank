@@ -70,16 +70,15 @@ public class StockProcessor {
                             exist.setCurrentPrice(current);
                             exist.setTransactionAmount(current.multiply(volume));
                             if (dailyRecords.size() >= 20) {
-                                List<DailyRecord> ma5 = dailyRecords.subList(0, 5);
-                                BigDecimal ma10 = BigDecimal
+                                exist.setMa5(BigDecimal
+                                    .valueOf(dailyRecords.subList(0, 5).stream().map(DailyRecord::getClosePrice)
+                                        .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
+                                exist.setMa10(BigDecimal
                                     .valueOf(dailyRecords.subList(0, 10).stream().map(DailyRecord::getClosePrice)
-                                        .collect(Collectors.averagingDouble(BigDecimal::doubleValue)));
-                                List<DailyRecord> ma20 = dailyRecords.subList(0, 20);
-                                exist.setMa5(BigDecimal.valueOf(ma5.stream().map(DailyRecord::getClosePrice)
-                                    .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
-                                exist.setMa10(ma10);
-                                exist.setMa20(BigDecimal.valueOf(ma20.stream().map(DailyRecord::getClosePrice)
-                                    .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
+                                        .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
+                                exist.setMa20(BigDecimal
+                                    .valueOf(dailyRecords.subList(0, 20).stream().map(DailyRecord::getClosePrice)
+                                        .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
                             }
                             stockMapper.updateById(exist);
                         } else {
