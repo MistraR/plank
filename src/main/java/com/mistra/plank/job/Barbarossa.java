@@ -272,8 +272,8 @@ public class Barbarossa implements CommandLineRunner {
         try {
             List<StockRealTimePrice> realTimePrices = new ArrayList<>();
             while (DateUtil.hour(new Date(), true) < 15 && DateUtil.hour(new Date(), true) >= 9) {
-                List<Stock> stocks =
-                    stockMapper.selectList(new QueryWrapper<Stock>().eq("track", true).or().eq("shareholding", true));
+                List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().eq("ignore_monitor", true)
+                    .eq("track", true).or().eq("shareholding", true));
                 Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
                 for (Stock stock : stocks) {
                     // 默认把MA10作为建仓基准价格
