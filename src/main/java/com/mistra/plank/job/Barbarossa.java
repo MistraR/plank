@@ -297,7 +297,7 @@ public class Barbarossa implements CommandLineRunner {
                             double v = ((JSONArray)o).getDoubleValue(5);
                             List<BigDecimal> collect = dailyRecords.subList(0, purchaseType - 1).stream()
                                 .map(DailyRecord::getClosePrice).collect(Collectors.toList());
-                            collect.add(new BigDecimal(v));
+                            collect.add(new BigDecimal(v).setScale(2, RoundingMode.HALF_UP));
                             double ma = collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
                             // 如果手动设置了purchasePrice，则以stock.purchasePrice 和均线价格 2个当中更低的价格为基准价
                             if (Objects.nonNull(stock.getPurchasePrice())
@@ -337,7 +337,7 @@ public class Barbarossa implements CommandLineRunner {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
-                log.error("暴跌：");
+                log.error("跌幅>5%：");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (realTimePrice.getIncreaseRate() < -5) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
@@ -386,9 +386,9 @@ public class Barbarossa implements CommandLineRunner {
         StringBuilder builder = new StringBuilder().append(realTimePrice.getName())
             .append((realTimePrice.getName().length() == 3 ? "  " : "")).append("[高:")
             .append(realTimePrice.getTodayHighestPrice()).append("|低:").append(realTimePrice.getTodayLowestPrice())
-            .append("|现:").append(realTimePrice.getTodayRealTimePrice()).append("|基准价:")
-            .append(realTimePrice.getPurchasePrice()).append("|距离基准价:").append(realTimePrice.getPurchaseRate())
-            .append("%|涨跌").append(realTimePrice.getIncreaseRate()).append("|主力流入:").append(realTimePrice.getMainFund())
+            .append("|现:").append(realTimePrice.getTodayRealTimePrice()).append("|买:")
+            .append(realTimePrice.getPurchasePrice()).append("|差距:").append(realTimePrice.getPurchaseRate())
+            .append("%|涨跌:").append(realTimePrice.getIncreaseRate()).append("|主力:").append(realTimePrice.getMainFund())
             .append("万]");
         return builder.toString();
     }
