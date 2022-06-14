@@ -179,7 +179,8 @@ public class Barbarossa implements CommandLineRunner {
         List<String> failed = new ArrayList<>();
         for (Map.Entry<String, String> entry : STOCK_MAP.entrySet()) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, entry.getKey()));
-            if (stock.getIgnoreMonitor() || stock.getTransactionAmount().doubleValue() < 500000000) {
+            if (stock.getIgnoreMonitor() || stock.getTrack()
+                || stock.getTransactionAmount().doubleValue() < 500000000) {
                 continue;
             }
             List<DailyRecord> dailyRecords = dailyRecordMapper
@@ -218,7 +219,7 @@ public class Barbarossa implements CommandLineRunner {
             // log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
         }
         Collections.sort(samples);
-        log.warn("上升趋势的股票一共{}支:{}", samples.size(),
+        log.warn("新发现的上升趋势的股票一共{}支:{}", samples.size(),
             collectionToString(samples.stream().map(UpwardTrendSample::getCode).collect(Collectors.toSet())));
         if (CollectionUtils.isNotEmpty(samples)) {
             // 找出来之后直接更新这些股票为监控股票
