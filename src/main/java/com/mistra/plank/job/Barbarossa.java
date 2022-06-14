@@ -339,7 +339,7 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 log.error("跌幅>5%：");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
-                    if (realTimePrice.getIncreaseRate() < -6) {
+                    if (realTimePrice.getIncreaseRate() < -5) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
