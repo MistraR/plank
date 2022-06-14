@@ -281,7 +281,7 @@ public class Barbarossa implements CommandLineRunner {
                         : stock.getPurchaseType();
                     List<DailyRecord> dailyRecords =
                         dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().eq("code", stock.getCode())
-                            .ge("date", DateUtils.addDays(new Date(), purchaseType * 2)).orderByDesc("date"));
+                            .ge("date", DateUtils.addDays(new Date(), -purchaseType * 2)).orderByDesc("date"));
                     if (dailyRecords.size() < purchaseType) {
                         log.error("{}的交易数据不完整，不够{}个交易日数据！请先爬取交易数据！", stock.getCode(), stock.getPurchaseType());
                         continue;
@@ -339,7 +339,7 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 log.error("跌幅>5%：");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
-                    if (realTimePrice.getIncreaseRate() < -5) {
+                    if (realTimePrice.getIncreaseRate() < -6) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
