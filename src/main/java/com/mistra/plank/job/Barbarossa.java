@@ -229,7 +229,7 @@ public class Barbarossa implements CommandLineRunner {
                 samples.stream().map(UpwardTrendSample::getCode).collect(Collectors.toSet())));
             for (Stock stock : stocks) {
                 stock.setTrack(true);
-                stockMapper.updateById(stock);
+                // stockMapper.updateById(stock);
             }
         }
     }
