@@ -52,19 +52,19 @@ public class ScreeningStocks {
     /**
      * 红三兵选股
      *
-     * @param date 开盘日期
+     * @param date 分析日期-截止这天的收盘数据
      * @return List<Stock>
      */
     public List<Stock> checkRedThreeSoldiersStock(Date date) {
         List<Stock> result = new ArrayList<>();
         List<DailyRecord> dailyRecords = dailyRecordMapper
             .selectList(new LambdaQueryWrapper<DailyRecord>().ge(DailyRecord::getDate, DateUtils.addDays(date, -20))
-                .le(DailyRecord::getDate, DateUtils.addDays(date, -1)).orderByDesc(DailyRecord::getDate));
+                .le(DailyRecord::getDate, date).orderByDesc(DailyRecord::getDate));
         Map<String, List<DailyRecord>> dailyRecordMap =
             dailyRecords.stream().collect(Collectors.groupingBy(DailyRecord::getCode));
         for (Map.Entry<String, List<DailyRecord>> entry : dailyRecordMap.entrySet()) {
             List<DailyRecord> recordList = entry.getValue();
-            if (recordList.size() >= 3 && recordList.get(0).getAmount() > 100000) {
+            if (recordList.size() >= 3 && recordList.get(0).getAmount() > 80000) {
                 DailyRecord one = recordList.get(2);
                 DailyRecord two = recordList.get(1);
                 DailyRecord three = recordList.get(0);
@@ -87,7 +87,7 @@ public class ScreeningStocks {
             }
         }
         Collections.sort(result);
-        log.warn("{}日红三兵股票{}支:{}", sdf.format(date), result.size(),
+        log.warn("{}日红三兵股票[{}]支:{}", sdf.format(date), result.size(),
             StringUtil.collectionToString(result.stream().map(Stock::getName).collect(Collectors.toList())));
         return result;
     }

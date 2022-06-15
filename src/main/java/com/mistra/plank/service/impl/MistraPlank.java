@@ -71,7 +71,7 @@ public class MistraPlank implements Plank {
                 return screeningStocks.checkDragonListStock(date);
             case RED_THREE_SOLDIERS:
             default:
-                return screeningStocks.checkRedThreeSoldiersStock(date);
+                return screeningStocks.checkRedThreeSoldiersStock(DateUtils.addDays(date, -1));
         }
     }
 
