@@ -74,13 +74,13 @@ public class ScreeningStocks {
                         && two.getClosePrice().compareTo(two.getOpenPrice()) > 0)
                     && (three.getClosePrice().compareTo(two.getClosePrice()) > 0
                         && three.getClosePrice().compareTo(two.getOpenPrice()) > 0)
-                    && (threeDayIncreaseRate <= 0.12 && threeDayIncreaseRate > 0.05)) {
+                    && (threeDayIncreaseRate <= 0.15 && threeDayIncreaseRate > 0.05)) {
                     Stock stock =
                         stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, entry.getKey()));
                     if (three.getClosePrice().compareTo(stock.getMa10()) > 0
                         && three.getClosePrice().compareTo(stock.getMa5()) > 0
-                        && differencePercentage(three.getClosePrice(), stock.getMa5()) < 0.05
-                        && differencePercentage(three.getClosePrice(), stock.getMa10()) < 0.15) {
+                        && differencePercentage(three.getClosePrice(), stock.getMa5()) < 0.15
+                        && differencePercentage(three.getClosePrice(), stock.getMa10()) < 0.20) {
                         result.add(stock);
                     }
                 }
