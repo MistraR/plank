@@ -688,10 +688,13 @@ public class Barbarossa implements CommandLineRunner {
                 String body = HttpUtil.getHttpGetResponseString(
                     plankConfig.getForeignShareholdingUrl().replace("{pageNumber}", pageNumber + ""), null);
                 body = body.substring(body.indexOf("(") + 1, body.indexOf(")"));
-                JSONArray array = JSON.parseObject(body).getJSONObject("result").getJSONArray("data");
-                for (Object o : array) {
-                    JSONObject jsonObject = (JSONObject)o;
-                    result.put(jsonObject.getString("SECURITY_NAME"), jsonObject);
+                JSONObject parseObject = JSON.parseObject(body);
+                if (parseObject.getJSONObject("result") != null) {
+                    JSONArray array = parseObject.getJSONObject("result").getJSONArray("data");
+                    for (Object o : array) {
+                        JSONObject jsonObject = (JSONObject)o;
+                        result.put(jsonObject.getString("SECURITY_NAME"), jsonObject);
+                    }
                 }
                 pageNumber++;
             }
