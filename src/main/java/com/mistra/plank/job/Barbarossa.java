@@ -491,13 +491,17 @@ public class Barbarossa implements CommandLineRunner {
                 this.promotion(fourToFive, todayFive, yesterdayFour, date);
                 this.promotion(fiveToSix, todaySix, yesterdayFive, date);
                 this.promotion(sixToSeven, todaySeven, yesterdaySix, date);
-                log.warn("{}日连板数据：" + "\n一板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}\n七板{}支:{}",
-                    sdf.format(date), todayOne.keySet().size(), new ArrayList<>(todayOne.keySet()),
-                    todayTwo.keySet().size(), new ArrayList<>(todayTwo.keySet()), todayThree.keySet().size(),
-                    new ArrayList<>(todayThree.keySet()), todayFour.keySet().size(),
-                    new ArrayList<>(todayFour.keySet()), todayFive.keySet().size(), new ArrayList<>(todayFive.keySet()),
-                    todaySix.keySet().size(), new ArrayList<>(todaySix.keySet()), todaySeven.keySet().size(),
-                    new ArrayList<>(todaySeven.keySet()));
+                if (date.after(DateUtils.addDays(new Date(), -5))) {
+                    // 只打印最近3-5个交易日的连板数据
+                    log.warn("{}日连板数据：" + "\n一板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}\n七板{}支:{}",
+                        sdf.format(date), todayOne.keySet().size(), new ArrayList<>(todayOne.keySet()),
+                        todayTwo.keySet().size(), new ArrayList<>(todayTwo.keySet()), todayThree.keySet().size(),
+                        new ArrayList<>(todayThree.keySet()), todayFour.keySet().size(),
+                        new ArrayList<>(todayFour.keySet()), todayFive.keySet().size(),
+                        new ArrayList<>(todayFive.keySet()), todaySix.keySet().size(),
+                        new ArrayList<>(todaySix.keySet()), todaySeven.keySet().size(),
+                        new ArrayList<>(todaySeven.keySet()));
+                }
                 fivePlankStock.addAll(todayFive.keySet());
                 yesterdayOne.clear();
                 yesterdayOne.putAll(todayOne);
