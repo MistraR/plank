@@ -70,11 +70,6 @@ public class PlankConfig {
     private Integer recentDayNumber;
 
     /**
-     * 起始资金
-     */
-    private Integer funds;
-
-    /**
      * 选股策略
      */
     private BuyStrategyEnum buyStrategyEnum;
@@ -85,7 +80,7 @@ public class PlankConfig {
     private BigDecimal profitUpperRatio;
 
     /**
-     * 阶段止盈减半仓比率
+     * 阶段止盈减至1/4仓比率
      */
     private BigDecimal profitQuarterRatio;
 
@@ -95,7 +90,7 @@ public class PlankConfig {
     private BigDecimal profitHalfRatio;
 
     /**
-     * 阶段止盈回车清仓比率
+     * 阶段止盈回撤清仓比率
      */
     private BigDecimal profitClearanceRatio;
 
@@ -120,12 +115,12 @@ public class PlankConfig {
     private Integer stockPriceLowerLimit;
 
     /**
-     * 股价下限
+     * 最长持股天数限制
      */
     private Integer clearanceDay;
 
     /**
-     * 可打板涨幅比率
+     * 可买入涨幅比率
      */
     private BigDecimal buyPlankRatioLimit;
 

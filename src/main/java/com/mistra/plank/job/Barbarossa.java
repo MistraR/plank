@@ -132,13 +132,13 @@ public class Barbarossa implements CommandLineRunner {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().notLike("name", "%ST%")
             .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%C%").notLike("name", "%N%")
             .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%").notLike("code", "%688%"));
-        stocks.forEach(stock -> STOCK_MAP.put(stock.getCode(), stock.getName()));
-        stocks.stream().filter(e -> !e.getIgnoreMonitor() && (e.getShareholding() || e.getTrack()))
-            .forEach(stock -> TRACK_STOCK_MAP.put(stock.getName(), stock));
-        log.warn("一共加载[{}]支股票！", stocks.size());
-        log.warn("一共加载[{}]支需要监控的股票！", TRACK_STOCK_MAP.size());
-        BALANCE = new BigDecimal(plankConfig.getFunds());
-        BALANCE_AVAILABLE = new BigDecimal(plankConfig.getFunds());
+        stocks.forEach(e -> {
+            if (!e.getIgnoreMonitor() && (e.getShareholding() || e.getTrack())) {
+                TRACK_STOCK_MAP.put(e.getName(), e);
+            }
+            STOCK_MAP.put(e.getCode(), e.getName());
+        });
+        log.warn("一共加载[{}]支股票！[{}]支需要监控的股票！", STOCK_MAP.size(), TRACK_STOCK_MAP.size());
         if (DateUtil.hour(new Date(), true) >= 15) {
             executorService.submit(this::queryMainFundData);
             // 15点后读取当日交易数据
@@ -154,15 +154,11 @@ public class Barbarossa implements CommandLineRunner {
             // 分析上升趋势的股票
             analyzeUpwardTrend();
             // 分析红三兵股票
-            analyzeRedThreeSoldiers(null);
+            screeningStocks.checkRedThreeSoldiersStock(new Date());
         } else {
             // 15点以前实时监控涨跌
             monitor();
         }
-    }
-
-    private void analyzeRedThreeSoldiers(Date date) {
-        screeningStocks.checkRedThreeSoldiersStock(Objects.isNull(date) ? new Date() : date);
     }
 
     /**
@@ -423,7 +419,8 @@ public class Barbarossa implements CommandLineRunner {
         HashMap<String, BigDecimal> fiveToSix = new HashMap<>(16);
         // 六板六进七胜率
         HashMap<String, BigDecimal> sixToSeven = new HashMap<>(16);
-        List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().ge("date", date));
+        List<DailyRecord> dailyRecords =
+            dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>().ge(DailyRecord::getDate, date));
         Map<String, List<DailyRecord>> dateListMap =
             dailyRecords.stream().collect(Collectors.groupingBy(dailyRecord -> sdf.format(dailyRecord.getDate())));
         // 昨日首板
@@ -699,5 +696,4 @@ public class Barbarossa implements CommandLineRunner {
         }
         return result;
     }
-
 }
