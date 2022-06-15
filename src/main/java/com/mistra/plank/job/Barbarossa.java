@@ -162,9 +162,7 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private void analyzeRedThreeSoldiers(Date date) {
-        List<Stock> stocks = screeningStocks.checkRedThreeSoldiersStock(Objects.isNull(date) ? new Date() : date);
-        log.warn("红三兵股票一共{}支:{}", stocks.size(),
-            StringUtil.collectionToString(stocks.stream().map(Stock::getName).collect(Collectors.toList())));
+        screeningStocks.checkRedThreeSoldiersStock(Objects.isNull(date) ? new Date() : date);
     }
 
     /**
@@ -222,7 +220,7 @@ public class Barbarossa implements CommandLineRunner {
         }
         Collections.sort(samples);
         log.warn("新发现的上升趋势的股票一共{}支:{}", samples.size(), StringUtil
-            .collectionToString(samples.stream().map(UpwardTrendSample::getCode).collect(Collectors.toSet())));
+            .collectionToString(samples.stream().map(UpwardTrendSample::getName).collect(Collectors.toSet())));
         if (CollectionUtils.isNotEmpty(samples)) {
             // 找出来之后直接更新这些股票为监控股票
             List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getCode,
