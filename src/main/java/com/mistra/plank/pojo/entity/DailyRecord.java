@@ -63,7 +63,7 @@ public class DailyRecord {
     private BigDecimal lowest;
 
     /**
-     * 成交额
+     * 成交额(万)
      */
     @TableField(value = "amount")
     private Long amount;

@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName(value = "stock", autoResultMap = true)
-public class Stock {
+public class Stock implements Comparable<Stock> {
 
     @TableId(value = "code")
     private String code;
@@ -120,4 +120,9 @@ public class Stock {
      */
     @TableField(value = "classification")
     private String classification;
+
+    @Override
+    public int compareTo(Stock o) {
+        return (int)(this.transactionAmount.doubleValue()) - (int)(o.transactionAmount.doubleValue());
+    }
 }

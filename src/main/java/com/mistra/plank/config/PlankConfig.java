@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import com.mistra.plank.pojo.enums.BuyStrategyEnum;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -73,6 +75,11 @@ public class PlankConfig {
     private Integer funds;
 
     /**
+     * 选股策略
+     */
+    private BuyStrategyEnum buyStrategyEnum;
+
+    /**
      * 止盈清仓比率
      */
     private BigDecimal profitUpperRatio;
@@ -101,16 +108,6 @@ public class PlankConfig {
      * 止损均线
      */
     private Integer deficitMovingAverage;
-
-    /**
-     * 介入比率下限 2日涨幅
-     */
-    private BigDecimal joinIncreaseRatioLowerLimit;
-
-    /**
-     * 介入比率上限 6日涨幅
-     */
-    private BigDecimal joinIncreaseRatioUpperLimit;
 
     /**
      * 股价上限
