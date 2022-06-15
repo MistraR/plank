@@ -2,6 +2,7 @@ package com.mistra.plank.service.impl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -22,6 +23,9 @@ import com.mistra.plank.mapper.StockMapper;
 import com.mistra.plank.pojo.entity.DailyRecord;
 import com.mistra.plank.pojo.entity.DragonList;
 import com.mistra.plank.pojo.entity.Stock;
+import com.mistra.plank.util.StringUtil;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 描述
@@ -29,9 +33,11 @@ import com.mistra.plank.pojo.entity.Stock;
  * @author mistra@future.com
  * @date 2022/6/15
  */
+@Slf4j
 @Component
 public class ScreeningStocks {
 
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     private final DailyRecordMapper dailyRecordMapper;
     private final StockMapper stockMapper;
     private final DragonListMapper dragonListMapper;
@@ -57,11 +63,11 @@ public class ScreeningStocks {
         Map<String, List<DailyRecord>> dailyRecordMap =
             dailyRecords.stream().collect(Collectors.groupingBy(DailyRecord::getCode));
         for (Map.Entry<String, List<DailyRecord>> entry : dailyRecordMap.entrySet()) {
-            if (entry.getValue().size() >= 3 && entry.getValue().get(0).getAmount() > 50000) {
-                dailyRecords = dailyRecords.subList(0, 3);
-                DailyRecord one = dailyRecords.get(2);
-                DailyRecord two = dailyRecords.get(1);
-                DailyRecord three = dailyRecords.get(0);
+            List<DailyRecord> recordList = entry.getValue();
+            if (recordList.size() >= 3 && recordList.get(0).getAmount() > 100000) {
+                DailyRecord one = recordList.get(2);
+                DailyRecord two = recordList.get(1);
+                DailyRecord three = recordList.get(0);
                 double threeDayIncreaseRate = differencePercentage(three.getClosePrice(), one.getOpenPrice());
                 if (one.getClosePrice().compareTo(one.getOpenPrice()) > 0
                     && (two.getClosePrice().compareTo(one.getClosePrice()) > 0
@@ -81,6 +87,8 @@ public class ScreeningStocks {
             }
         }
         Collections.sort(result);
+        log.warn("{}日红三兵股票{}支:{}", sdf.format(date), result.size(),
+            StringUtil.collectionToString(result.stream().map(Stock::getName).collect(Collectors.toList())));
         return result;
     }
 

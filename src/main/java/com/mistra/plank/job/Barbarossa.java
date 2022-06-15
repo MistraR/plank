@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -50,6 +49,7 @@ import com.mistra.plank.pojo.param.FundHoldingsParam;
 import com.mistra.plank.service.Plank;
 import com.mistra.plank.service.impl.ScreeningStocks;
 import com.mistra.plank.util.HttpUtil;
+import com.mistra.plank.util.StringUtil;
 import com.mistra.plank.util.UploadDataListener;
 
 import cn.hutool.core.date.DateUtil;
@@ -164,7 +164,7 @@ public class Barbarossa implements CommandLineRunner {
     private void analyzeRedThreeSoldiers(Date date) {
         List<Stock> stocks = screeningStocks.checkRedThreeSoldiersStock(Objects.isNull(date) ? new Date() : date);
         log.warn("红三兵股票一共{}支:{}", stocks.size(),
-            collectionToString(stocks.stream().map(Stock::getName).collect(Collectors.toList())));
+            StringUtil.collectionToString(stocks.stream().map(Stock::getName).collect(Collectors.toList())));
     }
 
     /**
@@ -221,8 +221,8 @@ public class Barbarossa implements CommandLineRunner {
             // log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
         }
         Collections.sort(samples);
-        log.warn("新发现的上升趋势的股票一共{}支:{}", samples.size(),
-            collectionToString(samples.stream().map(UpwardTrendSample::getCode).collect(Collectors.toSet())));
+        log.warn("新发现的上升趋势的股票一共{}支:{}", samples.size(), StringUtil
+            .collectionToString(samples.stream().map(UpwardTrendSample::getCode).collect(Collectors.toSet())));
         if (CollectionUtils.isNotEmpty(samples)) {
             // 找出来之后直接更新这些股票为监控股票
             List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getCode,
@@ -324,7 +324,7 @@ public class Barbarossa implements CommandLineRunner {
                 Collections.sort(realTimePrices);
                 System.out.println("\n\n\n");
                 log.error("今日主力净流入前10：");
-                log.warn(this.collectionToString(
+                log.warn(StringUtil.collectionToString(
                     mainFundSamplesTopTen.stream().map(e -> e.getF14() + "[" + e.getF62() / W + "万]" + e.getF3() + "%")
                         .collect(Collectors.toList())));
                 log.error("持仓：");
@@ -398,7 +398,7 @@ public class Barbarossa implements CommandLineRunner {
 
     private void analyzeMainFund() {
         log.warn(
-            "3|5|10日主力净流入>3亿:" + this.collectionToString(mainFundDataAll.parallelStream()
+            "3|5|10日主力净流入>3亿:" + StringUtil.collectionToString(mainFundDataAll.parallelStream()
                 .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
                     || e.getF174() > mainFundFilterAmount)
                 .map(StockMainFundSample::getF14).collect(Collectors.toSet())));
@@ -525,8 +525,8 @@ public class Barbarossa implements CommandLineRunner {
                 gemPlankStockTwice.add(entry.getKey());
             }
         }
-        log.warn("最近一个月5连板+的股票:{}", this.collectionToString(fivePlankStock));
-        log.warn("最近一个月创业板涨停2次+的股票:{}", this.collectionToString(gemPlankStockTwice));
+        log.warn("最近一个月5连板+的股票:{}", StringUtil.collectionToString(fivePlankStock));
+        log.warn("最近一个月创业板涨停2次+的股票:{}", StringUtil.collectionToString(gemPlankStockTwice));
         log.error("一板>一进二平均胜率：{}",
             (double)Math
                 .round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
@@ -702,7 +702,4 @@ public class Barbarossa implements CommandLineRunner {
         return result;
     }
 
-    private String collectionToString(Collection collection) {
-        return collection.toString().replace(" ", "").replace("[", "").replace("]", "");
-    }
 }
