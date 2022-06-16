@@ -34,7 +34,7 @@ public class DailyRecordProcessor {
     private final DailyRecordMapper dailyRecordMapper;
     private final PlankConfig plankConfig;
 
-    private final ThreadPoolExecutor executorService = new ThreadPoolExecutor(20, 50, 0L, TimeUnit.MILLISECONDS,
+    private final ThreadPoolExecutor executorService = new ThreadPoolExecutor(20, 20, 0L, TimeUnit.MILLISECONDS,
         new LinkedBlockingQueue<>(5000), new NamedThreadFactory("每日交易数据线程-", false));
 
     public DailyRecordProcessor(DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig) {
