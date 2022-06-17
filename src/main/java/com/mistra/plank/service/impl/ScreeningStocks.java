@@ -79,8 +79,8 @@ public class ScreeningStocks {
                         low = record;
                     }
                 }
-                if (high.getAmount() > Math.max(ma10 * 1.5, 100000) && low.getAmount() < ma10 * 0.7
-                    && low.getAmount() > 50000
+                if (high.getDate().before(low.getDate()) && high.getAmount() > Math.max(ma10 * 1.5, 100000)
+                    && low.getAmount() < ma10 * 0.7 && low.getAmount() > 50000
                     && low.getClosePrice()
                         .doubleValue() < ((high.getClosePrice().doubleValue() + high.getOpenPrice().doubleValue())
                             / 2)) {
