@@ -138,7 +138,6 @@ public class Barbarossa implements CommandLineRunner {
             }
             STOCK_MAP.put(e.getCode(), e.getName());
         });
-        log.warn("一共加载[{}]支股票！[{}]支需要监控的股票！", STOCK_MAP.size(), TRACK_STOCK_MAP.size());
         if (DateUtil.hour(new Date(), true) >= 15) {
             executorService.submit(this::queryMainFundData);
             // 15点后读取当日交易数据
@@ -153,6 +152,8 @@ public class Barbarossa implements CommandLineRunner {
             analyzeMainFund();
             // 分析上升趋势的股票
             analyzeUpwardTrend();
+            // 爆量回踩
+            screeningStocks.explosiveVolumeBack(new Date());
             // 分析红三兵股票
             screeningStocks.checkRedThreeSoldiersStock(new Date());
         } else {
