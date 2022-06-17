@@ -11,7 +11,7 @@ public enum BuyStrategyEnum {
     /**
      * 选股策略
      */
-    DRAGON_LIST("龙虎榜净买入选股"), RED_THREE_SOLDIERS("红三兵选股");
+    DRAGON_LIST("龙虎榜净买入选股"), RED_THREE_SOLDIERS("红三兵选股"), EXPLOSIVE_VOLUME_BACK("爆量回踩");
 
     /**
      * 描述

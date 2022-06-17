@@ -57,7 +57,7 @@ public class ScreeningStocks {
      * 
      * 最高成交额>10亿 最低成交额>5亿
      */
-    public void explosiveVolumeBack(Date date) {
+    public List<Stock> explosiveVolumeBack(Date date) {
         List<Stock> result = new ArrayList<>();
         List<DailyRecord> dailyRecords = dailyRecordMapper
             .selectList(new LambdaQueryWrapper<DailyRecord>().ge(DailyRecord::getDate, DateUtils.addDays(date, -30))
@@ -96,6 +96,7 @@ public class ScreeningStocks {
         Collections.sort(result);
         log.warn("{}爆量回踩股票[{}]支:{}", sdf.format(date), result.size(),
             StringUtil.collectionToString(result.stream().map(Stock::getName).collect(Collectors.toList())));
+        return result;
     }
 
     /**
