@@ -51,7 +51,7 @@ public class ScreeningStocks {
     }
 
     /**
-     * 找出最近10天 爆量回踩的票
+     * 找出最近5天或10天 爆量回踩的票
      *
      * 最高成交量>MA10*1.5 最低成交量<MA10*0.7 最低成交量出现在最高成交量之后 最低成交量那天的收盘价>最高成交量那天(收盘价+开盘价)/2
      * 
@@ -67,27 +67,12 @@ public class ScreeningStocks {
         for (Map.Entry<String, List<DailyRecord>> entry : dailyRecordMap.entrySet()) {
             List<DailyRecord> recordList = entry.getValue();
             if (recordList.size() >= 10 && recordList.get(0).getAmount() > 50000) {
-                recordList = recordList.subList(0, 10);
-                // 计算MA10
-                double ma10 = recordList.stream().collect(Collectors.averagingLong(DailyRecord::getAmount));
-                DailyRecord high = recordList.get(0), low = recordList.get(0);
-                for (DailyRecord record : recordList) {
-                    if (high.getAmount() < record.getAmount()) {
-                        high = record;
-                    }
-                    if (low.getAmount() > record.getAmount()) {
-                        low = record;
-                    }
-                }
-                if (high.getDate().before(low.getDate()) && high.getAmount() > Math.max(ma10 * 1.5, 100000)
-                    && low.getAmount() < ma10 * 0.7 && low.getAmount() > 50000
-                    && low.getClosePrice()
-                        .doubleValue() < ((high.getClosePrice().doubleValue() + high.getOpenPrice().doubleValue())
-                            / 2)) {
-                    Stock stock =
-                        stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, entry.getKey()));
-                    if (Objects.nonNull(stock.getMa20())
-                        && recordList.get(0).getClosePrice().compareTo(stock.getMa20()) > 0) {
+                Stock stock = explosiveVolumeBack(recordList.subList(0, 5), entry.getKey());
+                if (Objects.nonNull(stock)) {
+                    result.add(stock);
+                } else {
+                    stock = explosiveVolumeBack(recordList.subList(0, 10), entry.getKey());
+                    if (Objects.nonNull(stock)) {
                         result.add(stock);
                     }
                 }
@@ -97,6 +82,30 @@ public class ScreeningStocks {
         log.warn("{}爆量回踩股票[{}]支:{}", sdf.format(date), result.size(),
             StringUtil.collectionToString(result.stream().map(Stock::getName).collect(Collectors.toList())));
         return result;
+    }
+
+    private Stock explosiveVolumeBack(List<DailyRecord> recordList, String code) {
+        // 计算MA10
+        double ma10 = recordList.stream().collect(Collectors.averagingLong(DailyRecord::getAmount));
+        DailyRecord high = recordList.get(0), low = recordList.get(0);
+        for (DailyRecord record : recordList) {
+            if (high.getAmount() < record.getAmount()) {
+                high = record;
+            }
+            if (low.getAmount() > record.getAmount()) {
+                low = record;
+            }
+        }
+        if (high.getClosePrice().compareTo(high.getOpenPrice()) > 0 && high.getDate().before(low.getDate())
+            && high.getAmount() > Math.max(ma10 * 1.5, 100000) && low.getAmount() < ma10 * 0.7
+            && low.getAmount() > 50000 && low.getClosePrice()
+                .doubleValue() > ((high.getClosePrice().doubleValue() + high.getOpenPrice().doubleValue()) / 2)) {
+            Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, code));
+            if (Objects.nonNull(stock.getMa20()) && recordList.get(0).getClosePrice().compareTo(stock.getMa20()) > 0) {
+                return stock;
+            }
+        }
+        return null;
     }
 
     /**
