@@ -352,31 +352,33 @@ public class Barbarossa implements CommandLineRunner {
      * 查询主力实时流入数据
      */
     private void queryMainFundData() {
-        String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
-        JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
-        List<StockMainFundSample> result = new ArrayList<>();
-        array.parallelStream().forEach(e -> {
-            try {
-                StockMainFundSample mainFundSample = JSONObject.parseObject(e.toString(), StockMainFundSample.class);
-                result.add(mainFundSample);
-                mainFundDataAllMap.put(mainFundSample.getF14(), mainFundSample);
-                if (TRACK_STOCK_MAP.containsKey(mainFundSample.getF14())) {
-                    mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
+        while (true) {
+            String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
+            JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
+            List<StockMainFundSample> result = new ArrayList<>();
+            array.parallelStream().forEach(e -> {
+                try {
+                    StockMainFundSample mainFundSample =
+                        JSONObject.parseObject(e.toString(), StockMainFundSample.class);
+                    result.add(mainFundSample);
+                    mainFundDataAllMap.put(mainFundSample.getF14(), mainFundSample);
+                    if (TRACK_STOCK_MAP.containsKey(mainFundSample.getF14())) {
+                        mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
+                    }
+                } catch (Exception exception) {
                 }
-            } catch (Exception exception) {
+            });
+            Collections.sort(result);
+            mainFundDataAll.clear();
+            mainFundDataAll.addAll(result);
+            mainFundData.clear();
+            mainFundData.addAll(
+                result.stream().filter(e -> TRACK_STOCK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
+            try {
+                Thread.sleep(W);
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
             }
-        });
-        Collections.sort(result);
-        mainFundDataAll.clear();
-        mainFundDataAll.addAll(result);
-        mainFundData.clear();
-        mainFundData
-            .addAll(result.stream().filter(e -> TRACK_STOCK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
-
-        try {
-            Thread.sleep(W);
-        } catch (InterruptedException interruptedException) {
-            interruptedException.printStackTrace();
         }
     }
 

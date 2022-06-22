@@ -99,7 +99,7 @@ public class ScreeningStocks {
         if (high.getClosePrice().compareTo(high.getOpenPrice()) > 0 && high.getDate().before(low.getDate())
             && high.getAmount() > Math.max(ma10 * 1.5, 100000) && low.getAmount() < ma10 * 0.7
             && low.getAmount() > 50000 && low.getClosePrice()
-                .doubleValue() > ((high.getClosePrice().doubleValue() + high.getOpenPrice().doubleValue()) / 2)) {
+                .doubleValue() > ((high.getClosePrice().doubleValue() + high.getOpenPrice().doubleValue()) * 0.3)) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, code));
             if (Objects.nonNull(stock.getMa20()) && recordList.get(0).getClosePrice().compareTo(stock.getMa20()) > 0) {
                 return stock;
