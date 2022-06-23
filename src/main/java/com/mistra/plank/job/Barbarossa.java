@@ -314,13 +314,11 @@ public class Barbarossa implements CommandLineRunner {
                         }
                     }
                 }
-                List<StockMainFundSample> mainFundSamplesTopTen =
-                    mainFundDataAll.size() > 10 ? mainFundDataAll.subList(0, 10) : new ArrayList<>();
                 Collections.sort(realTimePrices);
                 System.out.println("\n\n\n");
-                log.error("今日主力净流入前10↓");
+                log.error("今日主力净流>1亿↓");
                 log.warn(StringUtil.collectionToString(
-                    mainFundSamplesTopTen.stream().map(e -> e.getF14() + "[" + e.getF62() / W + "万]" + e.getF3() + "%")
+                    mainFundDataAll.stream().map(e -> e.getF14() + "[" + e.getF62() / W / W + "亿]" + e.getF3() + "%")
                         .collect(Collectors.toList())));
                 log.error("持仓↓");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
@@ -353,31 +351,34 @@ public class Barbarossa implements CommandLineRunner {
      */
     private void queryMainFundData() {
         while (true) {
-            String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
-            JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
-            List<StockMainFundSample> result = new ArrayList<>();
-            array.parallelStream().forEach(e -> {
-                try {
-                    StockMainFundSample mainFundSample =
-                        JSONObject.parseObject(e.toString(), StockMainFundSample.class);
-                    result.add(mainFundSample);
-                    mainFundDataAllMap.put(mainFundSample.getF14(), mainFundSample);
-                    if (TRACK_STOCK_MAP.containsKey(mainFundSample.getF14())) {
-                        mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
-                    }
-                } catch (Exception exception) {
-                }
-            });
-            Collections.sort(result);
-            mainFundDataAll.clear();
-            mainFundDataAll.addAll(result);
-            mainFundData.clear();
-            mainFundData.addAll(
-                result.stream().filter(e -> TRACK_STOCK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
             try {
-                Thread.sleep(W);
+                String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
+                JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
+                List<StockMainFundSample> result = new ArrayList<>();
+                array.parallelStream().forEach(e -> {
+                    try {
+                        StockMainFundSample mainFundSample =
+                            JSONObject.parseObject(e.toString(), StockMainFundSample.class);
+                        result.add(mainFundSample);
+                        mainFundDataAllMap.put(mainFundSample.getF14(), mainFundSample);
+                        if (TRACK_STOCK_MAP.containsKey(mainFundSample.getF14())) {
+                            mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
+                        }
+                    } catch (Exception exception) {
+                    }
+                });
+                Collections.sort(result);
+                mainFundDataAll.clear();
+                mainFundDataAll
+                    .addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
+                mainFundData.clear();
+                mainFundData.addAll(
+                    result.stream().filter(e -> TRACK_STOCK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
+                Thread.sleep(3000);
             } catch (InterruptedException interruptedException) {
                 interruptedException.printStackTrace();
+            } catch (Exception e) {
+
             }
         }
     }
