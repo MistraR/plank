@@ -316,9 +316,13 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 Collections.sort(realTimePrices);
                 System.out.println("\n\n\n");
-                log.error("今日主力净流>1亿↓");
+                log.error("今日主力净流Top20↓");
+                List<StockMainFundSample> topTen = new ArrayList<>();
+                for (int i = 0; i < 20; i++) {
+                    topTen.add(mainFundDataAll.get(i));
+                }
                 log.warn(StringUtil.collectionToString(
-                    mainFundDataAll.stream().map(e -> e.getF14() + "[" + e.getF62() / W / W + "亿]" + e.getF3() + "%")
+                    topTen.stream().map(e -> e.getF14() + "[" + e.getF62() / W / W + "亿]" + e.getF3() + "%")
                         .collect(Collectors.toList())));
                 log.error("持仓↓");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
