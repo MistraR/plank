@@ -391,10 +391,10 @@ public class Barbarossa implements CommandLineRunner {
         StringBuilder builder = new StringBuilder().append(realTimePrice.getName())
             .append((realTimePrice.getName().length() == 3 ? "  " : "")).append("[高:")
             .append(realTimePrice.getTodayHighestPrice()).append("|低:").append(realTimePrice.getTodayLowestPrice())
-            .append("|现:").append(realTimePrice.getTodayRealTimePrice()).append("|买:")
-            .append(realTimePrice.getPurchasePrice()).append("|差距:").append(realTimePrice.getPurchaseRate())
-            .append("%|涨跌:").append(realTimePrice.getIncreaseRate()).append("|主力:").append(realTimePrice.getMainFund())
-            .append("万]");
+            .append("|现:").append(realTimePrice.getTodayRealTimePrice())
+            // .append("|买:").append(realTimePrice.getPurchasePrice())
+            .append("|差距:").append(realTimePrice.getPurchaseRate()).append("%|涨跌:")
+            .append(realTimePrice.getIncreaseRate()).append("|主力:").append(realTimePrice.getMainFund()).append("万]");
         return builder.toString();
     }
 
