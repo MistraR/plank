@@ -202,9 +202,8 @@ public class Barbarossa implements CommandLineRunner {
             // 计算MA20
             double ma20 = week.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
             if (ma3 > ma5 && ma5 > ma10 && ma10 > ma20) {
-                double[] x = new double[] {ma3, ma5, ma10, ma20};
                 // 计算方差
-                double variance = variance(x);
+                double variance = variance(new double[] {ma3, ma5, ma10, ma20});
                 samples.add(UpwardTrendSample.builder().ma3(new BigDecimal(ma3).setScale(2, RoundingMode.HALF_UP))
                     .ma5(new BigDecimal(ma5).setScale(2, RoundingMode.HALF_UP))
                     .ma10(new BigDecimal(ma10).setScale(2, RoundingMode.HALF_UP))
