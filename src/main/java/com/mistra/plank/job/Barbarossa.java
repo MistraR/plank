@@ -215,8 +215,10 @@ public class Barbarossa implements CommandLineRunner {
             // log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
         }
         Collections.sort(samples);
-        log.warn("新发现的上升趋势的股票一共[{}]支:{}", samples.size(), StringUtil
-            .collectionToString(samples.stream().map(UpwardTrendSample::getName).collect(Collectors.toSet())));
+        log.warn("新发现的上升趋势的股票一共[{}]支:{}", samples.size(),
+            StringUtil.collectionToString(samples.stream()
+                .map(plankConfig.getPrintName() ? UpwardTrendSample::getName : UpwardTrendSample::getCode)
+                .collect(Collectors.toSet())));
         if (CollectionUtils.isNotEmpty(samples)) {
             // 找出来之后直接更新这些股票为监控股票
             List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getCode,
@@ -315,9 +317,9 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 Collections.sort(realTimePrices);
                 System.out.println("\n\n\n");
-                log.error("主力净流入Top20↓");
+                log.error("主力净流入Top10↓");
                 List<StockMainFundSample> topTen = new ArrayList<>();
-                for (int i = 0; i < Math.min(mainFundDataAll.size(), 20); i++) {
+                for (int i = 0; i < Math.min(mainFundDataAll.size(), 10); i++) {
                     topTen.add(mainFundDataAll.get(i));
                 }
                 log.warn(StringUtil.collectionToString(
@@ -398,11 +400,11 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private void analyzeMainFund() {
-        log.warn(
-            "3|5|10日主力净流入>3亿:" + StringUtil.collectionToString(mainFundDataAll.parallelStream()
-                .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
-                    || e.getF174() > mainFundFilterAmount)
-                .map(StockMainFundSample::getF14).collect(Collectors.toSet())));
+        log.warn("3|5|10日主力净流入>3亿:" + StringUtil.collectionToString(mainFundDataAll.parallelStream()
+            .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
+                || e.getF174() > mainFundFilterAmount)
+            .map(plankConfig.getPrintName() ? StockMainFundSample::getF14 : StockMainFundSample::getF12)
+            .collect(Collectors.toSet())));
     }
 
     /**

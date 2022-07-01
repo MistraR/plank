@@ -124,4 +124,9 @@ public class PlankConfig {
      */
     private BigDecimal buyPlankRatioLimit;
 
+    /**
+     * 打印日志时显示股票名称还是code
+     */
+    private Boolean printName;
+
 }

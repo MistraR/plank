@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.DailyRecordMapper;
 import com.mistra.plank.mapper.DragonListMapper;
 import com.mistra.plank.mapper.StockMapper;
@@ -42,12 +43,14 @@ public class ScreeningStocks {
     private final DailyRecordMapper dailyRecordMapper;
     private final StockMapper stockMapper;
     private final DragonListMapper dragonListMapper;
+    private final PlankConfig plankConfig;
 
     public ScreeningStocks(DailyRecordMapper dailyRecordMapper, StockMapper stockMapper,
-        DragonListMapper dragonListMapper) {
+        DragonListMapper dragonListMapper, PlankConfig plankConfig) {
         this.dailyRecordMapper = dailyRecordMapper;
         this.stockMapper = stockMapper;
         this.dragonListMapper = dragonListMapper;
+        this.plankConfig = plankConfig;
     }
 
     /**
@@ -79,8 +82,8 @@ public class ScreeningStocks {
             }
         }
         Collections.sort(result);
-        log.warn("{}爆量回踩股票[{}]支:{}", sdf.format(date), result.size(),
-            StringUtil.collectionToString(result.stream().map(Stock::getName).collect(Collectors.toList())));
+        log.warn("{}爆量回踩股票[{}]支:{}", sdf.format(date), result.size(), StringUtil.collectionToString(result.stream()
+            .map(plankConfig.getPrintName() ? Stock::getName : Stock::getCode).collect(Collectors.toList())));
         return result;
     }
 
@@ -146,8 +149,8 @@ public class ScreeningStocks {
             }
         }
         Collections.sort(result);
-        log.warn("{}日红三兵股票[{}]支:{}", sdf.format(date), result.size(),
-            StringUtil.collectionToString(result.stream().map(Stock::getName).collect(Collectors.toList())));
+        log.warn("{}日红三兵股票[{}]支:{}", sdf.format(date), result.size(), StringUtil.collectionToString(result.stream()
+            .map(plankConfig.getPrintName() ? Stock::getName : Stock::getCode).collect(Collectors.toList())));
         return result;
     }
 
