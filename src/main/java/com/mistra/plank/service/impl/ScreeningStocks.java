@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Component;
 
@@ -105,6 +106,7 @@ public class ScreeningStocks {
                 .doubleValue() > ((high.getClosePrice().doubleValue() + high.getOpenPrice().doubleValue()) * 0.3)) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, code));
             if (Objects.nonNull(stock.getMa20()) && recordList.get(0).getClosePrice().compareTo(stock.getMa20()) > 0) {
+                stock.setCode(StringUtils.substring(stock.getCode(), 2, 8));
                 return stock;
             }
         }
@@ -143,6 +145,7 @@ public class ScreeningStocks {
                         && three.getClosePrice().compareTo(stock.getMa5()) > 0
                         && differencePercentage(three.getClosePrice(), stock.getMa5()) < 0.15
                         && differencePercentage(three.getClosePrice(), stock.getMa10()) < 0.20) {
+                        stock.setCode(StringUtils.substring(stock.getCode(), 2, 8));
                         result.add(stock);
                     }
                 }

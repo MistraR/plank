@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.joda.time.DateTime;
 import org.springframework.boot.CommandLineRunner;
@@ -208,7 +209,7 @@ public class Barbarossa implements CommandLineRunner {
                     .ma5(new BigDecimal(ma5).setScale(2, RoundingMode.HALF_UP))
                     .ma10(new BigDecimal(ma10).setScale(2, RoundingMode.HALF_UP))
                     .ma20(new BigDecimal(ma20).setScale(2, RoundingMode.HALF_UP)).name(entry.getValue())
-                    .code(entry.getKey()).variance(variance).build());
+                    .code(StringUtils.substring(entry.getKey(), 2, 8)).variance(variance).build());
             }
         }
         if (CollectionUtils.isNotEmpty(failed)) {
