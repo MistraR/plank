@@ -50,36 +50,7 @@ public class DailyRecordProcessor {
         }
         log.warn("开始更新股票每日成交数据！");
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            executorService.submit(() -> {
-                try {
-                    String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", entry.getKey())
-                        .replace("{time}", String.valueOf(System.currentTimeMillis()))
-                        .replace("{recentDayNumber}", String.valueOf(plankConfig.getRecentDayNumber()));
-                    String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
-                    JSONObject data = JSON.parseObject(body).getJSONObject("data");
-                    JSONArray list = data.getJSONArray("item");
-                    if (CollectionUtils.isNotEmpty(list)) {
-                        JSONArray array;
-                        for (Object o : list) {
-                            array = (JSONArray)o;
-                            DailyRecord dailyRecord = new DailyRecord();
-                            dailyRecord.setDate(new Date(array.getLongValue(0)));
-                            dailyRecord.setCode(entry.getKey());
-                            dailyRecord.setName(entry.getValue());
-                            dailyRecord.setOpenPrice(BigDecimal.valueOf(array.getDoubleValue(2)));
-                            dailyRecord.setHighest(BigDecimal.valueOf(array.getDoubleValue(3)));
-                            dailyRecord.setLowest(BigDecimal.valueOf(array.getDoubleValue(4)));
-                            dailyRecord.setClosePrice(BigDecimal.valueOf(array.getDoubleValue(5)));
-                            dailyRecord.setIncreaseRate(BigDecimal.valueOf(array.getDoubleValue(7)));
-                            dailyRecord.setAmount(array.getLongValue(9) / 10000);
-                            dailyRecordMapper.insert(dailyRecord);
-                            log.info("更新[ {} ]近日成交数据完成！", entry.getValue());
-                        }
-                    }
-                    Thread.sleep(3000);
-                } catch (Exception e) {
-                }
-            });
+            executorService.submit(() -> run(entry.getKey(), entry.getValue()));
         }
         while (executorService.getQueue().size() != 0) {
             try {
@@ -89,6 +60,37 @@ public class DailyRecordProcessor {
             }
         }
         log.warn("更新股票每日成交数据完成！");
+    }
+
+    public void run(String code, String name) {
+        try {
+            String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", code)
+                .replace("{time}", String.valueOf(System.currentTimeMillis()))
+                .replace("{recentDayNumber}", String.valueOf(plankConfig.getRecentDayNumber()));
+            String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
+            JSONObject data = JSON.parseObject(body).getJSONObject("data");
+            JSONArray list = data.getJSONArray("item");
+            if (CollectionUtils.isNotEmpty(list)) {
+                JSONArray array;
+                for (Object o : list) {
+                    array = (JSONArray)o;
+                    DailyRecord dailyRecord = new DailyRecord();
+                    dailyRecord.setDate(new Date(array.getLongValue(0)));
+                    dailyRecord.setCode(code);
+                    dailyRecord.setName(name);
+                    dailyRecord.setOpenPrice(BigDecimal.valueOf(array.getDoubleValue(2)));
+                    dailyRecord.setHighest(BigDecimal.valueOf(array.getDoubleValue(3)));
+                    dailyRecord.setLowest(BigDecimal.valueOf(array.getDoubleValue(4)));
+                    dailyRecord.setClosePrice(BigDecimal.valueOf(array.getDoubleValue(5)));
+                    dailyRecord.setIncreaseRate(BigDecimal.valueOf(array.getDoubleValue(7)));
+                    dailyRecord.setAmount(array.getLongValue(9) / 10000);
+                    dailyRecordMapper.insert(dailyRecord);
+                    log.info("更新[ {} ]近日成交数据完成！", name);
+                }
+            }
+            Thread.sleep(3000);
+        } catch (Exception e) {
+        }
     }
 
     /**

@@ -140,6 +140,8 @@ public class Barbarossa implements CommandLineRunner {
             STOCK_MAP.put(e.getCode(), e.getName());
         });
         if (DateUtil.hour(new Date(), true) >= 15) {
+            // 补充写入某只股票的历史交易数据
+            // dailyRecordProcessor.run("SZ000762", "西藏矿业");
             executorService.submit(this::queryMainFundData);
             // 15点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
