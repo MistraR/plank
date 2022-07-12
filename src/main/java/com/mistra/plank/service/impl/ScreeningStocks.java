@@ -70,7 +70,7 @@ public class ScreeningStocks {
             dailyRecords.stream().collect(Collectors.groupingBy(DailyRecord::getCode));
         for (Map.Entry<String, List<DailyRecord>> entry : dailyRecordMap.entrySet()) {
             List<DailyRecord> recordList = entry.getValue();
-            if (recordList.size() >= 10 && recordList.get(0).getAmount() > 50000) {
+            if (recordList.size() >= 10 && recordList.get(0).getAmount() > 30000) {
                 Stock stock = explosiveVolumeBack(recordList.subList(0, 5), entry.getKey());
                 if (Objects.nonNull(stock)) {
                     result.add(stock);
@@ -103,7 +103,7 @@ public class ScreeningStocks {
         if (high.getClosePrice().compareTo(high.getOpenPrice()) > 0 && high.getDate().before(low.getDate())
             && high.getAmount() > Math.max(ma10 * 1.5, 100000) && low.getAmount() < ma10 * 0.7
             && low.getAmount() > 50000 && low.getClosePrice()
-                .doubleValue() > ((high.getClosePrice().doubleValue() + high.getOpenPrice().doubleValue()) * 0.3)) {
+                .doubleValue() > ((high.getClosePrice().doubleValue() + high.getOpenPrice().doubleValue()) * 0.5)) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, code));
             if (Objects.nonNull(stock.getMa20()) && recordList.get(0).getClosePrice().compareTo(stock.getMa20()) > 0) {
                 stock.setCode(StringUtils.substring(stock.getCode(), 2, 8));
