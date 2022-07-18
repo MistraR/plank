@@ -520,7 +520,11 @@ public class Barbarossa implements CommandLineRunner {
                     twoPlus.addAll(todaySix.keySet());
                     twoPlus.addAll(todaySeven.keySet());
                     List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", twoPlus));
-                    log.warn("今日二板+股票:{}", StringUtil.collectionToString(stocks.stream().map(Stock::getCode).collect(Collectors.toSet()).stream().map()));
+                    twoPlus.clear();
+                    for (Stock stock : stocks) {
+                        twoPlus.add(stock.getCode().substring(2, 8));
+                    }
+                    log.warn("今日二板+股票:{}", StringUtil.collectionToString(twoPlus));
                 }
                 fivePlankStock.addAll(todayFive.keySet());
                 yesterdayOne.clear();
