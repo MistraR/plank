@@ -22,10 +22,11 @@ import com.mistra.plank.util.HttpUtil;
 
 import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 22:09 @ Description: 更新股票每日成交数据 @ Copyright (c) Mistra,All Rights
- *         Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
+ * Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
  */
 @Slf4j
 @Component
@@ -35,7 +36,7 @@ public class DailyRecordProcessor {
     private final PlankConfig plankConfig;
 
     private final ThreadPoolExecutor executorService = new ThreadPoolExecutor(20, 20, 0L, TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(5000), new NamedThreadFactory("每日交易数据线程-", false));
+            new LinkedBlockingQueue<>(5000), new NamedThreadFactory("每日交易数据线程-", false));
 
     public DailyRecordProcessor(DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig) {
         this.dailyRecordMapper = dailyRecordMapper;
@@ -65,15 +66,15 @@ public class DailyRecordProcessor {
     public void run(String code, String name) {
         try {
             String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", code)
-                .replace("{time}", String.valueOf(System.currentTimeMillis()))
-                .replace("{recentDayNumber}", String.valueOf(plankConfig.getRecentDayNumber()));
+                    .replace("{time}", String.valueOf(System.currentTimeMillis()))
+                    .replace("{recentDayNumber}", String.valueOf(plankConfig.getRecentDayNumber()));
             String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
             JSONObject data = JSON.parseObject(body).getJSONObject("data");
             JSONArray list = data.getJSONArray("item");
             if (CollectionUtils.isNotEmpty(list)) {
                 JSONArray array;
                 for (Object o : list) {
-                    array = (JSONArray)o;
+                    array = (JSONArray) o;
                     DailyRecord dailyRecord = new DailyRecord();
                     dailyRecord.setDate(new Date(array.getLongValue(0)));
                     dailyRecord.setCode(code);
@@ -95,19 +96,19 @@ public class DailyRecordProcessor {
 
     /**
      * 查询上一个交易日日期
-     * 
+     *
      * @return 上一个交易日日期
      */
     private Date checkDailyRecord() {
         String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", "SH600519")
-            .replace("{time}", String.valueOf(System.currentTimeMillis())).replace("{recentDayNumber}", "1");
+                .replace("{time}", String.valueOf(System.currentTimeMillis())).replace("{recentDayNumber}", "1");
         String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
         JSONObject data = JSON.parseObject(body).getJSONObject("data");
         JSONArray list = data.getJSONArray("item");
         if (CollectionUtils.isNotEmpty(list)) {
             JSONArray array;
             for (Object o : list) {
-                array = (JSONArray)o;
+                array = (JSONArray) o;
                 return new Date(array.getLongValue(0));
             }
         }
