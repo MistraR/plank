@@ -1,40 +1,52 @@
 SELECT count(id) FROM	daily_record WHERE	DATE_FORMAT(date,'%Y-%m-%d') = '2022-05-05';
 SELECT count(id) FROM	daily_record WHERE	DATE_FORMAT(date,'%Y-%m-%d') = DATE_FORMAT(now(),'%Y-%m-%d');
-# 根据板块查询公司   白酒 光伏 半导体 医疗服务 锂电池 医美 龙头 电力设备 整车 果链 煤炭 电力 整车 化肥
-SELECT * FROM stock WHERE classification='医疗服务' ORDER BY RIGHT(code,6) DESC;
-# 重点关注的十家公司
+DELETE FROM daily_record WHERE	DATE_FORMAT(date,'%Y-%m-%d') = DATE_FORMAT(now(),'%Y-%m-%d');
+
+DELETE FROM daily_record WHERE date <'2022-02-23 00:00:00'
+# 根据板块查询公司   白酒 光伏 半导体 医疗服务 锂电池 医美 龙头 电力设备 整车 果链 煤炭 电力 整车 化肥 硅能源 小金属 医疗服务
+SELECT * FROM stock WHERE classification='化肥' ORDER BY RIGHT(code,6) DESC;
+# 重点关注的十家公司  隆基绿能 五粮液 泸州老窖 药明康德 山西汾酒 晶澳科技 东方财富 华友钴业
 SELECT * FROM stock WHERE focus=1 ORDER BY classification;
 # 查看基金对某支股票的 季度增减持仓明细
 SELECT name AS '公司',quarter AS '季度',shareholding_count AS '季度末持股数/万股',fund_total_market AS '季报末基金持仓市值/万',average_price AS '季度均价',shareholding_change_amount AS '增持金额/万',shareholding_change_count AS '持股数量变动/万股',IF(shareholding_change_count<0,'减持','增持') AS '增持/减持'
-FROM foreign_fund_holdings_tracking WHERE name = '华友钴业' ORDER BY quarter ASC;
+FROM foreign_fund_holdings_tracking WHERE name = '隆基绿能' ORDER BY quarter ASC;
 # 查看某个季度开始的汇总增持金额-重点关注公司
 SELECT name AS '公司',change_amount AS '累计增持金额/万' FROM (SELECT name,SUM(shareholding_change_amount) AS change_amount FROM foreign_fund_holdings_tracking
-WHERE quarter>=202105 AND name IN (SELECT (name COLLATE utf8mb4_general_ci) FROM stock WHERE focus=1) GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
+WHERE quarter>=202201 AND name IN (SELECT (name COLLATE utf8mb4_general_ci) FROM stock WHERE focus=1) GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
 # 查看某个季度开始的汇总增持金额-所有公司
 SELECT name AS '公司',change_amount AS '累计增持金额/万' FROM (SELECT name,SUM(shareholding_change_amount) AS change_amount FROM foreign_fund_holdings_tracking
-WHERE quarter>=202105 GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
+WHERE quarter=202202 GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
 
 # 加仓季度排序
 SELECT a.name AS '公司',a.quarterAdd AS '加仓季度数' from (SELECT name,SUM(IF(shareholding_change_count<10,0,1)) as quarterAdd FROM foreign_fund_holdings_tracking GROUP BY name) as a WHERE a.quarterAdd >0 ORDER BY a.quarterAdd desc
 # 查看某一板块某一季度的基金持仓汇总
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度增减市值/万'
 FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
-WHERE s.classification='半导体' AND f.quarter=202201 ORDER BY f.foreign_fund_total_market_dynamic DESC
+WHERE s.classification='半导体' AND f.quarter=202202 ORDER BY f.foreign_fund_total_market_dynamic DESC
 # 查看某一季度的基金持仓汇总
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度增减市值/万'
 FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
-WHERE f.quarter=202201 AND f.foreign_fund_total_market_dynamic>1000000 ORDER BY f.foreign_fund_total_market_dynamic DESC
+WHERE f.quarter=202202 AND f.foreign_fund_total_market_dynamic>1000000 ORDER BY f.foreign_fund_total_market_dynamic DESC
 # 查看重点关注的公司某一季度的基金持仓
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度增减市值/万'
 FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
-WHERE s.focus=1 AND f.quarter=202201 ORDER BY f.foreign_fund_total_market_dynamic DESC
+WHERE s.focus=1 AND f.quarter=202202 ORDER BY f.foreign_fund_total_market_dynamic DESC
 
 # 查询监控股票
-SELECT * FROM stock WHERE track = 1;
+SELECT * FROM stock WHERE track = 1 and ignore_monitor = 0  order by purchase_type asc;
 # 按行业查询股票
-SELECT * FROM stock WHERE classification ='果链';
+SELECT * FROM stock WHERE classification ='半导体';
 # 查询持仓
-SELECT * FROM stock WHERE name IN ('江淮汽车','金风科技','航发控制','中航机电','怡亚通','联创电子');
+SELECT * FROM stock WHERE name IN ('恒大高新','京山轻机','舍得酒业','巨轮智能');
+# 查询持仓
+SELECT * FROM stock WHERE name IN ('紫光国微','立讯精密','凯莱英','药明康德','泰格医药','康龙化成','阳光电源','','','');
 # 查询趋势关注
-SELECT * FROM stock WHERE name IN ('中国电建','中粮科技','粤水电','航发控制','伊戈尔','许继电气','中航高科','中兵红箭','川恒股份','中天科技','天顺风能','');
+SELECT * FROM stock WHERE name = '韦尔股份';
+
+SELECT * FROM stock WHERE name IN ('舍得酒业','横店东磁','','阳光电源','亿纬锂能','酒鬼酒','东方财富','','','');
+
+DELETE FROM daily_record WHERE name = '赣锋锂业';
+
+
+
 
