@@ -12,7 +12,9 @@ SELECT name AS '公司',change_amount AS '累计增持金额/万' FROM (SELECT n
 WHERE quarter>=202105 AND name IN (SELECT (name COLLATE utf8mb4_general_ci) FROM stock WHERE focus=1) GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
 # 查看某个季度开始的汇总增持金额-所有公司
 SELECT name AS '公司',change_amount AS '累计增持金额/万' FROM (SELECT name,SUM(shareholding_change_amount) AS change_amount FROM foreign_fund_holdings_tracking
-WHERE quarter>=202105 GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
+WHERE quarter>=202201 GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
+SELECT quarter,shareholding_count AS '持仓股数',shareholding_change_count AS '增持股数',shareholding_change_amount AS '增持金额' from foreign_fund_holdings_tracking
+WHERE name='隆基绿能' ORDER BY quarter desc;
 
 # 加仓季度排序
 SELECT a.name AS '公司',a.quarterAdd AS '加仓季度数' from (SELECT name,SUM(IF(shareholding_change_count<10,0,1)) as quarterAdd FROM foreign_fund_holdings_tracking GROUP BY name) as a WHERE a.quarterAdd >0 ORDER BY a.quarterAdd desc
@@ -34,7 +36,7 @@ SELECT * FROM stock WHERE track = 1;
 # 按行业查询股票
 SELECT * FROM stock WHERE classification ='果链';
 # 查询持仓
-SELECT * FROM stock WHERE name IN ('江淮汽车','金风科技','航发控制','中航机电','怡亚通','联创电子');
+SELECT * FROM stock WHERE name IN ('隆基绿能','万华化学','立讯精密');
 # 查询趋势关注
-SELECT * FROM stock WHERE name IN ('中国电建','中粮科技','粤水电','航发控制','伊戈尔','许继电气','中航高科','中兵红箭','川恒股份','中天科技','天顺风能','');
+SELECT * FROM stock WHERE name IN ('盛新锂能');
 
