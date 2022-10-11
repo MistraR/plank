@@ -692,7 +692,7 @@ public class Barbarossa implements CommandLineRunner {
             JSONObject jsonObject = foreignShareholding.get(tracking.getName());
             try {
                 if (Objects.nonNull(jsonObject)) {
-                    long foreignTotalMarket = jsonObject.getLong("HOLD_MARKET_CAP") / W;
+                    long foreignTotalMarket = jsonObject.getLong("HOLD_MARKET_CAP");
                     tracking.setForeignTotalMarketDynamic(foreignTotalMarket);
                 }
                 tracking.setFundTotalMarketDynamic(stockMap.get(tracking.getName()).getCurrentPrice()
