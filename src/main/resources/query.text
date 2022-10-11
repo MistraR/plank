@@ -13,7 +13,7 @@ SELECT name AS '公司',change_amount AS '累计增持金额/万' FROM (SELECT n
 WHERE quarter>=202105 AND name IN (SELECT (name COLLATE utf8mb4_general_ci) FROM stock WHERE focus=1) GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
 # 某季度开始的汇总增持金额-所有公司
 SELECT name AS '公司',change_amount AS '累计增持金额/万' FROM (SELECT name,SUM(shareholding_change_amount) AS change_amount FROM foreign_fund_holdings_tracking
-WHERE quarter>=202104 GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
+WHERE quarter>=202202 GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
 
 # 从某季度开始，加仓季度排序
 SELECT a.name AS '公司',a.quarterAdd AS '加仓季度数' from (SELECT name,SUM(IF(shareholding_change_count<10,0,1)) as quarterAdd FROM foreign_fund_holdings_tracking where quarter>=202102 GROUP BY name) as a WHERE a.quarterAdd >0 ORDER BY a.quarterAdd DESC;
@@ -33,4 +33,4 @@ WHERE s.focus=1 AND f.quarter=202202 ORDER BY f.foreign_fund_total_market_dynami
 # 查询持仓
 SELECT * FROM stock WHERE name IN ('隆基绿能','万华化学','立讯精密','通威股份');
 
-10月份重点买入的公司：隆基股份，五粮液，宁德时代，迈瑞医疗，东方财富，通威股份，华友钴业，药明康德，恩捷股份，晶澳科技
+10月份重点买入的公司：隆基股份，五粮液，宁德时代，迈瑞医疗，东方财富，通威股份，华友钴业，药明康德，恩捷股份
