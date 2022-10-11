@@ -140,7 +140,7 @@ public class Barbarossa implements CommandLineRunner {
             STOCK_MAP.put(e.getCode(), e.getName());
         });
         // 补充写入某只股票的历史交易数据
-        // dailyRecordProcessor.run("SZ300015", "爱尔眼科");
+//         dailyRecordProcessor.run("SZ002129", "TCL中环");
         if (DateUtil.hour(new Date(), true) >= 15) {
             executorService.submit(this::queryMainFundData);
             // 15点后读取当日交易数据
@@ -148,7 +148,7 @@ public class Barbarossa implements CommandLineRunner {
             // 更新每只股票收盘价，当日成交量，MA5 MA10 MA20
             stockProcessor.run();
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
-//            updateForeignFundShareholding(202201);
+            updateForeignFundShareholding(202202);
             // 分析连板数据
             analyzePlank();
             // 分析主力流入数据
@@ -282,7 +282,7 @@ public class Barbarossa implements CommandLineRunner {
                             : stock.getPurchaseType();
                     List<DailyRecord> dailyRecords =
                             dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().eq("code", stock.getCode())
-                                    .ge("date", DateUtils.addDays(new Date(), -purchaseType * 2)).orderByDesc("date"));
+                                    .ge("date", DateUtils.addDays(new Date(), -purchaseType * 3)).orderByDesc("date"));
                     if (dailyRecords.size() < purchaseType) {
                         log.error("{}的交易数据不完整，不够{}个交易日数据！请先爬取交易数据！", stock.getCode(), stock.getPurchaseType());
                         continue;
