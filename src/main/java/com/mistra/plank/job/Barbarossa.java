@@ -347,6 +347,7 @@ public class Barbarossa implements CommandLineRunner {
                     }
                 }
                 realTimePrices.clear();
+                Thread.sleep(5000);
             }
         } catch (Exception e) {
             e.printStackTrace();
