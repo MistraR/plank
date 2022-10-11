@@ -22,16 +22,15 @@ SELECT a.name AS '公司',a.quarterAdd AS '加仓季度数' from (SELECT name,SU
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
 WHERE s.classification='半导体' AND f.quarter=202201 ORDER BY f.foreign_fund_total_market_dynamic DESC
 
-# 某季度基金持仓市值排行
+# 某季度基金持仓市值排行-动态计算基金市值
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
-WHERE f.quarter=202201 AND f.foreign_fund_total_market_dynamic>1000000 ORDER BY f.foreign_fund_total_market_dynamic DESC
+WHERE f.quarter=202202 ORDER BY f.foreign_fund_total_market_dynamic DESC
 
-# 重点关注的公司某季度基金市值排行
+# 重点关注的公司某季度基金市值排行-动态计算基金市值
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
 WHERE s.focus=1 AND f.quarter=202202 ORDER BY f.foreign_fund_total_market_dynamic DESC
-
 
 # 查询持仓
 SELECT * FROM stock WHERE name IN ('隆基绿能','万华化学','立讯精密','通威股份');
 
-
+10月份重点买入的公司：隆基股份，五粮液，宁德时代，迈瑞医疗，东方财富，通威股份，华友钴业，药明康德，恩捷股份，晶澳科技

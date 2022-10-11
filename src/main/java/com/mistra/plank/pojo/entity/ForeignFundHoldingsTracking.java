@@ -51,7 +51,7 @@ public class ForeignFundHoldingsTracking {
     private Long shareholdingCount;
 
     /**
-     * 持股变动数量
+     * 基金持股变动数量
      */
     @ExcelProperty(index = 4)
     @TableField(value = "shareholding_change_count")
@@ -89,7 +89,7 @@ public class ForeignFundHoldingsTracking {
     private BigDecimal averagePrice;
 
     /**
-     * 持股变动金额
+     * 基金持股变动金额
      */
     @TableField(value = "shareholding_change_amount")
     private Double shareholdingChangeAmount;
