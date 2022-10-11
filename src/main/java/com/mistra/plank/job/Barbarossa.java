@@ -682,7 +682,7 @@ public class Barbarossa implements CommandLineRunner {
         HashMap<String, JSONObject> foreignShareholding = getForeignShareholding();
         List<ForeignFundHoldingsTracking> fundHoldings = fundHoldingsTrackingMapper
                 .selectList(new QueryWrapper<ForeignFundHoldingsTracking>().eq("quarter", quarter));
-        List<Stock> stocks = stockMapper.selectList(new QueryWrapper<>());
+        List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", fundHoldings.stream().map(ForeignFundHoldingsTracking::getName).collect(Collectors.toList())));
         if (CollectionUtils.isEmpty(foreignShareholding.values()) || CollectionUtils.isEmpty(fundHoldings)
                 || CollectionUtils.isEmpty(stocks)) {
             return;
@@ -692,7 +692,7 @@ public class Barbarossa implements CommandLineRunner {
             JSONObject jsonObject = foreignShareholding.get(tracking.getName());
             try {
                 if (Objects.nonNull(jsonObject)) {
-                    long foreignTotalMarket = jsonObject.getLong("HOLD_MARKETCAP_CHG10") / W;
+                    long foreignTotalMarket = jsonObject.getLong("HOLD_MARKET_CAP") / W;
                     tracking.setForeignTotalMarketDynamic(foreignTotalMarket);
                 }
                 tracking.setFundTotalMarketDynamic(stockMap.get(tracking.getName()).getCurrentPrice()
