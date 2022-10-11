@@ -30,7 +30,6 @@ WHERE f.quarter=202202 ORDER BY f.foreign_fund_total_market_dynamic DESC
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
 WHERE s.focus=1 AND f.quarter=202202 ORDER BY f.foreign_fund_total_market_dynamic DESC
 
-# 查询持仓
-SELECT * FROM stock WHERE name IN ('隆基绿能','万华化学','立讯精密','通威股份');
+# 10月份重点买入的公司
+SELECT * FROM stock WHERE name IN ('隆基绿能','万华化学','立讯精密','通威股份','五粮液','宁德时代','迈瑞医疗','东方财富','华友钴业','药明康德','恩捷股份');
 
-10月份重点买入的公司：隆基股份，五粮液，宁德时代，迈瑞医疗，东方财富，通威股份，华友钴业，药明康德，恩捷股份
