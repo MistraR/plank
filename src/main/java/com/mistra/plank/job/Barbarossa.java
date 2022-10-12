@@ -677,6 +677,8 @@ public class Barbarossa implements CommandLineRunner {
 
     /**
      * 更新 外资+基金 持仓
+     * 基金的实时持仓市值是根据该季度(quarter)季报公布的持仓股数*当日收盘价 计算的。所以跟实际情况肯定存在差距的，仅作为参考
+     * 外资持仓市值是前一交易日最新的数据，是实时的
      */
     private void updateForeignFundShareholding(Integer quarter) {
         HashMap<String, JSONObject> foreignShareholding = getForeignShareholding();
