@@ -514,12 +514,6 @@ public class Barbarossa implements CommandLineRunner {
                             new ArrayList<>(todaySix.keySet()), todaySeven.keySet().size(),
                             new ArrayList<>(todaySeven.keySet()));
                     List<String> tmp = new ArrayList<>();
-                    List<Stock> stocksOne = stockMapper.selectList(new QueryWrapper<Stock>().in("name", todayOne.keySet()));
-                    for (Stock stock : stocksOne) {
-                        tmp.add(stock.getCode().substring(2, 8));
-                    }
-                    log.warn("当日一板股票:{}", StringUtil.collectionToString(tmp));
-                    tmp.clear();
                     tmp.addAll(todayTwo.keySet());
                     tmp.addAll(todayThree.keySet());
                     tmp.addAll(todayFour.keySet());
@@ -532,7 +526,7 @@ public class Barbarossa implements CommandLineRunner {
                         for (Stock stock : stocks) {
                             tmp.add(stock.getCode().substring(2, 8));
                         }
-                        log.warn("当日二板+股票:{}", StringUtil.collectionToString(tmp));
+                        log.warn("二板+:{}", StringUtil.collectionToString(tmp));
                     }
                 }
                 fivePlankStock.addAll(todayFive.keySet());
