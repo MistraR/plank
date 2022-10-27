@@ -31,9 +31,9 @@ SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '�
 WHERE s.focus=1 AND f.quarter=202203 ORDER BY f.foreign_fund_total_market_dynamic DESC
 
 # 10月份重点买入的公司
-SELECT * FROM stock WHERE name IN ('隆基绿能','宁德时代','五粮液','迈瑞医疗','爱尔眼科','泸州老窖','阳光电源','亿纬锂能','药明康德','紫光国微') ORDER BY shareholding DESC;
+SELECT * FROM stock WHERE name IN ('隆基绿能','宁德时代','五粮液','迈瑞医疗','通威股份','泸州老窖','阳光电源','亿纬锂能','药明康德','紫光国微') ORDER BY shareholding DESC;
 
-SELECT * FROM stock WHERE name IN ('通威股份','恒瑞医药','北方华创');
+SELECT * FROM stock WHERE name IN ('','恒瑞医药','北方华创');
 
 
 
