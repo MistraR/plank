@@ -15,10 +15,8 @@ import org.springframework.cache.annotation.EnableCaching;
 @MapperScan("com.mistra.plank.mapper")
 public class PlankApplication {
 
-
-
-	public static void main(String[] args) {
-		SpringApplication.run(PlankApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(PlankApplication.class, args);
+    }
 
 }
