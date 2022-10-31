@@ -319,7 +319,7 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 Collections.sort(realTimePrices);
                 System.out.println("\n\n\n");
-                log.error("主力净流入Top10↓");
+                log.error("------------------------ ↓主力净流入Top10↓ ------------------------");
                 List<StockMainFundSample> topTen = new ArrayList<>();
                 for (int i = 0; i < Math.min(mainFundDataAll.size(), 10); i++) {
                     topTen.add(mainFundDataAll.get(i));
@@ -327,20 +327,20 @@ public class Barbarossa implements CommandLineRunner {
                 log.warn(StringUtil.collectionToString(
                         topTen.stream().map(e -> e.getF14() + "[" + e.getF62() / W / W + "亿]" + e.getF3() + "%")
                                 .collect(Collectors.toList())));
-                log.error("持仓↓");
+                log.error("----------------------------- ↓持仓↓ -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (stockMap.get(realTimePrice.getName()).getShareholding()) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
                 realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
-                log.error("建仓↓");
+                log.error("----------------------------- ↓建仓↓ -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (realTimePrice.getPurchaseRate() >= -1) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
-                log.error("暴跌↓");
+                log.error("----------------------------- ↓暴跌↓ -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (realTimePrice.getIncreaseRate() < -5 && realTimePrice.getPurchaseRate() < -1) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
@@ -392,14 +392,14 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private String convertLog(StockRealTimePrice realTimePrice) {
-        StringBuilder builder = new StringBuilder().append(realTimePrice.getName())
-                .append((realTimePrice.getName().length() == 3 ? "  " : "")).append("[高:")
-                .append(realTimePrice.getTodayHighestPrice()).append("|低:").append(realTimePrice.getTodayLowestPrice())
+        return new StringBuilder().append(realTimePrice.getName())
+                .append((realTimePrice.getName().length() == 3 ? "  " : ""))
+                .append("[高:").append(realTimePrice.getTodayHighestPrice())
                 .append("|现:").append(realTimePrice.getTodayRealTimePrice())
-                // .append("|买:").append(realTimePrice.getPurchasePrice())
-                .append("|差距:").append(realTimePrice.getPurchaseRate()).append("%|涨跌:")
-                .append(realTimePrice.getIncreaseRate()).append("|主力:").append(realTimePrice.getMainFund()).append("万]");
-        return builder.toString();
+                .append("|低:").append(realTimePrice.getTodayLowestPrice())
+                .append("|差距:").append(realTimePrice.getPurchaseRate())
+                .append("%|涨跌:").append(realTimePrice.getIncreaseRate())
+                .append("|主力:").append(realTimePrice.getMainFund()).append("万]").toString();
     }
 
     private void analyzeMainFund() {
