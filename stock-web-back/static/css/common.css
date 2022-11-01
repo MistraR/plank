@@ -1,0 +1,305 @@
+@charset "utf-8";
+
+/* reset */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+div,
+dl,
+dt,
+dd,
+ul,
+ol,
+li,
+p,
+blockquote,
+pre,
+hr,
+figure,
+table,
+caption,
+th,
+td,
+form,
+fieldset,
+legend,
+input,
+button,
+textarea,
+menu {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+header,
+footer,
+section,
+article,
+aside,
+nav,
+hgroup,
+address,
+figure,
+figcaption,
+menu,
+details {
+  display: block;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+caption,
+th,
+td {
+  text-align: left;
+  font-weight: normal;
+}
+
+html,
+body,
+fieldset,
+img,
+iframe,
+abbr {
+  border: 0;
+}
+
+i,
+cite,
+em,
+var,
+address,
+dfn {
+  font-style: normal;
+}
+
+[hidefocus],
+summary {
+  outline: 0;
+}
+
+li {
+  list-style: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+small {
+  font-size: 100%;
+}
+
+sup,
+sub {
+  font-size: 83%;
+}
+
+pre,
+code,
+kbd,
+samp {
+  font-family: inherit;
+}
+
+q:before,
+q:after {
+  content: none;
+}
+
+textarea {
+  overflow: auto;
+  resize: none;
+}
+
+label,
+summary {
+  cursor: default;
+}
+
+a,
+button {
+  cursor: pointer;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+strong,
+b {
+  font-weight: bold;
+}
+
+del,
+ins,
+u,
+s,
+a,
+a:hover {
+  text-decoration: none;
+}
+
+body {
+  position: relative;
+  height: 100%;
+}
+
+body,
+textarea,
+input,
+button,
+select,
+keygen,
+legend {
+  font: 14px/1.5 "微软雅黑";
+  color: #444;
+  outline: 0;
+}
+
+a {
+  color: black;
+  outline: none;
+}
+
+/* common */
+
+.innerBox {
+  width: 1200px;
+  margin: 0 auto;
+  height: 100%;
+  position: relative;
+}
+
+.content {
+  min-height: 650px;
+  padding: 0 0 50px 0;
+  margin-top: 94px;
+}
+
+.meta-content {
+  padding: 5px 5px;
+}
+
+body {
+  background: #F4F4F4;
+}
+
+.clearfix {
+  zoom: 1;
+}
+
+.clearfix:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.hide {
+  display: none;
+}
+
+.disabled {
+  background-color: #C0C0C0 !important;
+  pointer-events: none;
+}
+
+.btn {
+  border: none;
+  padding: 4px 7px;
+  background: #229966;
+  border-radius: 5px;
+  color: white;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* frame */
+
+.head .top-head {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.head .top-head > li {
+  float: left;
+  position: relative;
+}
+
+.head .top-head a {
+  color: lightgrey;
+  display: block;
+  float: left;
+  height: 35px;
+  line-height: 35px;
+  padding-right: 10px;
+}
+
+/* menu */
+
+.menu-nav {
+  width: 100%;
+  overflow: hidden;
+}
+
+.menu-nav li {
+  float: left;
+  margin: 0 10px 0 0;
+  border: 1px solid lightgrey;
+  border-radius: 5px;
+}
+
+.menu-nav li a {
+  width: 120px;
+  float: left;
+  text-align: center;
+  height: 30px;
+  line-height: 30px;
+}
+
+.menu-nav li.current {
+  background: #3D8E97;
+}
+
+.menu-nav li:hover {
+  background: #3D8E97;
+}
+
+@media only screen and (max-width: 720px) {
+  .innerBox {
+    width: 100%;
+  }
+
+  .head .top-head {
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  .menu-nav li a {
+    width: 80px;
+  }
+}

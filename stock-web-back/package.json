@@ -1,0 +1,25 @@
+{
+  "name": "web",
+  "version": "1.0.0",
+  "description": "stock web",
+  "scripts": {
+    "start": "node stock-web.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitee.com:bosspen1/stock.git"
+  },
+  "keywords": [
+    "web",
+    "jquery",
+    "html"
+  ],
+  "author": "wild",
+  "license": "ISC",
+  "devDependencies": {
+    "child_process": "^1.0.2",
+    "connect": "^3.6.3",
+    "proxy-middleware": "^0.15.0",
+    "serve-static": "^1.12.4"
+  }
+}
