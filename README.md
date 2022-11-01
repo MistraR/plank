@@ -15,6 +15,7 @@
 - 自动交易从 AutomaticTrading.run() 方法入手
 - 持仓数据监控以及分析连板数据从 Barbarossa.run() 方法入手
 - 在trade_user表修改自己的东方财富资金账号及密码
+- 交易前需要登录一次东财资金账号，否则下单时会报会话超时，登录的话需要启动前端node服务，操作参考：https://github.com/bosspen1/stock/wiki
 
 
 > 请求雪球的接口报错时，去雪球首页拿一个最新的cookie换一下
