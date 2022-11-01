@@ -1,20 +1,18 @@
 package com.mistra.plank.config;
 
-import java.math.BigDecimal;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
 import com.mistra.plank.pojo.enums.BuyStrategyEnum;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
 
 /**
  * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 21:44 @ Description: 配置文件 @ Copyright (c) Mistra,All Rights
- *         Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
+ * Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
  */
 @Data
 @Builder
@@ -128,5 +126,10 @@ public class PlankConfig {
      * 打印日志时显示股票名称还是code
      */
     private Boolean printName;
+
+    /**
+     * 是否开启自动交易
+     */
+    private Boolean automaticTrading;
 
 }

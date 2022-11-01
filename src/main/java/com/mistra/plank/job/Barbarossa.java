@@ -1,32 +1,7 @@
 package com.mistra.plank.job;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.joda.time.DateTime;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
-
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.thread.NamedThreadFactory;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -34,12 +9,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.config.PlankConfig;
-import com.mistra.plank.mapper.ClearanceMapper;
-import com.mistra.plank.mapper.DailyRecordMapper;
-import com.mistra.plank.mapper.FundHoldingsTrackingMapper;
-import com.mistra.plank.mapper.HoldSharesMapper;
-import com.mistra.plank.mapper.StockMapper;
-import com.mistra.plank.mapper.TradeRecordMapper;
+import com.mistra.plank.mapper.*;
 import com.mistra.plank.pojo.dto.StockMainFundSample;
 import com.mistra.plank.pojo.dto.StockRealTimePrice;
 import com.mistra.plank.pojo.dto.UpwardTrendSample;
@@ -52,10 +22,21 @@ import com.mistra.plank.service.impl.ScreeningStocks;
 import com.mistra.plank.util.HttpUtil;
 import com.mistra.plank.util.StringUtil;
 import com.mistra.plank.util.UploadDataListener;
-
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.joda.time.DateTime;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * 涨停先锋
@@ -80,7 +61,7 @@ public class Barbarossa implements CommandLineRunner {
     private final DailyRecordProcessor dailyRecordProcessor;
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
 
-    private final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
+    public static final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(5000), new NamedThreadFactory("T", false));
     /**
      * 主力趋势流入 过滤金额 >3亿

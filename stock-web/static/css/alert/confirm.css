@@ -1,0 +1,14 @@
+.leftBtn {
+  width: 50%;
+  height: 100%;
+  border: none;
+  background: #468AD5;
+  color: white;
+}
+
+.rightBtn {
+  width: 50%;
+  height: 100%;
+  border: none;
+  color: black;
+}

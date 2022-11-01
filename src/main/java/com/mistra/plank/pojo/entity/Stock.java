@@ -1,16 +1,15 @@
 package com.mistra.plank.pojo.entity;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * 描述
@@ -121,8 +120,26 @@ public class Stock implements Comparable<Stock> {
     @TableField(value = "classification")
     private String classification;
 
+    /**
+     * 是否监控该股票，如果上板则立即挂单买进
+     */
+    @TableField(value = "buy_plank")
+    private Boolean buyPlank;
+
+    /**
+     * 买入数量
+     */
+    @TableField(value = "buy_amount")
+    private Integer buyAmount;
+
+    /**
+     * 买入价格
+     */
+    @TableField(value = "buy_price")
+    private BigDecimal buyPrice;
+
     @Override
     public int compareTo(Stock o) {
-        return (int)(this.transactionAmount.doubleValue()) - (int)(o.transactionAmount.doubleValue());
+        return (int) (this.transactionAmount.doubleValue()) - (int) (o.transactionAmount.doubleValue());
     }
 }

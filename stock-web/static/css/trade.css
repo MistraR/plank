@@ -1,0 +1,40 @@
+.red {
+  color: red;
+}
+
+.green {
+  color: green;
+}
+
+.account-display-amount {
+  margin-top: 5px;
+}
+
+.account-input > div {
+  float: left;
+  margin-left: 5px;
+  overflow: hidden;
+}
+
+.account-input-dir {
+  margin-top: 8px;
+  line-height: 30px;
+  width: 20px;
+}
+
+.account-input-amount {
+  margin-top: 5px;
+}
+
+.account-input-amount > div {
+  margin-top: 5px;
+}
+
+.account-input-change {
+  line-height: 76px;
+  font-size: 25px;
+}
+
+.account-input-transfer {
+  margin-top: 22px;
+}
