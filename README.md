@@ -1,4 +1,4 @@
-# plank 涨停先锋
+# plank 
 
 #### Introduction
 
@@ -10,14 +10,18 @@
 
 
 
-熟悉代码：
+快速上手：
+- 初始化sql：src/main/resources/init-sql1.sql,src/main/resources/init-sql2.sql
+- 自动交易从 AutomaticTrading.run() 方法入手
 - 持仓数据监控以及分析连板数据从 Barbarossa.run() 方法入手
-- 自动交易从AutomaticTrading入手
+- 在trade_user表修改自己的东方财富资金账号及密码
 
 
-> 请求雪球的接口报错时，说明cookie需要换一下
+> 请求雪球的接口报错时，去雪球首页拿一个最新的cookie换一下
 > 
 > 我是赛道股，趋势股，打板都玩，跟随资金，有炒大A的朋友可以加V(GODR3060W)交流
+> 
+> 想实现自己的选股策略就自由发挥啦，调用下单接口就行了
 > 
 连板晋级率：
 

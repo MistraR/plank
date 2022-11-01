@@ -171,6 +171,7 @@ public class AutomaticTrading implements CommandLineRunner {
             map.remove(stock.getCode());
             pendingOrderSet.add(stock.getCode());
             buy.set(true);
+            // 已经挂单，就修改为不监控该股票了
             stock.setBuyPlank(false);
             stockMapper.updateById(stock);
             log.info("成功下单[{}],数量:{},价格:{},message:{}", stock.getName(), stock.getBuyAmount(), stock.getBuyPrice().doubleValue(),
