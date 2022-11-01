@@ -1,7 +1,7 @@
 package com.mistra.plank.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.mistra.plank.pojo.model.po.TradeMethod;
+import com.mistra.plank.pojo.entity.TradeMethod;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

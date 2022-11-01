@@ -1,13 +1,5 @@
 package com.mistra.plank.service.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.mistra.plank.api.TradeClient;
@@ -17,8 +9,8 @@ import com.mistra.plank.api.request.BaseTradeListRequest;
 import com.mistra.plank.api.request.BaseTradeRequest;
 import com.mistra.plank.api.response.AuthenticationResponse;
 import com.mistra.plank.api.response.BaseTradeResponse;
-import com.mistra.plank.pojo.model.po.TradeMethod;
-import com.mistra.plank.pojo.model.po.TradeUser;
+import com.mistra.plank.pojo.entity.TradeMethod;
+import com.mistra.plank.pojo.entity.TradeUser;
 import com.mistra.plank.service.AbstractTradeApiService;
 import com.mistra.plank.service.TradeService;
 import com.mistra.plank.util.RSAUtil;
@@ -27,6 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service

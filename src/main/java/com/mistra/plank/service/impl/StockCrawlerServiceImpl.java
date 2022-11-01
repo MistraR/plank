@@ -1,12 +1,7 @@
 package com.mistra.plank.service.impl;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.mistra.plank.pojo.model.po.DailyIndex;
-import com.mistra.plank.pojo.model.po.StockInfo;
+import com.mistra.plank.pojo.entity.DailyIndex;
+import com.mistra.plank.pojo.entity.StockInfo;
 import com.mistra.plank.service.DailyIndexParser;
 import com.mistra.plank.service.StockCrawlerService;
 import com.mistra.plank.service.StockInfoParser;
@@ -16,6 +11,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class StockCrawlerServiceImpl implements StockCrawlerService {

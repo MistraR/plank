@@ -1,6 +1,6 @@
 package com.mistra.plank.service;
 
-import com.mistra.plank.pojo.model.po.User;
+import com.mistra.plank.pojo.entity.User;
 
 public interface UserService {
 

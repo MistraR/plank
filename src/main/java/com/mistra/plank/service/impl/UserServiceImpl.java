@@ -1,7 +1,8 @@
 package com.mistra.plank.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mistra.plank.mapper.UserDao;
-import com.mistra.plank.pojo.model.po.User;
+import com.mistra.plank.pojo.entity.User;
 import com.mistra.plank.service.UserService;
 import com.mistra.plank.util.StockConsts;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -19,7 +20,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User login(String username, String password) {
         password = DigestUtils.md5Hex(password);
-        return userDao.get(username, password);
+        return userDao.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username).eq(User::getPassword, password));
     }
 
     @Cacheable(value = StockConsts.CACHE_KEY_TOKEN, key = "#token", unless = "#result == null")
@@ -36,7 +37,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getById(int id) {
-        return userDao.get(id);
+        return userDao.selectById(id);
     }
 
     @Override

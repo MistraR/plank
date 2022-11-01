@@ -1,17 +1,17 @@
 package com.mistra.plank.mapper;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.mistra.plank.pojo.model.po.TradeUser;
+import com.mistra.plank.pojo.entity.TradeUser;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 @Mapper
 public interface TradeUserDao extends BaseMapper<TradeUser> {
 
     TradeUser getById(int id);
 
-    void update(TradeUser tradeUser);
+//    void update(TradeUser tradeUser);
 
     List<TradeUser> getList();
 

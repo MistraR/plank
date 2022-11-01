@@ -8,17 +8,17 @@ import com.mistra.plank.api.response.CrQueryCollateralResponse;
 import com.mistra.plank.api.response.GetDealDataResponse;
 import com.mistra.plank.api.response.GetOrdersDataResponse;
 import com.mistra.plank.api.response.GetStockListResponse;
-import com.mistra.plank.pojo.model.po.StockSelected;
-import com.mistra.plank.pojo.model.po.TradeDeal;
-import com.mistra.plank.pojo.model.po.TradeMethod;
-import com.mistra.plank.pojo.model.po.TradeOrder;
-import com.mistra.plank.pojo.model.po.TradeUser;
-import com.mistra.plank.pojo.model.vo.PageParam;
-import com.mistra.plank.pojo.model.vo.PageVo;
-import com.mistra.plank.pojo.model.vo.trade.DealVo;
-import com.mistra.plank.pojo.model.vo.trade.OrderVo;
-import com.mistra.plank.pojo.model.vo.trade.StockVo;
-import com.mistra.plank.pojo.model.vo.trade.TradeRuleVo;
+import com.mistra.plank.pojo.entity.StockSelected;
+import com.mistra.plank.pojo.entity.TradeDeal;
+import com.mistra.plank.pojo.entity.TradeMethod;
+import com.mistra.plank.pojo.entity.TradeOrder;
+import com.mistra.plank.pojo.entity.TradeUser;
+import com.mistra.plank.pojo.vo.PageParam;
+import com.mistra.plank.pojo.vo.PageVo;
+import com.mistra.plank.pojo.vo.trade.DealVo;
+import com.mistra.plank.pojo.vo.trade.OrderVo;
+import com.mistra.plank.pojo.vo.trade.StockVo;
+import com.mistra.plank.pojo.vo.trade.TradeRuleVo;
 
 
 public interface TradeService {

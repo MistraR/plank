@@ -1,23 +1,15 @@
 package com.mistra.plank.service.impl;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mistra.plank.mapper.DailyIndexDao;
 import com.mistra.plank.mapper.StockInfoDao;
 import com.mistra.plank.mapper.StockLogDao;
-import com.mistra.plank.pojo.model.po.DailyIndex;
-import com.mistra.plank.pojo.model.po.StockInfo;
-import com.mistra.plank.pojo.model.po.StockLog;
-import com.mistra.plank.pojo.model.vo.DailyIndexVo;
-import com.mistra.plank.pojo.model.vo.PageParam;
-import com.mistra.plank.pojo.model.vo.PageVo;
+import com.mistra.plank.pojo.entity.DailyIndex;
+import com.mistra.plank.pojo.entity.StockInfo;
+import com.mistra.plank.pojo.entity.StockLog;
+import com.mistra.plank.pojo.vo.DailyIndexVo;
+import com.mistra.plank.pojo.vo.PageParam;
+import com.mistra.plank.pojo.vo.PageVo;
 import com.mistra.plank.service.DailyIndexParser;
 import com.mistra.plank.service.StockCrawlerService;
 import com.mistra.plank.service.StockService;
@@ -33,6 +25,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.FileCopyUtils;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class StockServiceImpl implements StockService {
@@ -64,8 +65,7 @@ public class StockServiceImpl implements StockService {
         PageParam pageParam = new PageParam();
         pageParam.setStart(0);
         pageParam.setLength(Integer.MAX_VALUE);
-        PageVo<StockInfo> pageVo = stockInfoDao.get(pageParam);
-        return pageVo.getData();
+        return stockInfoDao.selectList(new LambdaQueryWrapper<>());
     }
 
     @Override
@@ -79,7 +79,9 @@ public class StockServiceImpl implements StockService {
     public void addStockLog(List<StockLog> list) {
         Assert.notNull(list, StockServiceImpl.LIST_MESSAGE);
         if (!list.isEmpty()) {
-            stockLogDao.add(list);
+            for (StockLog stockLog : list) {
+                stockLogDao.insert(stockLog);
+            }
         }
     }
 

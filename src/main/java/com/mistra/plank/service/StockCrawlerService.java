@@ -2,8 +2,8 @@ package com.mistra.plank.service;
 
 import java.util.List;
 
-import com.mistra.plank.pojo.model.po.DailyIndex;
-import com.mistra.plank.pojo.model.po.StockInfo;
+import com.mistra.plank.pojo.entity.DailyIndex;
+import com.mistra.plank.pojo.entity.StockInfo;
 
 public interface StockCrawlerService {
 

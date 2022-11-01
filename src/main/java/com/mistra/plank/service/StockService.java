@@ -3,12 +3,12 @@ package com.mistra.plank.service;
 import java.util.Date;
 import java.util.List;
 
-import com.mistra.plank.pojo.model.po.DailyIndex;
-import com.mistra.plank.pojo.model.po.StockInfo;
-import com.mistra.plank.pojo.model.po.StockLog;
-import com.mistra.plank.pojo.model.vo.DailyIndexVo;
-import com.mistra.plank.pojo.model.vo.PageParam;
-import com.mistra.plank.pojo.model.vo.PageVo;
+import com.mistra.plank.pojo.entity.DailyIndex;
+import com.mistra.plank.pojo.entity.StockInfo;
+import com.mistra.plank.pojo.entity.StockLog;
+import com.mistra.plank.pojo.vo.DailyIndexVo;
+import com.mistra.plank.pojo.vo.PageParam;
+import com.mistra.plank.pojo.vo.PageVo;
 
 public interface StockService {
 

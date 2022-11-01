@@ -1,12 +1,12 @@
 package com.mistra.plank.mapper;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.mistra.plank.pojo.model.po.StockInfo;
-import com.mistra.plank.pojo.model.vo.PageParam;
-import com.mistra.plank.pojo.model.vo.PageVo;
+import com.mistra.plank.pojo.entity.StockInfo;
+import com.mistra.plank.pojo.vo.PageParam;
+import com.mistra.plank.pojo.vo.PageVo;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 @Mapper
 public interface StockInfoDao extends BaseMapper<StockInfo> {

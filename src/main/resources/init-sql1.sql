@@ -10824,7 +10824,7 @@ CREATE TABLE `trade_user`  (
 -- ----------------------------
 -- Records of trade_user
 -- ----------------------------
-INSERT INTO `trade_user` VALUES (1, '540320258576', '159357', 'Khmc=%e7%8e%8b%e7%91%9e; Uid=CwBzH%2bEGyhfiGoA7TOJ2ww%3d%3d; Uuid=4b3f80bdb320484282cd7be6016bcd6c; Yybdm=5403; mobileimei=3ee5728b-afd8-4586-a3f6-6e88eb422f81', '37858216-953b-479f-84ba-ec2453da780a', 1, '2022-10-31 18:51:26', '2022-10-31 19:24:44');
+INSERT INTO `trade_user` VALUES (1, '你的东方财富资金账号', '密码', 'Khmc=%e7%8e%8b%e7%91%9e; Uid=CwBzH%2bEGyhfiGoA7TOJ2ww%3d%3d; Uuid=4b3f80bdb320484282cd7be6016bcd6c; Yybdm=5403; mobileimei=3ee5728b-afd8-4586-a3f6-6e88eb422f81', '37858216-953b-479f-84ba-ec2453da780a', 1, '2022-10-31 18:51:26', '2022-10-31 19:24:44');
 
 -- ----------------------------
 -- Table structure for user

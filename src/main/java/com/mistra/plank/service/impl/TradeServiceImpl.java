@@ -1,40 +1,15 @@
 package com.mistra.plank.service.impl;
 
-import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.mistra.plank.api.response.CrGetDealDataResponse;
-import com.mistra.plank.api.response.CrGetHisDealDataResponse;
-import com.mistra.plank.api.response.CrGetOrdersDataResponse;
-import com.mistra.plank.api.response.CrQueryCollateralResponse;
-import com.mistra.plank.api.response.GetDealDataResponse;
-import com.mistra.plank.api.response.GetHisDealDataResponse;
-import com.mistra.plank.api.response.GetOrdersDataResponse;
-import com.mistra.plank.api.response.GetStockListResponse;
-import com.mistra.plank.mapper.TradeDealDao;
-import com.mistra.plank.mapper.TradeMethodDao;
-import com.mistra.plank.mapper.TradeOrderDao;
-import com.mistra.plank.mapper.TradeRuleDao;
-import com.mistra.plank.mapper.TradeStrategyDao;
-import com.mistra.plank.mapper.TradeUserDao;
-import com.mistra.plank.pojo.model.po.DailyIndex;
-import com.mistra.plank.pojo.model.po.StockInfo;
-import com.mistra.plank.pojo.model.po.StockSelected;
-import com.mistra.plank.pojo.model.po.TradeDeal;
-import com.mistra.plank.pojo.model.po.TradeMethod;
-import com.mistra.plank.pojo.model.po.TradeOrder;
-import com.mistra.plank.pojo.model.po.TradeRule;
-import com.mistra.plank.pojo.model.po.TradeStrategy;
-import com.mistra.plank.pojo.model.po.TradeUser;
-import com.mistra.plank.pojo.model.vo.PageParam;
-import com.mistra.plank.pojo.model.vo.PageVo;
-import com.mistra.plank.pojo.model.vo.trade.DealVo;
-import com.mistra.plank.pojo.model.vo.trade.OrderVo;
-import com.mistra.plank.pojo.model.vo.trade.StockVo;
-import com.mistra.plank.pojo.model.vo.trade.TradeRuleVo;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.mistra.plank.api.response.*;
+import com.mistra.plank.mapper.*;
+import com.mistra.plank.pojo.entity.*;
+import com.mistra.plank.pojo.vo.PageParam;
+import com.mistra.plank.pojo.vo.PageVo;
+import com.mistra.plank.pojo.vo.trade.DealVo;
+import com.mistra.plank.pojo.vo.trade.OrderVo;
+import com.mistra.plank.pojo.vo.trade.StockVo;
+import com.mistra.plank.pojo.vo.trade.TradeRuleVo;
 import com.mistra.plank.service.StockCrawlerService;
 import com.mistra.plank.service.StockService;
 import com.mistra.plank.service.TradeService;
@@ -46,6 +21,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TradeServiceImpl implements TradeService {
@@ -77,7 +58,7 @@ public class TradeServiceImpl implements TradeService {
     @Cacheable(value = StockConsts.CACHE_KEY_TRADE_METHOD, key = "#name", unless = "#result == null")
     @Override
     public TradeMethod getTradeMethodByName(String name) {
-        return tradeMethodDao.getByName(name);
+        return tradeMethodDao.selectOne(new LambdaQueryWrapper<TradeMethod>().eq(TradeMethod::getName, name));
     }
 
     @Cacheable(value = StockConsts.CACHE_KEY_TRADE_USER_LIST, key = "'all'", unless = "#result.size() == 0")
@@ -89,7 +70,7 @@ public class TradeServiceImpl implements TradeService {
     @Cacheable(value = StockConsts.CACHE_KEY_TRADE_USER, key = "#id.toString()", unless = "#result == null")
     @Override
     public TradeUser getTradeUserById(int id) {
-        TradeUser tradeUser = tradeUserDao.getById(id);
+        TradeUser tradeUser = tradeUserDao.selectById(id);
         if (tradeUser != null && "资金账号".equals(tradeUser.getAccountId()))
             return null;
         return tradeUser;
@@ -98,7 +79,7 @@ public class TradeServiceImpl implements TradeService {
     @CacheEvict(value = StockConsts.CACHE_KEY_TRADE_USER, key = "#tradeUser.id.toString()")
     @Override
     public void updateTradeUser(TradeUser tradeUser) {
-        tradeUserDao.update(tradeUser);
+        tradeUserDao.updateById(tradeUser);
     }
 
     @Override

@@ -1,17 +1,17 @@
 package com.mistra.plank.service.impl;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.alibaba.fastjson.JSON;
-import com.mistra.plank.pojo.model.po.DailyIndex;
-import com.mistra.plank.pojo.model.po.StockInfo;
+import com.mistra.plank.pojo.entity.DailyIndex;
+import com.mistra.plank.pojo.entity.StockInfo;
 import com.mistra.plank.service.StockInfoParser;
 import com.mistra.plank.util.StockConsts;
 import com.mistra.plank.util.StockUtil;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component("eastmoneyStockInfoParser")
 public class EastmoneyStockInfoParserImpl implements StockInfoParser {
