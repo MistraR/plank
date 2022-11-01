@@ -1,6 +1,6 @@
 package com.mistra.plank.pojo.model.po;
 
-import vip.linhs.stock.exception.ServiceException;
+import com.mistra.plank.exception.ServiceException;
 
 public enum Task {
 
@@ -26,7 +26,7 @@ public enum Task {
     }
 
     public static Task valueOf(int id) {
-        for(Task task : Task.values()) {
+        for (Task task : Task.values()) {
             if (task.id == id) {
                 return task;
             }

@@ -1,9 +1,9 @@
 package com.mistra.plank.pojo.model.po;
 
+import com.mistra.plank.api.response.GetOrdersDataResponse;
+
 import java.math.BigDecimal;
 import java.util.Date;
-
-import vip.linhs.stock.api.response.GetOrdersDataResponse;
 
 public class TradeOrder extends BaseModel {
 
@@ -114,7 +114,7 @@ public class TradeOrder extends BaseModel {
     }
 
     public boolean isValid() {
-        return isDealed() || GetOrdersDataResponse.WEIBAO.equals(tradeState) ||  GetOrdersDataResponse.YIBAO.equals(tradeState);
+        return isDealed() || GetOrdersDataResponse.WEIBAO.equals(tradeState) || GetOrdersDataResponse.YIBAO.equals(tradeState);
     }
 
     public boolean isManual() {

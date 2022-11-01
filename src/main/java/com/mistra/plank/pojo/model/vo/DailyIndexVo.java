@@ -1,6 +1,6 @@
 package com.mistra.plank.pojo.model.vo;
 
-import vip.linhs.stock.model.po.DailyIndex;
+import com.mistra.plank.pojo.model.po.DailyIndex;
 
 public class DailyIndexVo extends DailyIndex {
 

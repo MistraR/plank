@@ -1,8 +1,8 @@
 package com.mistra.plank.pojo.model.po;
 
-import java.math.BigDecimal;
+import com.mistra.plank.util.StockConsts;
 
-import vip.linhs.stock.util.StockConsts;
+import java.math.BigDecimal;
 
 public class TradeRule extends BaseModel {
 
@@ -127,7 +127,7 @@ public class TradeRule extends BaseModel {
     }
 
     public boolean isValid() {
-       return state == StockConsts.TradeState.Valid.value();
+        return state == StockConsts.TradeState.Valid.value();
     }
 
     public boolean isProportion() {

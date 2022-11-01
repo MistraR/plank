@@ -3,6 +3,9 @@ package com.mistra.plank.config;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
+import com.mistra.plank.exception.FieldInputException;
+import com.mistra.plank.exception.ServiceException;
+import com.mistra.plank.pojo.model.vo.CommonResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -12,9 +15,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import vip.linhs.stock.exception.FieldInputException;
-import vip.linhs.stock.exception.ServiceException;
-import vip.linhs.stock.model.vo.CommonResponse;
 
 @ControllerAdvice
 public class ApiExceptionHandler {
@@ -44,7 +44,7 @@ public class ApiExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
     public CommonResponse handleResourceNotFoundException(ResourceNotFoundException e,
-            HttpServletRequest request) {
+                                                          HttpServletRequest request) {
         logger.error("{}: resource not found", request.getRequestURI(), e);
         return CommonResponse.buildResponse("resource not found");
     }

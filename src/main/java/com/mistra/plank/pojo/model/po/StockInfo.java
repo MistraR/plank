@@ -1,6 +1,6 @@
 package com.mistra.plank.pojo.model.po;
 
-import vip.linhs.stock.util.StockConsts;
+import com.mistra.plank.util.StockConsts;
 
 public class StockInfo extends BaseModel {
 
