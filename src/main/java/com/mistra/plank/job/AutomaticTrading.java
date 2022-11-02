@@ -1,9 +1,6 @@
 package com.mistra.plank.job;
 
 import cn.hutool.core.date.DateUtil;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mistra.plank.api.TradeResultVo;
 import com.mistra.plank.api.request.SubmitRequest;
@@ -12,14 +9,13 @@ import com.mistra.plank.config.PlankConfig;
 import com.mistra.plank.mapper.StockMapper;
 import com.mistra.plank.pojo.entity.Stock;
 import com.mistra.plank.service.TradeApiService;
-import com.mistra.plank.util.HttpUtil;
 import com.mistra.plank.util.StockUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -42,6 +38,7 @@ public class AutomaticTrading implements CommandLineRunner {
     private final TradeApiService tradeApiService;
 
     private final PlankConfig plankConfig;
+    private final StockProcessor stockProcessor;
 
     /**
      * 需要监控的股票
@@ -60,10 +57,11 @@ public class AutomaticTrading implements CommandLineRunner {
 
     private final ReentrantLock lock = new ReentrantLock();
 
-    public AutomaticTrading(StockMapper stockMapper, TradeApiService tradeApiService, PlankConfig plankConfig) {
+    public AutomaticTrading(StockMapper stockMapper, TradeApiService tradeApiService, PlankConfig plankConfig, StockProcessor stockProcessor) {
         this.stockMapper = stockMapper;
         this.tradeApiService = tradeApiService;
         this.plankConfig = plankConfig;
+        this.stockProcessor = stockProcessor;
     }
 
     /**
@@ -100,7 +98,12 @@ public class AutomaticTrading implements CommandLineRunner {
      *
      * @return boolean
      */
-    private boolean isTradeTime() {
+    public static boolean isTradeTime() {
+        int week = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1;
+        if (week == 6 || week == 0) {
+            //0代表周日，6代表周六
+            return false;
+        }
         int hour = DateUtil.hour(new Date(), true);
         return (hour == 9 && DateUtil.minute(new Date()) > 30) || (hour == 11 && DateUtil.minute(new Date()) <= 29)
                 || hour == 10 || hour == 13 || hour == 14;
@@ -141,19 +144,9 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     private void automaticTrading(Stock stock, AtomicBoolean buy) {
-        String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", stock.getCode())
-                .replace("{time}", String.valueOf(System.currentTimeMillis()))
-                .replace("{recentDayNumber}", "1");
-        String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
-        JSONObject data = JSON.parseObject(body).getJSONObject("data");
-        JSONArray list = data.getJSONArray("item");
-        if (CollectionUtils.isNotEmpty(list)) {
-            Object o = list.get(0);
-            // 实时价格
-            double increaseRate = ((JSONArray) o).getDoubleValue(5);
-            if (increaseRate >= stock.getBuyPrice().doubleValue()) {
-                buy(stock, buy);
-            }
+        double price = stockProcessor.getCurrentPriceByCode(stock.getCode());
+        if (price != 0d && price >= stock.getBuyPrice().doubleValue()) {
+            buy(stock, buy);
         }
     }
 

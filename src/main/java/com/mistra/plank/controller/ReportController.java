@@ -4,7 +4,7 @@ import com.mistra.plank.pojo.entity.StockInfo;
 import com.mistra.plank.pojo.vo.DailyIndexVo;
 import com.mistra.plank.pojo.vo.PageParam;
 import com.mistra.plank.pojo.vo.PageVo;
-import com.mistra.plank.service.StockService;
+import com.mistra.plank.service.StockInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReportController extends BaseController {
 
     @Autowired
-    private StockService stockService;
+    private StockInfoService stockService;
 
     @RequestMapping("stockList")
     public PageVo<StockInfo> getStockList(PageParam pageParam) {

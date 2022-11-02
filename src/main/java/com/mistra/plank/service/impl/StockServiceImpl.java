@@ -13,7 +13,7 @@ import com.mistra.plank.pojo.vo.PageParam;
 import com.mistra.plank.pojo.vo.PageVo;
 import com.mistra.plank.service.DailyIndexParser;
 import com.mistra.plank.service.StockCrawlerService;
-import com.mistra.plank.service.StockService;
+import com.mistra.plank.service.StockInfoService;
 import com.mistra.plank.util.StockConsts;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
-public class StockServiceImpl implements StockService {
+public class StockServiceImpl implements StockInfoService {
 
     private final Logger logger = LoggerFactory.getLogger(StockServiceImpl.class);
 

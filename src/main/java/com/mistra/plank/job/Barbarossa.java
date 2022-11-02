@@ -28,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.joda.time.DateTime;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -36,6 +37,7 @@ import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -92,6 +94,11 @@ public class Barbarossa implements CommandLineRunner {
      */
     public static BigDecimal BALANCE_AVAILABLE = new BigDecimal(100 * W);
 
+    /**
+     * 是否开启监控中
+     */
+    private final AtomicBoolean monitoring = new AtomicBoolean(false);
+
     public Barbarossa(StockMapper stockMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
                       ClearanceMapper clearanceMapper, TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
                       Plank plank, PlankConfig plankConfig, ScreeningStocks screeningStocks,
@@ -120,10 +127,11 @@ public class Barbarossa implements CommandLineRunner {
             }
             STOCK_MAP.put(e.getCode(), e.getName());
         });
-        // 补充写入某只股票的历史交易数据
-//         dailyRecordProcessor.run("SZ002129", "TCL中环");
-        if (DateUtil.hour(new Date(), true) >= 15) {
-            executorService.submit(this::queryMainFundData);
+    }
+
+    @Scheduled(cron = "0 2 15 * * ?")
+    private void updateData() {
+        try {
             // 15点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
             // 更新每只股票收盘价，当日成交量，MA5 MA10 MA20
@@ -140,9 +148,8 @@ public class Barbarossa implements CommandLineRunner {
             screeningStocks.explosiveVolumeBack(new Date());
             // 分析红三兵股票
             screeningStocks.checkRedThreeSoldiersStock(new Date());
-        } else {
-            // 15点以前实时监控涨跌
-            monitor();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -245,15 +252,19 @@ public class Barbarossa implements CommandLineRunner {
      * <p>
      * 股价除权之后需要重新爬取交易数据，算均价就不准了
      */
+    @Scheduled(cron = "0 */1 * * * ?")
     public void monitor() {
-        executorService.submit(this::monitorStock);
-        executorService.submit(this::queryMainFundData);
+        if (AutomaticTrading.isTradeTime() && plankConfig.getEnableMonitor() && !monitoring.get()) {
+            executorService.submit(this::monitorStock);
+            executorService.submit(this::queryMainFundData);
+            monitoring.set(true);
+        }
     }
 
     private void monitorStock() {
         try {
             List<StockRealTimePrice> realTimePrices = new ArrayList<>();
-            while (true) {
+            while (AutomaticTrading.isTradeTime()) {
                 List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().eq("ignore_monitor", false)
                         .eq("track", true).or().eq("shareholding", true));
                 Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
@@ -340,6 +351,8 @@ public class Barbarossa implements CommandLineRunner {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            monitoring.set(false);
         }
     }
 
@@ -347,7 +360,7 @@ public class Barbarossa implements CommandLineRunner {
      * 查询主力实时流入数据
      */
     private void queryMainFundData() {
-        while (true) {
+        while (AutomaticTrading.isTradeTime()) {
             try {
                 String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
                 JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
@@ -362,6 +375,7 @@ public class Barbarossa implements CommandLineRunner {
                             mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
                         }
                     } catch (Exception exception) {
+                        exception.printStackTrace();
                     }
                 });
                 Collections.sort(result);
@@ -372,10 +386,8 @@ public class Barbarossa implements CommandLineRunner {
                 mainFundData.addAll(
                         result.stream().filter(e -> TRACK_STOCK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
                 Thread.sleep(3000);
-            } catch (InterruptedException interruptedException) {
-                interruptedException.printStackTrace();
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
         }
     }

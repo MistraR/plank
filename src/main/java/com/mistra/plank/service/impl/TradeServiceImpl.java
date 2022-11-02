@@ -12,7 +12,7 @@ import com.mistra.plank.pojo.vo.trade.OrderVo;
 import com.mistra.plank.pojo.vo.trade.StockVo;
 import com.mistra.plank.pojo.vo.trade.TradeRuleVo;
 import com.mistra.plank.service.StockCrawlerService;
-import com.mistra.plank.service.StockService;
+import com.mistra.plank.service.StockInfoService;
 import com.mistra.plank.service.TradeService;
 import com.mistra.plank.util.DecimalUtil;
 import com.mistra.plank.util.StockConsts;
@@ -51,7 +51,7 @@ public class TradeServiceImpl implements TradeService {
     private TradeDealDao tradeDealDao;
 
     @Autowired
-    private StockService stockService;
+    private StockInfoService stockService;
 
     @Autowired
     private StockCrawlerService stockCrawlerService;

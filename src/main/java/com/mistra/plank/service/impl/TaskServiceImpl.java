@@ -48,7 +48,7 @@ public class TaskServiceImpl implements TaskService {
     private StockCrawlerService stockCrawlerService;
 
     @Autowired
-    private StockService stockService;
+    private StockInfoService stockService;
 
     @Autowired
     private MessageService messageServicve;

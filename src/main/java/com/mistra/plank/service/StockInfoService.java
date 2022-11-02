@@ -1,8 +1,5 @@
 package com.mistra.plank.service;
 
-import java.util.Date;
-import java.util.List;
-
 import com.mistra.plank.pojo.entity.DailyIndex;
 import com.mistra.plank.pojo.entity.StockInfo;
 import com.mistra.plank.pojo.entity.StockLog;
@@ -10,7 +7,10 @@ import com.mistra.plank.pojo.vo.DailyIndexVo;
 import com.mistra.plank.pojo.vo.PageParam;
 import com.mistra.plank.pojo.vo.PageVo;
 
-public interface StockService {
+import java.util.Date;
+import java.util.List;
+
+public interface StockInfoService {
 
     List<StockInfo> getAll();
 

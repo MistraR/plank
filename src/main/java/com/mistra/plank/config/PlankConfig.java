@@ -132,4 +132,10 @@ public class PlankConfig {
      */
     private Boolean automaticTrading;
 
+    /**
+     * 是否开启持仓监控
+     */
+    private Boolean enableMonitor;
+
+
 }

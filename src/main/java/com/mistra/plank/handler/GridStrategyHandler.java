@@ -16,7 +16,7 @@ import com.mistra.plank.handler.model.StrategySubmitResult;
 import com.mistra.plank.pojo.entity.TradeOrder;
 import com.mistra.plank.pojo.vo.trade.TradeRuleVo;
 import com.mistra.plank.service.MessageService;
-import com.mistra.plank.service.StockService;
+import com.mistra.plank.service.StockInfoService;
 import com.mistra.plank.service.TradeApiService;
 import com.mistra.plank.service.TradeService;
 import com.mistra.plank.util.DecimalUtil;
@@ -53,7 +53,7 @@ public class GridStrategyHandler extends BaseStrategyHandler<GridStrategyInput, 
     private TradeService tradeService;
 
     @Autowired
-    private StockService stockService;
+    private StockInfoService stockService;
 
     @Override
     public GridStrategyInput queryInput(TradeRuleVo tradeRuleVo) {
