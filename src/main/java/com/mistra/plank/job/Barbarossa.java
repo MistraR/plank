@@ -122,7 +122,7 @@ public class Barbarossa implements CommandLineRunner {
         });
         // 补充写入某只股票的历史交易数据
 //         dailyRecordProcessor.run("SZ002129", "TCL中环");
-        if (DateUtil.hour(new Date(), true) >= 22) {
+        if (DateUtil.hour(new Date(), true) >= 15) {
             executorService.submit(this::queryMainFundData);
             // 15点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
