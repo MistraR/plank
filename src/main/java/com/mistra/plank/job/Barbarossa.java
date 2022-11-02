@@ -142,7 +142,7 @@ public class Barbarossa implements CommandLineRunner {
             screeningStocks.checkRedThreeSoldiersStock(new Date());
         } else {
             // 15点以前实时监控涨跌
-//            monitor();
+            monitor();
         }
     }
 
