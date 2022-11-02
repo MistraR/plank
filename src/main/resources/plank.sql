@@ -5710,28 +5710,22 @@ INSERT INTO `foreign_fund_holdings_tracking` VALUES (1131, 'SH603688', '石英�
 -- Table structure for hold_shares
 -- ----------------------------
 DROP TABLE IF EXISTS `hold_shares`;
-CREATE TABLE `hold_shares`  (
-  `id` bigint(0) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `hold_shares` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
   `name` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '名称',
   `code` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
-  `number` int(0) NOT NULL COMMENT '持股数量',
-  `cost` decimal(10, 2) NOT NULL COMMENT '当前成本价',
-  `current_price` decimal(10, 2) NOT NULL COMMENT '当前价',
-  `rate` decimal(10, 2) NOT NULL COMMENT '盈亏比率',
-  `buy_price` decimal(10, 2) NOT NULL COMMENT '建仓价',
-  `buy_time` datetime(0) NOT NULL COMMENT '建仓日期',
-  `fifteen_profit` tinyint(0) NOT NULL COMMENT '收益是否到过15%',
-  `buy_number` int(0) NOT NULL COMMENT '建仓数量',
-  `profit` decimal(10, 2) NOT NULL COMMENT '利润',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 11655 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of hold_shares
--- ----------------------------
-INSERT INTO `hold_shares` VALUES (11650, '沪电股份', 'SZ002463', 11400, 17.87, 17.87, 0.00, 17.87, '2022-01-18 09:00:00', 0, 11400, 0.00);
-INSERT INTO `hold_shares` VALUES (11653, '中科曙光', 'SH603019', 6500, 31.15, 31.15, 0.00, 31.15, '2022-01-19 09:00:00', 0, 6500, 0.00);
-INSERT INTO `hold_shares` VALUES (11654, '福耀玻璃', 'SH600660', 4300, 47.29, 47.29, 0.00, 47.29, '2022-01-19 09:00:00', 0, 4300, 0.00);
+  `number` int NOT NULL COMMENT '持股数量',
+  `cost` decimal(10,2) NOT NULL COMMENT '当前成本价',
+  `current_price` decimal(10,2) NOT NULL COMMENT '当前价',
+  `rate` decimal(10,2) NOT NULL COMMENT '盈亏比率',
+  `buy_price` decimal(10,2) NOT NULL COMMENT '建仓价',
+  `buy_time` datetime NOT NULL COMMENT '建仓日期',
+  `fifteen_profit` tinyint NOT NULL COMMENT '收益是否到过15%',
+  `buy_number` int NOT NULL COMMENT '建仓数量',
+  `profit` decimal(10,2) NOT NULL COMMENT '利润',
+  `available_volume` int NOT NULL COMMENT '可卖数量',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for holiday_calendar
