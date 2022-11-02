@@ -68,7 +68,7 @@ public class AutomaticTrading implements CommandLineRunner {
      * 每3秒更新一次需要打板的股票
      */
     @Scheduled(cron = "*/30 * * * * ?")
-    private void updatePlankMap() {
+    private void plank() {
         if (plankConfig.getAutomaticTrading() && isTradeTime()) {
             List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getBuyPlank, true));
             lock.lock();
@@ -111,7 +111,7 @@ public class AutomaticTrading implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        updatePlankMap();
+        plank();
     }
 
     class Task implements Runnable {
@@ -146,10 +146,17 @@ public class AutomaticTrading implements CommandLineRunner {
     private void automaticTrading(Stock stock, AtomicBoolean buy) {
         double price = stockProcessor.getCurrentPriceByCode(stock.getCode());
         if (price != 0d && price >= stock.getBuyPrice().doubleValue()) {
+            // 触发打板下单条件，挂单
             buy(stock, buy);
         }
     }
 
+    /**
+     * 下单
+     *
+     * @param stock Stock
+     * @param buy   AtomicBoolean
+     */
     private void buy(Stock stock, AtomicBoolean buy) {
         SubmitRequest request = new SubmitRequest(1);
         request.setAmount(stock.getBuyAmount());
@@ -168,8 +175,7 @@ public class AutomaticTrading implements CommandLineRunner {
             stock.setBuyPlank(false);
             stock.setBuyTime(new Date());
             stockMapper.updateById(stock);
-            log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), stock.getBuyAmount(), stock.getBuyPrice().doubleValue(),
-                    response.getData().get(0).getWtbh());
+            log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), stock.getBuyAmount(), stock.getBuyPrice().doubleValue());
         } else {
             log.error("下单[{}]失败,message:{}", stock.getName(), response.getMessage());
         }

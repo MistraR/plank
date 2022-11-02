@@ -11,15 +11,16 @@
 
 
 快速上手参考：src/main/resources/deployment.docx
-- 自动交易从 AutomaticTrading.run() 方法入手
-- 持仓数据监控以及分析连板数据从 Barbarossa.run() 方法入手
+- 自动交易从 AutomaticTrading.plank() 方法入手
+- 持仓数据监控从 Barbarossa.monitor() 方法入手
+- 分析历史连板数据从 Barbarossa.analyzeData() 方法入手
 
 
 > 请求雪球的接口报错时，去雪球首页拿一个最新的cookie换一下
 > 
 > 我是赛道股，趋势股，打板都玩，跟随资金，有炒大A的朋友可以加V(GODR3060W)交流
 > 
-> 想实现自己的选股策略就自由发挥啦，调用下单接口就行了
+> 想实现自己的选股策略就自由发挥，调用下单接口就行了，参考AutomaticTrading.buy()方法
 > 
 连板晋级率：
 
@@ -27,11 +28,11 @@
 
 > 连板越高，晋级概率越大。三板定龙头是有道理的。当然，有可能很多都是一字板，排单都排不进去。
 
-监控数据：
+console->监控数据：
 
 ![avatar](./src/main/resources/img/3.png)
 
-持仓及委托
+web页面->持仓及委托
 ![avatar](./src/main/resources/img/2.png)
 ![avatar](./src/main/resources/img/我的持仓.png)
 
