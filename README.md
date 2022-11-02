@@ -31,5 +31,9 @@
 
 ![avatar](./src/main/resources/img/3.png)
 
+持仓及委托
+![avatar](./src/main/resources/img/2.png)
+![avatar](./src/main/resources/img/我的持仓.png)
+
 基金和外资持仓，季度增减仓数据： sql:src/main/resources/query.text
 ![avatar](./src/main/resources/img/4.png)
