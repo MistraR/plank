@@ -1,69 +1,41 @@
 package com.mistra.plank.api.response;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class GetStockListResponse extends BaseTradeResponse {
 
+    /**
+     * 证券名称
+     */
     private String Zqmc;
+    /**
+     * 证券代码
+     */
     private String Zqdm;
+    /**
+     * 证券数量
+     */
     private String Zqsl;
+    /**
+     * 证券价格
+     */
     private String Zxjg;
+    /**
+     * 可用数量
+     */
     private String Kysl;
+    /**
+     * 成本价
+     */
     private String Cbjg;
+    /**
+     * 利润
+     */
     private String Ljyk;
-
-    public String getZqmc() {
-        return Zqmc;
-    }
-
-    public void setZqmc(String zqmc) {
-        Zqmc = zqmc;
-    }
-
-    public String getZqdm() {
-        return Zqdm;
-    }
-
-    public void setZqdm(String zqdm) {
-        Zqdm = zqdm;
-    }
-
-    public String getZqsl() {
-        return Zqsl;
-    }
-
-    public void setZqsl(String zqsl) {
-        Zqsl = zqsl;
-    }
-
-    public String getZxjg() {
-        return Zxjg;
-    }
-
-    public void setZxjg(String zxjg) {
-        Zxjg = zxjg;
-    }
-
-    public String getKysl() {
-        return Kysl;
-    }
-
-    public void setKysl(String kysl) {
-        Kysl = kysl;
-    }
-
-    public String getCbjg() {
-        return Cbjg;
-    }
-
-    public void setCbjg(String cbjg) {
-        Cbjg = cbjg;
-    }
-
-    public String getLjyk() {
-        return Ljyk;
-    }
-
-    public void setLjyk(String ljyk) {
-        Ljyk = ljyk;
-    }
 
 }

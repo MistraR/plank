@@ -84,7 +84,7 @@ public class TradeController extends BaseController {
         selectList = selectList.stream().filter(v -> list.stream().noneMatch(vo -> vo.getStockCode().equals(v.getCode()))).collect(Collectors.toList());
         list.addAll(tradeService.getTradeStockListBySelected(selectList));
         list.sort((a, b) -> Integer.compare(b.getTotalVolume(), a.getTotalVolume()));
-        return new PageVo<>(subList(list, pageParam), list.size());
+        return new PageVo<>(list, list.size());
     }
 
     @RequestMapping("ruleList")

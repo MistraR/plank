@@ -4,15 +4,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="Keywords" content="wild">
-  <meta name="description" content="" />
+  <meta name="description" content=""/>
   <meta name="renderer" content="webkit">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <title>transfer</title>
   <link rel="stylesheet" type="text/css" href="/static/css/common.css">
   <link rel="stylesheet" type="text/css" href="/static/css/trade.css">
-  <link rel="stylesheet" type="text/css" href="/static/js/lib/datatable/datatable.css" />
+  <link rel="stylesheet" type="text/css" href="/static/js/lib/datatable/datatable.css"/>
 
   <script type="text/javascript" src="/static/js/lib/jquery/3.2.1/jquery.js"></script>
   <script type="text/javascript" src="/static/js/lib/datatable/datatable.js"></script>
@@ -30,7 +30,7 @@
     function onload() {
       renderTradeMenu(5);
 
-      $('.account-input-change').on('click', function() {
+      $('.account-input-change').on('click', function () {
         $($('.account-input-amount > div')[0]).appendTo($('.account-input-amount'));
       });
 
@@ -41,36 +41,36 @@
 </head>
 
 <body>
-  <div id="head" class="head"></div>
+<div id="head" class="head"></div>
 
-  <div class="container">
-    <div class="innerBox">
-      <ul class="menu-nav">
-      </ul>
-      <div class="account-display-amount">
-        可划转金额 0.00
-      </div>
-      <div class="account-input">
-        <div class="account-input-dir">
-          <div>从</div>
-          <div>到</div>
-        </div>
-        <div class="account-input-amount">
-          <div id="div-bank">银行 <input type="number" name="" /></div>
-          <div id="div-stock">证券 <input type="number" name="" /></div>
-        </div>
-        <div class="account-input-change">
-          ↓↑
-        </div>
-        <div class="account-input-transfer btn">
-          转账
-        </div>
-      </div>
-      <div class="error-message"></div>
+<div class="container">
+  <div class="innerBox">
+    <ul class="menu-nav">
+    </ul>
+    <div class="account-display-amount">
+      可划转金额 0.00
     </div>
+    <div class="account-input">
+      <div class="account-input-dir">
+        <div>从</div>
+        <div>到</div>
+      </div>
+      <div class="account-input-amount">
+        <div id="div-bank">银行 <input type="number" name=""/></div>
+        <div id="div-stock">证券 <input type="number" name=""/></div>
+      </div>
+      <div class="account-input-change">
+        ↓↑
+      </div>
+      <div class="account-input-transfer btn">
+        转账
+      </div>
+    </div>
+    <div class="error-message"></div>
   </div>
+</div>
 
-  <div id="foot" class="foot"></div>
+<div id="foot" class="foot"></div>
 
 </body>
 

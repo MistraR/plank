@@ -132,7 +132,6 @@ public class TradeServiceImpl implements TradeService {
             stockVo.setTotalVolume(Integer.parseInt(v.getZqsl()));
             stockVo.setPrice(new BigDecimal(v.getZxjg()));
             stockVo.setCostPrice(new BigDecimal(v.getCbjg()));
-
             stockVo.setAvailableVolume(Integer.parseInt(v.getKysl()));
             stockVo.setProfit(new BigDecimal(v.getLjyk()));
             return stockVo;
