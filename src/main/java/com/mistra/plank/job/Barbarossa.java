@@ -390,6 +390,7 @@ public class Barbarossa implements CommandLineRunner {
                 e.printStackTrace();
             }
         }
+        monitoring.set(false);
     }
 
     private String convertLog(StockRealTimePrice realTimePrice) {
