@@ -3,11 +3,13 @@ package com.mistra.plank.job;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.dao.DailyRecordMapper;
 import com.mistra.plank.dao.StockMapper;
+import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.common.util.HttpUtil;
@@ -59,8 +61,8 @@ public class StockProcessor {
                         if (Objects.nonNull(exist)) {
                             List<DailyRecord> dailyRecords = dailyRecordMapper
                                     .selectPage(new Page<>(1, 20),
-                                            new QueryWrapper<DailyRecord>().eq("code", data.getString("symbol"))
-                                                    .ge("date", DateUtils.addDays(new Date(), -40)).orderByDesc("date"))
+                                            new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, data.getString("symbol"))
+                                                    .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -40)).orderByDesc(DailyRecord::getDate))
                                     .getRecords();
                             exist.setVolume(volume.longValue());
                             exist.setModifyTime(today);
@@ -94,26 +96,28 @@ public class StockProcessor {
         }
     }
 
-
     /**
      * 获取某只股票的最新价格
      *
      * @param code code
-     * @return 价格
+     * @return StockRealTimePrice
      */
-    public double getCurrentPriceByCode(String code) {
+    public StockRealTimePrice getStockRealTimePriceByCode(String code) {
         String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", code)
                 .replace("{time}", String.valueOf(System.currentTimeMillis()))
                 .replace("{recentDayNumber}", "1");
         String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
         JSONObject data = JSON.parseObject(body).getJSONObject("data");
         JSONArray list = data.getJSONArray("item");
-        if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(list)) {
-            Object o = list.get(0);
-            // 实时价格
-            return ((JSONArray) o).getDoubleValue(5);
-
+        if (CollectionUtils.isNotEmpty(list)) {
+            JSONArray o = (JSONArray) list.get(0);
+            return StockRealTimePrice.builder().todayRealTimePrice(o.getDoubleValue(5))
+                    .todayHighestPrice(o.getDoubleValue(3))
+                    .todayLowestPrice(o.getDoubleValue(4))
+                    .increaseRate(o.getDoubleValue(7))
+                    .build();
+        } else {
+            throw new RuntimeException("获取某只股票的最新价格失败！");
         }
-        return 0d;
     }
 }

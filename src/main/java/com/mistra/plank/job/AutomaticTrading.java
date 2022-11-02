@@ -144,7 +144,7 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     private void automaticTrading(Stock stock, AtomicBoolean buy) {
-        double price = stockProcessor.getCurrentPriceByCode(stock.getCode());
+        double price = stockProcessor.getStockRealTimePriceByCode(stock.getCode()).getTodayRealTimePrice();
         if (price != 0d && price >= stock.getBuyPrice().doubleValue()) {
             // 触发打板下单条件，挂单
             buy(stock, buy);

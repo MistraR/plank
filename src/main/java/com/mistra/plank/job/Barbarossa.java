@@ -265,49 +265,38 @@ public class Barbarossa implements CommandLineRunner {
         try {
             List<StockRealTimePrice> realTimePrices = new ArrayList<>();
             while (AutomaticTrading.isTradeTime()) {
-                List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().eq("ignore_monitor", false)
-                        .eq("track", true).or().eq("shareholding", true));
+                List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getIgnoreMonitor, false)
+                        .eq(Stock::getTrack, true).or().eq(Stock::getShareholding, true));
                 Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
                 for (Stock stock : stocks) {
                     // 默认把MA10作为建仓基准价格
                     int purchaseType = Objects.isNull(stock.getPurchaseType()) || stock.getPurchaseType() == 0 ? 10
                             : stock.getPurchaseType();
                     List<DailyRecord> dailyRecords =
-                            dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>().eq("code", stock.getCode())
-                                    .ge("date", DateUtils.addDays(new Date(), -purchaseType * 3)).orderByDesc("date"));
+                            dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, stock.getCode())
+                                    .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -purchaseType * 3)).orderByDesc(DailyRecord::getDate));
                     if (dailyRecords.size() < purchaseType) {
                         log.error("{}的交易数据不完整，不够{}个交易日数据！请先爬取交易数据！", stock.getCode(), stock.getPurchaseType());
                         continue;
                     }
-                    String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", stock.getCode())
-                            .replace("{time}", String.valueOf(System.currentTimeMillis()))
-                            .replace("{recentDayNumber}", "1");
-                    String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
-                    JSONObject data = JSON.parseObject(body).getJSONObject("data");
-                    JSONArray list = data.getJSONArray("item");
-                    if (CollectionUtils.isNotEmpty(list)) {
-                        for (Object o : list) {
-                            double v = ((JSONArray) o).getDoubleValue(5);
-                            List<BigDecimal> collect = dailyRecords.subList(0, purchaseType - 1).stream()
-                                    .map(DailyRecord::getClosePrice).collect(Collectors.toList());
-                            collect.add(new BigDecimal(v).setScale(2, RoundingMode.HALF_UP));
-                            double ma = collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
-                            // 如果手动设置了purchasePrice，则以stock.purchasePrice 和均线价格 2个当中更低的价格为基准价
-                            if (Objects.nonNull(stock.getPurchasePrice())
-                                    && stock.getPurchasePrice().doubleValue() > 0) {
-                                ma = Math.min(stock.getPurchasePrice().doubleValue(), ma);
-                            }
-                            BigDecimal maPrice = new BigDecimal(ma).setScale(2, RoundingMode.HALF_UP);
-                            double purchaseRate = (double) Math.round(((maPrice.doubleValue() - v) / v) * 100) / 100;
-                            realTimePrices.add(StockRealTimePrice.builder().todayRealTimePrice(v).name(stock.getName())
-                                    .todayHighestPrice(((JSONArray) o).getDoubleValue(3))
-                                    .todayLowestPrice(((JSONArray) o).getDoubleValue(4))
-                                    .mainFund(mainFundDataMap.containsKey(stock.getName())
-                                            ? mainFundDataMap.get(stock.getName()).getF62() / W : 0)
-                                    .purchasePrice(maPrice).increaseRate(((JSONArray) o).getDoubleValue(7))
-                                    .purchaseRate((int) (purchaseRate * 100)).build());
-                        }
+                    StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
+                    double v = stockRealTimePrice.getTodayRealTimePrice();
+                    List<BigDecimal> collect = dailyRecords.subList(0, purchaseType - 1).stream()
+                            .map(DailyRecord::getClosePrice).collect(Collectors.toList());
+                    collect.add(new BigDecimal(v).setScale(2, RoundingMode.HALF_UP));
+                    double ma = collect.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue));
+                    // 如果手动设置了purchasePrice，则以stock.purchasePrice 和均线价格 2个当中更低的价格为基准价
+                    if (Objects.nonNull(stock.getPurchasePrice()) && stock.getPurchasePrice().doubleValue() > 0) {
+                        ma = Math.min(stock.getPurchasePrice().doubleValue(), ma);
                     }
+                    BigDecimal maPrice = new BigDecimal(ma).setScale(2, RoundingMode.HALF_UP);
+                    double purchaseRate = (double) Math.round(((maPrice.doubleValue() - v) / v) * 100) / 100;
+                    stockRealTimePrice.setName(stock.getName());
+                    stockRealTimePrice.setMainFund(mainFundDataMap.containsKey(stock.getName())
+                            ? mainFundDataMap.get(stock.getName()).getF62() / W : 0);
+                    stockRealTimePrice.setPurchasePrice(maPrice);
+                    stockRealTimePrice.setPurchaseRate((int) (purchaseRate * 100));
+                    realTimePrices.add(stockRealTimePrice);
                 }
                 Collections.sort(realTimePrices);
                 System.out.println("\n\n\n");
@@ -339,8 +328,8 @@ public class Barbarossa implements CommandLineRunner {
 //                    }
 //                }
                 log.error("-------------------------- ↓今日打板下单↓ --------------------------");
-                List<Stock> buyStocks = stockMapper.selectList(new QueryWrapper<Stock>().ge("buy_time", DateUtil.beginOfDay(new Date()))
-                        .le("buy_time", DateUtil.endOfDay(new Date())));
+                List<Stock> buyStocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().ge(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))
+                        .le(Stock::getBuyTime, DateUtil.endOfDay(new Date())));
                 for (Stock buyStock : buyStocks) {
                     log.warn("{} 数量:{},金额:{}", buyStock.getName(), buyStock.getBuyAmount(), buyStock.getBuyPrice());
                 }
@@ -523,7 +512,7 @@ public class Barbarossa implements CommandLineRunner {
                     tmp.addAll(todaySix.keySet());
                     tmp.addAll(todaySeven.keySet());
                     if (CollectionUtils.isNotEmpty(tmp)) {
-                        List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", tmp));
+                        List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getName, tmp));
                         tmp.clear();
                         for (Stock stock : stocks) {
                             tmp.add(stock.getCode().substring(2, 8));
@@ -641,18 +630,18 @@ public class Barbarossa implements CommandLineRunner {
                 ForeignFundHoldingsTracking fundHoldingsTracking = entry.getValue();
                 try {
                     Stock stock =
-                            stockMapper.selectOne(new QueryWrapper<Stock>().eq("name", fundHoldingsTracking.getName()));
+                            stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getName, fundHoldingsTracking.getName()));
                     fundHoldingsTracking.setCode(stock.getCode());
                     fundHoldingsTracking.setQuarter(fundHoldingsParam.getQuarter());
-                    List<DailyRecord> dailyRecordList = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
-                            .eq("name", fundHoldingsTracking.getName()).ge("date", beginTime).le("date", endTime));
+                    List<DailyRecord> dailyRecordList = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
+                            .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime).le(DailyRecord::getDate, endTime));
                     if (CollectionUtils.isEmpty(dailyRecordList)) {
                         HashMap<String, String> stockMap = new HashMap<>();
                         stockMap.put(stock.getCode(), stock.getName());
                         dailyRecordProcessor.run(stockMap);
                         Thread.sleep(60 * 1000);
-                        dailyRecordList = dailyRecordMapper.selectList(new QueryWrapper<DailyRecord>()
-                                .eq("name", fundHoldingsTracking.getName()).ge("date", beginTime).le("date", endTime));
+                        dailyRecordList = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
+                                .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime).le(DailyRecord::getDate, endTime));
                     }
                     double average = dailyRecordList.stream().map(DailyRecord::getClosePrice)
                             .mapToInt(BigDecimal::intValue).average().orElse(0D);
@@ -679,8 +668,9 @@ public class Barbarossa implements CommandLineRunner {
     private void updateForeignFundShareholding(Integer quarter) {
         HashMap<String, JSONObject> foreignShareholding = getForeignShareholding();
         List<ForeignFundHoldingsTracking> fundHoldings = fundHoldingsTrackingMapper
-                .selectList(new QueryWrapper<ForeignFundHoldingsTracking>().eq("quarter", quarter));
-        List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().in("name", fundHoldings.stream().map(ForeignFundHoldingsTracking::getName).collect(Collectors.toList())));
+                .selectList(new LambdaQueryWrapper<ForeignFundHoldingsTracking>().eq(ForeignFundHoldingsTracking::getQuarter, quarter));
+        List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>()
+                .in(Stock::getName, fundHoldings.stream().map(ForeignFundHoldingsTracking::getName).collect(Collectors.toList())));
         if (CollectionUtils.isEmpty(foreignShareholding.values()) || CollectionUtils.isEmpty(fundHoldings)
                 || CollectionUtils.isEmpty(stocks)) {
             return;
