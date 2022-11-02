@@ -321,12 +321,20 @@ public class Barbarossa implements CommandLineRunner {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
-                log.error("----------------------------- ↓暴跌↓ -----------------------------");
-                for (StockRealTimePrice realTimePrice : realTimePrices) {
-                    if (realTimePrice.getIncreaseRate() < -5 && realTimePrice.getPurchaseRate() < -1) {
-                        Barbarossa.log.warn(convertLog(realTimePrice));
-                    }
+//                log.error("----------------------------- ↓暴跌↓ -----------------------------");
+//                for (StockRealTimePrice realTimePrice : realTimePrices) {
+//                    if (realTimePrice.getIncreaseRate() < -5 && realTimePrice.getPurchaseRate() < -1) {
+//                        Barbarossa.log.warn(convertLog(realTimePrice));
+//                    }
+//                }
+                log.error("-------------------------- ↓今日打板挂单↓ --------------------------");
+                List<Stock> buyStocks = stockMapper.selectList(new QueryWrapper<Stock>().ge("buy_time", DateUtil.beginOfDay(new Date()))
+                        .le("buy_time", DateUtil.endOfDay(new Date())));
+                for (Stock buyStock : buyStocks) {
+                    log.warn("{} 数量:{},金额:{}", buyStock.getName(), buyStock.getBuyAmount(), buyStock.getBuyPrice());
                 }
+                log.error("---------------------------- ↓打板监测↓ ----------------------------");
+                log.warn("{}", StringUtil.collectionToString(AutomaticTrading.runningSet.entrySet()));
                 realTimePrices.clear();
                 Thread.sleep(5000);
             }

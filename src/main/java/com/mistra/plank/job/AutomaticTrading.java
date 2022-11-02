@@ -51,7 +51,7 @@ public class AutomaticTrading implements CommandLineRunner {
     /**
      * 监控中的股票
      */
-    private static final HashSet<String> runningSet = new HashSet<>();
+    public static final ConcurrentHashMap<String, Stock> runningSet = new ConcurrentHashMap<>();
 
     /**
      * 已经成功挂单的股票
@@ -67,9 +67,9 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     /**
-     * 每3分钟更新一次需要打板的股票
+     * 每3秒更新一次需要打板的股票
      */
-    @Scheduled(cron = "0 */3 * * * ?")
+    @Scheduled(cron = "*/30 * * * * ?")
     private void updatePlankMap() {
         if (plankConfig.getAutomaticTrading() && isTradeTime()) {
             List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getBuyPlank, true));
@@ -79,9 +79,9 @@ public class AutomaticTrading implements CommandLineRunner {
                 for (Stock stock : stocks) {
                     if (!pendingOrderSet.contains(stock.getCode())) {
                         map.put(stock.getCode(), stock);
-                        if (!runningSet.contains(stock.getCode())) {
+                        if (!runningSet.containsKey(stock.getCode())) {
                             Barbarossa.executorService.submit(new Task(stock));
-                            runningSet.add(stock.getCode());
+                            runningSet.put(stock.getCode(), stock);
                         }
                     }
                 }
@@ -173,8 +173,9 @@ public class AutomaticTrading implements CommandLineRunner {
             buy.set(true);
             // 已经挂单，就修改为不监控该股票了
             stock.setBuyPlank(false);
+            stock.setBuyTime(new Date());
             stockMapper.updateById(stock);
-            log.info("成功下单[{}],数量:{},价格:{},message:{}", stock.getName(), stock.getBuyAmount(), stock.getBuyPrice().doubleValue(),
+            log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), stock.getBuyAmount(), stock.getBuyPrice().doubleValue(),
                     response.getData().get(0).getWtbh());
         } else {
             log.error("下单[{}]失败,message:{}", stock.getName(), response.getMessage());
