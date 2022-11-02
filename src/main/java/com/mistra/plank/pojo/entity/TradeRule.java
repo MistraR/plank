@@ -22,15 +22,15 @@ public class TradeRule extends BaseModel {
     @TableField(value = "stock_code")
     private String stockCode;
     @TableField(value = "strategy_id")
-    private int strategyId;
+    private Integer strategyId;
     @TableField(value = "user_id")
-    private int userId;
+    private Integer userId;
     @TableField(value = "type")
-    private int type;
+    private Integer type;
     @TableField(value = "value")
     private BigDecimal value;
     @TableField(value = "volume")
-    private int volume;
+    private Integer volume;
     @TableField(value = "open_price")
     private BigDecimal openPrice;
     @TableField(value = "highest_price")
@@ -42,7 +42,7 @@ public class TradeRule extends BaseModel {
     @TableField(value = "lowest_volume")
     private BigDecimal lowestVolume;
     @TableField(value = "state")
-    private int state;
+    private Integer state;
     @TableField(value = "description")
     private String description;
 

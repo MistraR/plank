@@ -24,6 +24,6 @@ public class SystemConfig extends BaseModel {
     @TableField(value = "value3")
     private String value3;
     @TableField(value = "state")
-    private int state;
+    private Integer state;
 
 }

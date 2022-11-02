@@ -25,7 +25,7 @@ public class TradeDeal extends BaseModel {
     @TableField(value = "price")
     private BigDecimal price;
     @TableField(value = "volume")
-    private int volume;
+    private Integer volume;
     @TableField(value = "trade_type")
     private String tradeType;
     @TableField(value = "cr_trade_type")

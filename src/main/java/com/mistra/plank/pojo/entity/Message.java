@@ -19,7 +19,7 @@ public class Message extends BaseModel {
     private static final long serialVersionUID = 1L;
 
     @TableField(value = "value")
-    private int type;
+    private Integer type;
     @TableField(value = "target")
     private String target;
     @TableField(value = "body")

@@ -20,7 +20,7 @@ public class TradeOrder extends BaseModel {
 
     private static final long serialVersionUID = 1L;
     @TableField(value = "rule_id")
-    private int ruleId;
+    private Integer ruleId;
     @TableField(value = "stock_code")
     private String stockCode;
     @TableField(value = "entrust_code")
@@ -32,7 +32,7 @@ public class TradeOrder extends BaseModel {
     @TableField(value = "price")
     private BigDecimal price;
     @TableField(value = "volume")
-    private int volume;
+    private Integer volume;
     @TableField(value = "trade_type")
     private String tradeType;
     @TableField(value = "trade_state")
@@ -40,7 +40,7 @@ public class TradeOrder extends BaseModel {
     @TableField(value = "trade_time")
     private Date tradeTime;
     @TableField(value = "state")
-    private int state;
+    private Integer state;
 
     public boolean isDealed() {
         return GetOrdersDataResponse.YICHENG.equals(tradeState);

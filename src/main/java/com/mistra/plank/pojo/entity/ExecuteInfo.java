@@ -29,7 +29,7 @@ public class ExecuteInfo extends BaseModel {
     @TableField(value = "is_manual")
     private boolean isManual;
     @TableField(value = "state")
-    private int state;
+    private Integer state;
     @TableField(value = "message")
     private String message;
 }

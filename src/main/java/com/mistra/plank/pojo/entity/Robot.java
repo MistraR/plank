@@ -17,10 +17,10 @@ public class Robot extends BaseModel {
     private static final long serialVersionUID = 1L;
 
     @TableField(value = "type")
-    private int type;
+    private Integer type;
     @TableField(value = "webhook")
     private String webhook;
     @TableField(value = "state")
-    private int state;
+    private Integer state;
 
 }

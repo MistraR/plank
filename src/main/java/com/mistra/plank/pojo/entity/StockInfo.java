@@ -25,9 +25,9 @@ public class StockInfo extends BaseModel {
     @TableField(value = "abbreviation")
     private String abbreviation;
     @TableField(value = "state")
-    private int state;
+    private Integer state;
     @TableField(value = "type")
-    private int type;
+    private Integer type;
 
     public boolean isValid() {
         return state != StockConsts.StockState.Terminated.value();

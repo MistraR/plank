@@ -1,9 +1,10 @@
 package com.mistra.plank.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.mistra.plank.mapper.DailyIndexDao;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.mapper.StockInfoDao;
 import com.mistra.plank.mapper.StockLogDao;
+import com.mistra.plank.mapper.impl.DailyIndexDao;
 import com.mistra.plank.pojo.entity.DailyIndex;
 import com.mistra.plank.pojo.entity.StockInfo;
 import com.mistra.plank.pojo.entity.StockLog;
@@ -189,13 +190,15 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public PageVo<StockInfo> getStockList(PageParam pageParam) {
-        return stockInfoDao.get(pageParam);
+        Page<StockInfo> page = stockInfoDao.selectPage(new Page<>(pageParam.getStart() + 1, pageParam.getLength()), new LambdaQueryWrapper<>());
+        return new PageVo<>(page.getRecords(), (int) page.getTotal());
     }
 
     @Cacheable(value = StockConsts.CACHE_KEY_DATA_STOCK, key = "#code")
     @Override
     public StockInfo getStockByFullCode(String code) {
-        StockInfo stockInfo = stockInfoDao.getStockByFullCode(code);
+        StockInfo stockInfo = stockInfoDao.selectOne(new LambdaQueryWrapper<StockInfo>()
+                .eq(StockInfo::getCode, code.substring(2, 8)).eq(StockInfo::getExchange, code.substring(0, 2)));
         if (stockInfo == null) {
             stockInfo = new StockInfo();
             stockInfo.setAbbreviation("wlrzq");

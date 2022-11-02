@@ -21,5 +21,5 @@ public class TradeStrategy extends BaseModel {
     @TableField(value = "bean_name")
     private String beanName;
     @TableField(value = "state")
-    private int state;
+    private Integer state;
 }

@@ -122,7 +122,7 @@ public class Barbarossa implements CommandLineRunner {
         });
         // 补充写入某只股票的历史交易数据
 //         dailyRecordProcessor.run("SZ002129", "TCL中环");
-        if (DateUtil.hour(new Date(), true) >= 15) {
+        if (DateUtil.hour(new Date(), true) >= 22) {
             executorService.submit(this::queryMainFundData);
             // 15点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
@@ -142,7 +142,7 @@ public class Barbarossa implements CommandLineRunner {
             screeningStocks.checkRedThreeSoldiersStock(new Date());
         } else {
             // 15点以前实时监控涨跌
-            monitor();
+//            monitor();
         }
     }
 
@@ -327,14 +327,14 @@ public class Barbarossa implements CommandLineRunner {
 //                        Barbarossa.log.warn(convertLog(realTimePrice));
 //                    }
 //                }
-                log.error("-------------------------- ↓今日打板挂单↓ --------------------------");
+                log.error("-------------------------- ↓今日打板下单↓ --------------------------");
                 List<Stock> buyStocks = stockMapper.selectList(new QueryWrapper<Stock>().ge("buy_time", DateUtil.beginOfDay(new Date()))
                         .le("buy_time", DateUtil.endOfDay(new Date())));
                 for (Stock buyStock : buyStocks) {
                     log.warn("{} 数量:{},金额:{}", buyStock.getName(), buyStock.getBuyAmount(), buyStock.getBuyPrice());
                 }
                 log.error("---------------------------- ↓打板监测↓ ----------------------------");
-                log.warn("{}", StringUtil.collectionToString(AutomaticTrading.runningSet.entrySet()));
+                log.warn("{}", StringUtil.collectionToString(AutomaticTrading.runningSet.values().stream().map(Stock::getName).collect(Collectors.toList())));
                 realTimePrices.clear();
                 Thread.sleep(5000);
             }

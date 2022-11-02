@@ -34,7 +34,7 @@ public class DailyIndex extends BaseModel {
     @TableField(value = "closing_price")
     private BigDecimal closingPrice;
     @TableField(value = "trading_volume")
-    private long tradingVolume;
+    private Long tradingVolume;
     @TableField(value = "trading_value")
     private BigDecimal tradingValue;
     @TableField(value = "rurnover_rate")

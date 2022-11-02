@@ -9,15 +9,15 @@ public enum Task {
     Ticker(5, "ticker"), TradeTicker(6, "trade_ticker"),
     ApplyNewStock(7, "apply_new_stock"), AutoLogin(8, "auto_login");
 
-    private int id;
+    private Integer id;
     private String name;
 
-    Task(int id, String name) {
+    Task(Integer id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
@@ -25,7 +25,7 @@ public enum Task {
         return name;
     }
 
-    public static Task valueOf(int id) {
+    public static Task valueOf(Integer id) {
         for (Task task : Task.values()) {
             if (task.id == id) {
                 return task;

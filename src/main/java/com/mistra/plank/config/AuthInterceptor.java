@@ -55,7 +55,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    private int getUserId(HttpServletRequest request) {
+    private Long getUserId(HttpServletRequest request) {
         String authToken = request.getHeader(StockConsts.KEY_AUTH_TOKEN);
         if (StringUtils.isNotEmpty(authToken)) {
             User user = userService.getByToken(authToken);
@@ -63,7 +63,7 @@ public class AuthInterceptor implements HandlerInterceptor {
                 return user.getId();
             }
         }
-        return 0;
+        return 0L;
     }
 
     private void writeJson(HttpServletResponse response, int status, String data) throws IOException {

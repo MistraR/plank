@@ -3,6 +3,7 @@ package com.mistra.plank.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mistra.plank.api.response.*;
 import com.mistra.plank.mapper.*;
+import com.mistra.plank.mapper.impl.TradeRuleDao;
 import com.mistra.plank.pojo.entity.*;
 import com.mistra.plank.pojo.vo.PageParam;
 import com.mistra.plank.pojo.vo.PageVo;
@@ -224,7 +225,7 @@ public class TradeServiceImpl implements TradeService {
     public PageVo<TradeRuleVo> getTradeRuleList(PageParam pageParam) {
         PageVo<TradeRule> pageVo = tradeRuleDao.get(pageParam);
 
-        List<TradeStrategy> strategyList = tradeStrategyDao.getAll();
+        List<TradeStrategy> strategyList = tradeStrategyDao.selectList(new LambdaQueryWrapper<>());
         List<TradeRule> list = pageVo.getData();
 
         List<TradeRuleVo> tradeConfigVoList = list.stream().map(tradeRule -> {
@@ -232,7 +233,7 @@ public class TradeServiceImpl implements TradeService {
             BeanUtils.copyProperties(tradeRule, tradeRuleVo);
 
             String stockName = stockService.getStockByFullCode(StockUtil.getFullCode(tradeRuleVo.getStockCode())).getName();
-            TradeStrategy tradeStrategy = strategyList.stream().filter(v -> v.getId() == tradeRuleVo.getStrategyId()).findAny().orElse(null);
+            TradeStrategy tradeStrategy = strategyList.stream().filter(v -> v.getId() == tradeRuleVo.getStrategyId().longValue()).findAny().orElse(null);
             String strategyName = tradeStrategy.getName();
             String strategyBeanName = tradeStrategy.getBeanName();
 

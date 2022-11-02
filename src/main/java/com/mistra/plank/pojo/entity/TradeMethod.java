@@ -22,6 +22,6 @@ public class TradeMethod extends BaseModel {
     private String url;
 
     @TableField(value = "state")
-    private int state;
+    private Integer state;
 
 }

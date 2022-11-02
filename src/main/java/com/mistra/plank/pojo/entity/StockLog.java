@@ -19,11 +19,11 @@ public class StockLog extends BaseModel {
     private static final long serialVersionUID = 1L;
 
     @TableField(value = "stock_info_id")
-    private int stockInfoId;
+    private Integer stockInfoId;
     @TableField(value = "date")
     private Date date;
     @TableField(value = "type")
-    private int type;
+    private Integer type;
     @TableField(value = "old_value")
     private String oldValue;
     @TableField(value = "new_value")

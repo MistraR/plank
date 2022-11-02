@@ -4,6 +4,7 @@ import com.mistra.plank.api.TradeResultVo;
 import com.mistra.plank.api.request.*;
 import com.mistra.plank.api.response.*;
 import com.mistra.plank.exception.FieldInputException;
+import com.mistra.plank.pojo.entity.StockSelected;
 import com.mistra.plank.pojo.entity.TradeMethod;
 import com.mistra.plank.pojo.entity.TradeUser;
 import com.mistra.plank.pojo.vo.AccountVo;
@@ -12,7 +13,9 @@ import com.mistra.plank.pojo.vo.PageParam;
 import com.mistra.plank.pojo.vo.PageVo;
 import com.mistra.plank.pojo.vo.trade.DealVo;
 import com.mistra.plank.pojo.vo.trade.OrderVo;
+import com.mistra.plank.pojo.vo.trade.StockVo;
 import com.mistra.plank.pojo.vo.trade.TradeRuleVo;
+import com.mistra.plank.service.StockSelectedService;
 import com.mistra.plank.service.TradeApiService;
 import com.mistra.plank.service.TradeService;
 import com.mistra.plank.util.StockUtil;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -37,6 +41,9 @@ public class TradeController extends BaseController {
 
     @Autowired
     private TradeService tradeService;
+
+    @Autowired
+    private StockSelectedService stockSelectedService;
 
     @RequestMapping("queryVerifyCodeUrl")
     public CommonResponse queryVerifyCodeUrl() {
@@ -56,13 +63,28 @@ public class TradeController extends BaseController {
         if (resultVo.success()) {
             AuthenticationResponse response = resultVo.getData().get(0);
             TradeUser tradeUser = new TradeUser();
-            tradeUser.setId(request.getUserId());
+            tradeUser.setId((long) request.getUserId());
             tradeUser.setCookie(response.getCookie());
             tradeUser.setValidateKey(response.getValidateKey());
             tradeService.updateTradeUser(tradeUser);
             resultVo.setMessage(CommonResponse.DEFAULT_MESSAGE_SUCCESS);
         }
         return CommonResponse.buildResponse(resultVo.getMessage());
+    }
+
+    @RequestMapping("stockList")
+    public PageVo<StockVo> getStockList(PageParam pageParam) {
+        GetStockListRequest request = new GetStockListRequest(getTradeUserId(pageParam.getTradeUserId()));
+        TradeResultVo<GetStockListResponse> response = tradeApiService.getStockList(request);
+        ArrayList<StockVo> list = new ArrayList<>();
+        if (response.success()) {
+            list.addAll(tradeService.getTradeStockList(response.getData()));
+        }
+        List<StockSelected> selectList = stockSelectedService.getList();
+        selectList = selectList.stream().filter(v -> list.stream().noneMatch(vo -> vo.getStockCode().equals(v.getCode()))).collect(Collectors.toList());
+        list.addAll(tradeService.getTradeStockListBySelected(selectList));
+        list.sort((a, b) -> Integer.compare(b.getTotalVolume(), a.getTotalVolume()));
+        return new PageVo<>(subList(list, pageParam), list.size());
     }
 
     @RequestMapping("ruleList")
