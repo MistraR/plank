@@ -14,7 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableCaching
 @SpringBootApplication
-@MapperScan("com.mistra.plank.mapper")
+@MapperScan("com.mistra.plank.dao")
 public class PlankApplication {
 
     public static void main(String[] args) {

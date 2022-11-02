@@ -1,10 +1,10 @@
 package com.mistra.plank.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.mistra.plank.mapper.SystemConfigDao;
-import com.mistra.plank.pojo.entity.SystemConfig;
+import com.mistra.plank.dao.SystemConfigDao;
+import com.mistra.plank.model.entity.SystemConfig;
 import com.mistra.plank.service.SystemConfigService;
-import com.mistra.plank.util.StockConsts;
+import com.mistra.plank.common.util.StockConsts;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

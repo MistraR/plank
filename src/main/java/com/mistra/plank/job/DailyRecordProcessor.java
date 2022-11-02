@@ -15,14 +15,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.mistra.plank.config.PlankConfig;
-import com.mistra.plank.mapper.DailyRecordMapper;
-import com.mistra.plank.pojo.entity.DailyRecord;
-import com.mistra.plank.util.HttpUtil;
+import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.dao.DailyRecordMapper;
+import com.mistra.plank.model.entity.DailyRecord;
+import com.mistra.plank.common.util.HttpUtil;
 
 import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 22:09 @ Description: 更新股票每日成交数据 @ Copyright (c) Mistra,All Rights

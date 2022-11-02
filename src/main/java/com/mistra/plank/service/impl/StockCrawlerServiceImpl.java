@@ -1,12 +1,12 @@
 package com.mistra.plank.service.impl;
 
-import com.mistra.plank.pojo.entity.DailyIndex;
-import com.mistra.plank.pojo.entity.StockInfo;
+import com.mistra.plank.model.entity.DailyIndex;
+import com.mistra.plank.model.entity.StockInfo;
 import com.mistra.plank.service.DailyIndexParser;
 import com.mistra.plank.service.StockCrawlerService;
 import com.mistra.plank.service.StockInfoParser;
-import com.mistra.plank.util.HttpUtil;
-import com.mistra.plank.util.StockUtil;
+import com.mistra.plank.common.util.HttpUtil;
+import com.mistra.plank.common.util.StockUtil;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

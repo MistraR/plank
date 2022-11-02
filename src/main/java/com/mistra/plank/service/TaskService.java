@@ -1,10 +1,10 @@
 package com.mistra.plank.service;
 
 
-import com.mistra.plank.pojo.entity.ExecuteInfo;
-import com.mistra.plank.pojo.vo.PageParam;
-import com.mistra.plank.pojo.vo.PageVo;
-import com.mistra.plank.pojo.vo.TaskVo;
+import com.mistra.plank.model.entity.ExecuteInfo;
+import com.mistra.plank.model.vo.PageParam;
+import com.mistra.plank.model.vo.PageVo;
+import com.mistra.plank.model.vo.TaskVo;
 
 import java.util.List;
 

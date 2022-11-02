@@ -1,11 +1,11 @@
 package com.mistra.plank.service.impl;
 
-import com.mistra.plank.pojo.entity.Message;
-import com.mistra.plank.pojo.entity.Robot;
+import com.mistra.plank.model.entity.Message;
+import com.mistra.plank.model.entity.Robot;
 import com.mistra.plank.service.MessageService;
 import com.mistra.plank.service.RobotService;
-import com.mistra.plank.util.HttpUtil;
-import com.mistra.plank.util.StockConsts;
+import com.mistra.plank.common.util.HttpUtil;
+import com.mistra.plank.common.util.StockConsts;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

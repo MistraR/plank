@@ -17,10 +17,10 @@ import org.springframework.stereotype.Component;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.mistra.plank.config.PlankConfig;
-import com.mistra.plank.mapper.DragonListMapper;
-import com.mistra.plank.pojo.entity.DragonList;
-import com.mistra.plank.util.HttpUtil;
+import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.dao.DragonListMapper;
+import com.mistra.plank.model.entity.DragonList;
+import com.mistra.plank.common.util.HttpUtil;
 
 import lombok.extern.slf4j.Slf4j;
 

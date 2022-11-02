@@ -20,17 +20,17 @@ import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.mistra.plank.config.PlankConfig;
-import com.mistra.plank.mapper.ClearanceMapper;
-import com.mistra.plank.mapper.DailyRecordMapper;
-import com.mistra.plank.mapper.HoldSharesMapper;
-import com.mistra.plank.mapper.TradeRecordMapper;
-import com.mistra.plank.pojo.entity.Clearance;
-import com.mistra.plank.pojo.entity.DailyRecord;
-import com.mistra.plank.pojo.entity.HoldShares;
-import com.mistra.plank.pojo.entity.Stock;
-import com.mistra.plank.pojo.entity.TradeRecord;
-import com.mistra.plank.pojo.enums.ClearanceReasonEnum;
+import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.dao.ClearanceMapper;
+import com.mistra.plank.dao.DailyRecordMapper;
+import com.mistra.plank.dao.HoldSharesMapper;
+import com.mistra.plank.dao.TradeRecordMapper;
+import com.mistra.plank.model.entity.Clearance;
+import com.mistra.plank.model.entity.DailyRecord;
+import com.mistra.plank.model.entity.HoldShares;
+import com.mistra.plank.model.entity.Stock;
+import com.mistra.plank.model.entity.TradeRecord;
+import com.mistra.plank.model.enums.ClearanceReasonEnum;
 import com.mistra.plank.service.Plank;
 
 import lombok.extern.slf4j.Slf4j;

@@ -3,7 +3,7 @@ package com.mistra.plank.service;
 import java.util.Date;
 import java.util.List;
 
-import com.mistra.plank.pojo.entity.Stock;
+import com.mistra.plank.model.entity.Stock;
 
 /**
  * 定义自己的选股，买入，卖出策略

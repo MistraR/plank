@@ -10,7 +10,7 @@ import com.mistra.plank.job.Barbarossa;
 import com.mistra.plank.job.DailyRecordProcessor;
 import com.mistra.plank.job.DragonListProcessor;
 import com.mistra.plank.job.StockProcessor;
-import com.mistra.plank.pojo.param.FundHoldingsParam;
+import com.mistra.plank.model.param.FundHoldingsParam;
 
 /**
  * @author mistra@future.com

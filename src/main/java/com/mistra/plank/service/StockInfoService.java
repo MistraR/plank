@@ -1,11 +1,11 @@
 package com.mistra.plank.service;
 
-import com.mistra.plank.pojo.entity.DailyIndex;
-import com.mistra.plank.pojo.entity.StockInfo;
-import com.mistra.plank.pojo.entity.StockLog;
-import com.mistra.plank.pojo.vo.DailyIndexVo;
-import com.mistra.plank.pojo.vo.PageParam;
-import com.mistra.plank.pojo.vo.PageVo;
+import com.mistra.plank.model.entity.DailyIndex;
+import com.mistra.plank.model.entity.StockInfo;
+import com.mistra.plank.model.entity.StockLog;
+import com.mistra.plank.model.vo.DailyIndexVo;
+import com.mistra.plank.model.vo.PageParam;
+import com.mistra.plank.model.vo.PageVo;
 
 import java.util.Date;
 import java.util.List;

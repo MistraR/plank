@@ -1,9 +1,9 @@
 package com.mistra.plank.controller;
 
-import com.mistra.plank.exception.FieldInputException;
-import com.mistra.plank.pojo.entity.User;
-import com.mistra.plank.pojo.vo.CommonResponse;
-import com.mistra.plank.pojo.vo.UserVo;
+import com.mistra.plank.common.exception.FieldInputException;
+import com.mistra.plank.model.entity.User;
+import com.mistra.plank.model.vo.CommonResponse;
+import com.mistra.plank.model.vo.UserVo;
 import com.mistra.plank.service.UserService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;

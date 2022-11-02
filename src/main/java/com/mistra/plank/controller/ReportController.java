@@ -1,9 +1,9 @@
 package com.mistra.plank.controller;
 
-import com.mistra.plank.pojo.entity.StockInfo;
-import com.mistra.plank.pojo.vo.DailyIndexVo;
-import com.mistra.plank.pojo.vo.PageParam;
-import com.mistra.plank.pojo.vo.PageVo;
+import com.mistra.plank.model.entity.StockInfo;
+import com.mistra.plank.model.vo.DailyIndexVo;
+import com.mistra.plank.model.vo.PageParam;
+import com.mistra.plank.model.vo.PageVo;
 import com.mistra.plank.service.StockInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;

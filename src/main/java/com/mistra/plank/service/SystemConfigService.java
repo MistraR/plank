@@ -1,7 +1,7 @@
 package com.mistra.plank.service;
 
 
-import com.mistra.plank.pojo.entity.SystemConfig;
+import com.mistra.plank.model.entity.SystemConfig;
 
 import java.util.List;
 

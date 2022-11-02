@@ -2,7 +2,7 @@ package com.mistra.plank.service;
 
 import com.alibaba.fastjson.JSON;
 import com.github.benmanes.caffeine.cache.Cache;
-import com.mistra.plank.pojo.vo.CacheVo;
+import com.mistra.plank.model.vo.CacheVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;

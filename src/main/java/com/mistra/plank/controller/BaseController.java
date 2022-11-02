@@ -1,7 +1,7 @@
 package com.mistra.plank.controller;
 
-import com.mistra.plank.pojo.vo.PageParam;
-import com.mistra.plank.util.StockConsts;
+import com.mistra.plank.model.vo.PageParam;
+import com.mistra.plank.common.util.StockConsts;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 

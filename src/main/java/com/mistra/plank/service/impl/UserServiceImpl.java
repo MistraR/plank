@@ -1,10 +1,10 @@
 package com.mistra.plank.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.mistra.plank.mapper.UserDao;
-import com.mistra.plank.pojo.entity.User;
+import com.mistra.plank.dao.UserDao;
+import com.mistra.plank.model.entity.User;
 import com.mistra.plank.service.UserService;
-import com.mistra.plank.util.StockConsts;
+import com.mistra.plank.common.util.StockConsts;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CachePut;
