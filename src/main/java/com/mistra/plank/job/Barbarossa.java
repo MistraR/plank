@@ -5,6 +5,7 @@ import cn.hutool.core.thread.NamedThreadFactory;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -75,6 +76,10 @@ public class Barbarossa implements CommandLineRunner {
      */
     public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
     /**
+     * 所有股票 name
+     */
+    public static final HashSet<String> STOCK_NAME_SET = new HashSet<>();
+    /**
      * 需要监控关注的票 key-name value-Stock
      */
     public static final HashMap<String, Stock> TRACK_STOCK_MAP = new HashMap<>();
@@ -126,6 +131,7 @@ public class Barbarossa implements CommandLineRunner {
                 TRACK_STOCK_MAP.put(e.getName(), e);
             }
             STOCK_MAP.put(e.getCode(), e.getName());
+            STOCK_NAME_SET.add(e.getName());
         });
     }
 
@@ -353,24 +359,25 @@ public class Barbarossa implements CommandLineRunner {
             try {
                 String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
                 JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
-                List<StockMainFundSample> result = new ArrayList<>();
+                List<StockMainFundSample> tmpList = new ArrayList<>();
                 array.parallelStream().forEach(e -> {
                     try {
-                        StockMainFundSample mainFundSample =
-                                JSONObject.parseObject(e.toString(), StockMainFundSample.class);
-                        result.add(mainFundSample);
+                        StockMainFundSample mainFundSample = JSONObject.parseObject(e.toString(), StockMainFundSample.class);
+                        tmpList.add(mainFundSample);
                         mainFundDataAllMap.put(mainFundSample.getF14(), mainFundSample);
                         if (TRACK_STOCK_MAP.containsKey(mainFundSample.getF14())) {
                             mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
                         }
+                    } catch (JSONException jsonException) {
+
                     } catch (Exception exception) {
                         exception.printStackTrace();
                     }
                 });
+                List<StockMainFundSample> result = tmpList.stream().filter(e -> e != null && STOCK_NAME_SET.contains(e.getF14()) && e.getF62() != null).collect(Collectors.toList());
                 Collections.sort(result);
                 mainFundDataAll.clear();
-                mainFundDataAll
-                        .addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
+                mainFundDataAll.addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
                 mainFundData.clear();
                 mainFundData.addAll(
                         result.stream().filter(e -> TRACK_STOCK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
