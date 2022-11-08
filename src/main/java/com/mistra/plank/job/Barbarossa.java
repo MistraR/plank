@@ -327,13 +327,7 @@ public class Barbarossa implements CommandLineRunner {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
-//                log.error("----------------------------- ↓暴跌↓ -----------------------------");
-//                for (StockRealTimePrice realTimePrice : realTimePrices) {
-//                    if (realTimePrice.getIncreaseRate() < -5 && realTimePrice.getPurchaseRate() < -1) {
-//                        Barbarossa.log.warn(convertLog(realTimePrice));
-//                    }
-//                }
-                log.error("-------------------------- ↓今日打板下单↓ --------------------------");
+                log.error("---------------------------- ↓打板排单↓ ----------------------------");
                 List<Stock> buyStocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().ge(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(Stock::getBuyTime, DateUtil.endOfDay(new Date())));
                 for (Stock buyStock : buyStocks) {
