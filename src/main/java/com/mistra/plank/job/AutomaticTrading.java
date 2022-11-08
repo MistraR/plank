@@ -48,7 +48,7 @@ public class AutomaticTrading implements CommandLineRunner {
     /**
      * 监控中的股票
      */
-    public static final ConcurrentHashMap<String, Stock> runningSet = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<String, Stock> runningMap = new ConcurrentHashMap<>();
 
     /**
      * 已经成功挂单的股票
@@ -77,9 +77,9 @@ public class AutomaticTrading implements CommandLineRunner {
                 for (Stock stock : stocks) {
                     if (!pendingOrderSet.contains(stock.getCode())) {
                         map.put(stock.getCode(), stock);
-                        if (!runningSet.containsKey(stock.getCode())) {
+                        if (!runningMap.containsKey(stock.getCode())) {
                             Barbarossa.executorService.submit(new Task(stock));
-                            runningSet.put(stock.getCode(), stock);
+                            runningMap.put(stock.getCode(), stock);
                         }
                     }
                 }
@@ -132,7 +132,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     Thread.sleep(200);
                     if (!lock.isLocked()) {
                         if (!map.containsKey(stock.getCode())) {
-                            runningSet.remove(stock.getCode());
+                            runningMap.remove(stock.getCode());
                             break;
                         }
                     }
@@ -167,7 +167,7 @@ public class AutomaticTrading implements CommandLineRunner {
         request.setMarket(StockUtil.getStockMarket(request.getStockCode()));
         TradeResultVo<SubmitResponse> response = tradeApiService.submit(request);
         if (response.success()) {
-            runningSet.remove(stock.getCode());
+            runningMap.remove(stock.getCode());
             map.remove(stock.getCode());
             pendingOrderSet.add(stock.getCode());
             buy.set(true);

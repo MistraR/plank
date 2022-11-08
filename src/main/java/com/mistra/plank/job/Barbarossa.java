@@ -314,14 +314,14 @@ public class Barbarossa implements CommandLineRunner {
                 log.warn(StringUtil.collectionToString(
                         topTen.stream().map(e -> e.getF14() + "[" + e.getF62() / W / W + "亿]" + e.getF3() + "%")
                                 .collect(Collectors.toList())));
-                log.error("----------------------------- ↓持仓↓ -----------------------------");
+                log.error("------------------------------ ↓持仓↓ -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (stockMap.get(realTimePrice.getName()).getShareholding()) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
                 realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
-                log.error("----------------------------- ↓建仓↓ -----------------------------");
+                log.error("------------------------------ ↓建仓↓ -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (realTimePrice.getPurchaseRate() >= -1) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
@@ -334,7 +334,9 @@ public class Barbarossa implements CommandLineRunner {
                     log.warn("{} 数量:{},金额:{}", buyStock.getName(), buyStock.getBuyAmount(), buyStock.getBuyPrice());
                 }
                 log.error("---------------------------- ↓打板监测↓ ----------------------------");
-                log.warn("{}", StringUtil.collectionToString(AutomaticTrading.runningSet.values().stream().map(Stock::getName).collect(Collectors.toList())));
+                if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {
+                    log.warn("{}", StringUtil.collectionToString(AutomaticTrading.runningMap.values().stream().map(Stock::getName).collect(Collectors.toList())));
+                }
                 realTimePrices.clear();
                 Thread.sleep(5000);
             }
