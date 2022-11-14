@@ -38,6 +38,30 @@ public class HoldShares {
     private String code;
 
     /**
+     * HoldSharesEnum
+     */
+    @TableField(value = "type")
+    private String type;
+
+    /**
+     * 自动交易类型 AutomaticTradingEnum
+     */
+    @TableField(value = "automatic_trading_type")
+    private String automaticTradingType;
+
+    /**
+     * 止盈价格
+     */
+    @TableField(value = "take_profit_price")
+    private BigDecimal takeProfitPrice;
+
+    /**
+     * 止损价格
+     */
+    @TableField(value = "stop_loss_price")
+    private BigDecimal stopLossPrice;
+
+    /**
      * 持股数量
      */
     @TableField(value = "number")

@@ -121,10 +121,10 @@ public class Stock implements Comparable<Stock> {
     private String classification;
 
     /**
-     * 是否监控该股票，如果上板则立即挂单买进
+     * 自动交易类型
      */
-    @TableField(value = "buy_plank")
-    private Boolean buyPlank;
+    @TableField(value = "automatic_trading_type")
+    private String automaticTradingType;
 
     /**
      * 买入数量
@@ -137,6 +137,12 @@ public class Stock implements Comparable<Stock> {
      */
     @TableField(value = "buy_price")
     private BigDecimal buyPrice;
+
+    /**
+     * 触发自动买入的价格
+     */
+    @TableField(value = "trigger_price")
+    private BigDecimal triggerPrice;
 
     /**
      * 最近一次自动下单打板时间

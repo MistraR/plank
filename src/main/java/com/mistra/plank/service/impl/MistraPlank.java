@@ -1,8 +1,22 @@
 package com.mistra.plank.service.impl;
 
-import static com.mistra.plank.job.Barbarossa.BALANCE;
-import static com.mistra.plank.job.Barbarossa.BALANCE_AVAILABLE;
-import static com.mistra.plank.job.Barbarossa.W;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.dao.ClearanceMapper;
+import com.mistra.plank.dao.DailyRecordMapper;
+import com.mistra.plank.dao.HoldSharesMapper;
+import com.mistra.plank.dao.TradeRecordMapper;
+import com.mistra.plank.model.entity.*;
+import com.mistra.plank.model.enums.ClearanceReasonEnum;
+import com.mistra.plank.model.enums.HoldSharesEnum;
+import com.mistra.plank.service.Plank;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.joda.time.Days;
+import org.joda.time.LocalDate;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -12,28 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.OptionalDouble;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.joda.time.Days;
-import org.joda.time.LocalDate;
-import org.springframework.stereotype.Component;
-
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.mistra.plank.common.config.PlankConfig;
-import com.mistra.plank.dao.ClearanceMapper;
-import com.mistra.plank.dao.DailyRecordMapper;
-import com.mistra.plank.dao.HoldSharesMapper;
-import com.mistra.plank.dao.TradeRecordMapper;
-import com.mistra.plank.model.entity.Clearance;
-import com.mistra.plank.model.entity.DailyRecord;
-import com.mistra.plank.model.entity.HoldShares;
-import com.mistra.plank.model.entity.Stock;
-import com.mistra.plank.model.entity.TradeRecord;
-import com.mistra.plank.model.enums.ClearanceReasonEnum;
-import com.mistra.plank.service.Plank;
-
-import lombok.extern.slf4j.Slf4j;
+import static com.mistra.plank.job.Barbarossa.*;
 
 /**
  * 描述
@@ -54,8 +47,8 @@ public class MistraPlank implements Plank {
     private final ScreeningStocks screeningStocks;
 
     public MistraPlank(DailyRecordMapper dailyRecordMapper, ClearanceMapper clearanceMapper,
-        TradeRecordMapper tradeRecordMapper, PlankConfig plankConfig, HoldSharesMapper holdSharesMapper,
-        ScreeningStocks screeningStocks) {
+                       TradeRecordMapper tradeRecordMapper, PlankConfig plankConfig, HoldSharesMapper holdSharesMapper,
+                       ScreeningStocks screeningStocks) {
         this.dailyRecordMapper = dailyRecordMapper;
         this.clearanceMapper = clearanceMapper;
         this.tradeRecordMapper = tradeRecordMapper;
@@ -86,17 +79,17 @@ public class MistraPlank implements Plank {
                 return;
             }
             Page<DailyRecord> selectPage = dailyRecordMapper.selectPage(new Page<>(1, 5),
-                new QueryWrapper<DailyRecord>().eq("code", stock.getCode()).ge("date", DateUtils.addDays(date, -1))
-                    .le("date", DateUtils.addDays(date, 12)).orderByAsc("date"));
+                    new QueryWrapper<DailyRecord>().eq("code", stock.getCode()).ge("date", DateUtils.addDays(date, -1))
+                            .le("date", DateUtils.addDays(date, 12)).orderByAsc("date"));
             if (selectPage.getRecords().size() < 2) {
                 continue;
             }
             DailyRecord dailyRecord = selectPage.getRecords().get(1);
             double openRatio =
-                (selectPage.getRecords().get(1).getOpenPrice().subtract(selectPage.getRecords().get(0).getClosePrice()))
-                    .divide(selectPage.getRecords().get(0).getClosePrice(), 2, RoundingMode.HALF_UP).doubleValue();
+                    (selectPage.getRecords().get(1).getOpenPrice().subtract(selectPage.getRecords().get(0).getClosePrice()))
+                            .divide(selectPage.getRecords().get(0).getClosePrice(), 2, RoundingMode.HALF_UP).doubleValue();
             if (openRatio > -0.03 && openRatio < plankConfig.getBuyPlankRatioLimit().doubleValue()
-                && BALANCE_AVAILABLE.intValue() > W) {
+                    && BALANCE_AVAILABLE.intValue() > W) {
                 HoldShares one = holdSharesMapper.selectOne(new QueryWrapper<HoldShares>().eq("code", stock.getCode()));
                 if (Objects.isNull(one)) {
                     int money = BALANCE.intValue() / fundsPart;
@@ -105,18 +98,18 @@ public class MistraPlank implements Plank {
                     double cost = number * 100 * dailyRecord.getOpenPrice().doubleValue();
                     BALANCE_AVAILABLE = BALANCE_AVAILABLE.subtract(new BigDecimal(cost));
                     HoldShares holdShare = HoldShares.builder().buyTime(DateUtils.addHours(dailyRecord.getDate(), 9))
-                        .code(stock.getCode()).name(stock.getName()).cost(dailyRecord.getOpenPrice())
-                        .fifteenProfit(false).number(number * 100).profit(new BigDecimal(0))
-                        .currentPrice(dailyRecord.getOpenPrice()).rate(new BigDecimal(0))
-                        .buyPrice(dailyRecord.getOpenPrice()).buyNumber(number * 100).build();
+                            .code(stock.getCode()).name(stock.getName()).cost(dailyRecord.getOpenPrice())
+                            .fifteenProfit(false).number(number * 100).profit(new BigDecimal(0))
+                            .currentPrice(dailyRecord.getOpenPrice()).rate(new BigDecimal(0)).type(HoldSharesEnum.SIMULATION.name())
+                            .buyPrice(dailyRecord.getOpenPrice()).buyNumber(number * 100).build();
                     holdSharesMapper.insert(holdShare);
                     TradeRecord tradeRecord = new TradeRecord();
                     tradeRecord.setName(holdShare.getName());
                     tradeRecord.setCode(holdShare.getCode());
                     tradeRecord.setDate(DateUtils.addHours(dailyRecord.getDate(), 9));
-                    tradeRecord.setMoney((int)(number * 100 * dailyRecord.getOpenPrice().doubleValue()));
+                    tradeRecord.setMoney((int) (number * 100 * dailyRecord.getOpenPrice().doubleValue()));
                     String note = "以" + dailyRecord.getOpenPrice().doubleValue() + "价格建仓" + holdShare.getName()
-                        + number * 100 + "股，花费" + (int)cost + "，当前可用余额" + BALANCE_AVAILABLE.intValue();
+                            + number * 100 + "股，花费" + (int) cost + "，当前可用余额" + BALANCE_AVAILABLE.intValue();
                     tradeRecord.setReason(note);
                     tradeRecord.setBalance(BALANCE.setScale(2, RoundingMode.HALF_UP));
                     tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, RoundingMode.HALF_UP));
@@ -132,7 +125,7 @@ public class MistraPlank implements Plank {
 
     /**
      * 减仓或清仓股票
-     * 
+     *
      * @param date 开盘日期
      */
     @Override
@@ -141,20 +134,20 @@ public class MistraPlank implements Plank {
         if (CollectionUtils.isNotEmpty(holdShares)) {
             for (HoldShares holdShare : holdShares) {
                 if (!DateUtils.isSameDay(holdShare.getBuyTime(), date)
-                    && holdShare.getBuyTime().getTime() < date.getTime()) {
+                        && holdShare.getBuyTime().getTime() < date.getTime()) {
                     Page<DailyRecord> selectPage = dailyRecordMapper.selectPage(new Page<>(1, 25),
-                        new QueryWrapper<DailyRecord>().eq("code", holdShare.getCode())
-                            .ge("date", DateUtils.addDays(date, -plankConfig.getDeficitMovingAverage() - 9))
-                            .le("date", date).orderByDesc("date"));
+                            new QueryWrapper<DailyRecord>().eq("code", holdShare.getCode())
+                                    .ge("date", DateUtils.addDays(date, -plankConfig.getDeficitMovingAverage() - 9))
+                                    .le("date", date).orderByDesc("date"));
                     // 今日数据明细
                     DailyRecord todayRecord = selectPage.getRecords().get(0);
                     List<DailyRecord> dailyRecords =
-                        selectPage.getRecords().size() >= plankConfig.getDeficitMovingAverage()
-                            ? selectPage.getRecords().subList(0, plankConfig.getDeficitMovingAverage() - 1)
-                            : selectPage.getRecords();
+                            selectPage.getRecords().size() >= plankConfig.getDeficitMovingAverage()
+                                    ? selectPage.getRecords().subList(0, plankConfig.getDeficitMovingAverage() - 1)
+                                    : selectPage.getRecords();
                     // 止损均线价格
                     OptionalDouble average = dailyRecords.stream()
-                        .mapToDouble(dailyRecord -> dailyRecord.getClosePrice().doubleValue()).average();
+                            .mapToDouble(dailyRecord -> dailyRecord.getClosePrice().doubleValue()).average();
                     if (average.isPresent() && (todayRecord.getLowest().doubleValue() <= average.getAsDouble())) {
                         // 跌破均线，清仓
                         this.clearanceStock(holdShare, ClearanceReasonEnum.BREAK_POSITION, date, average.getAsDouble());
@@ -162,45 +155,45 @@ public class MistraPlank implements Plank {
                     }
                     // 盘中最低收益率
                     double profitLowRatio = todayRecord.getLowest().subtract(holdShare.getBuyPrice())
-                        .divide(holdShare.getBuyPrice(), 2, RoundingMode.HALF_UP).doubleValue();
+                            .divide(holdShare.getBuyPrice(), 2, RoundingMode.HALF_UP).doubleValue();
                     if (profitLowRatio < plankConfig.getDeficitRatio().doubleValue()) {
                         // 跌破止损线，清仓
                         this.clearanceStock(holdShare, ClearanceReasonEnum.BREAK_LOSS_LINE, date,
-                            holdShare.getBuyPrice().doubleValue() * (1 + plankConfig.getDeficitRatio().doubleValue()));
+                                holdShare.getBuyPrice().doubleValue() * (1 + plankConfig.getDeficitRatio().doubleValue()));
                         continue;
                     }
                     if (holdShare.getFifteenProfit()
-                        && profitLowRatio <= plankConfig.getProfitClearanceRatio().doubleValue()) {
+                            && profitLowRatio <= plankConfig.getProfitClearanceRatio().doubleValue()) {
                         // 收益回撤到plankConfig.getProfitClearanceRatio()个点止盈清仓
                         this.clearanceStock(holdShare, ClearanceReasonEnum.TAKE_PROFIT, date,
-                            holdShare.getBuyPrice().doubleValue()
-                                * plankConfig.getProfitClearanceRatio().doubleValue());
+                                holdShare.getBuyPrice().doubleValue()
+                                        * plankConfig.getProfitClearanceRatio().doubleValue());
                         continue;
                     }
                     // 盘中最高收益率
                     double profitHighRatio = todayRecord.getHighest().subtract(holdShare.getBuyPrice())
-                        .divide(holdShare.getBuyPrice(), 2, RoundingMode.HALF_UP).doubleValue();
+                            .divide(holdShare.getBuyPrice(), 2, RoundingMode.HALF_UP).doubleValue();
                     if (profitHighRatio >= plankConfig.getProfitUpperRatio().doubleValue()) {
                         // 收益25% 清仓
                         this.clearanceStock(holdShare, ClearanceReasonEnum.PROFIT_UPPER, date,
-                            holdShare.getBuyPrice().doubleValue()
-                                * (1 + plankConfig.getProfitUpperRatio().doubleValue()));
+                                holdShare.getBuyPrice().doubleValue()
+                                        * (1 + plankConfig.getProfitUpperRatio().doubleValue()));
                     } else if (profitHighRatio >= plankConfig.getProfitQuarterRatio().doubleValue()) {
                         // 收益20% 减至1/4仓
                         this.reduceStock(holdShare, ClearanceReasonEnum.POSITION_QUARTER, date, todayRecord,
-                            holdShare.getBuyPrice().doubleValue()
-                                * (1 + plankConfig.getProfitQuarterRatio().doubleValue()));
+                                holdShare.getBuyPrice().doubleValue()
+                                        * (1 + plankConfig.getProfitQuarterRatio().doubleValue()));
                     } else if (profitHighRatio >= plankConfig.getProfitHalfRatio().doubleValue()) {
                         // 收益15% 减半仓
                         this.reduceStock(holdShare, ClearanceReasonEnum.POSITION_HALF, date, todayRecord,
-                            holdShare.getBuyPrice().doubleValue()
-                                * (1 + plankConfig.getProfitHalfRatio().doubleValue()));
+                                holdShare.getBuyPrice().doubleValue()
+                                        * (1 + plankConfig.getProfitHalfRatio().doubleValue()));
                     }
                     // 持股超过x天 并且 收益不到20% 清仓
                     if (Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime()))
-                        .getDays() > plankConfig.getClearanceDay()) {
+                            .getDays() > plankConfig.getClearanceDay()) {
                         this.clearanceStock(holdShare, ClearanceReasonEnum.TEN_DAY, date,
-                            todayRecord.getOpenPrice().add(todayRecord.getClosePrice()).doubleValue() / 2);
+                                todayRecord.getOpenPrice().add(todayRecord.getClosePrice()).doubleValue() / 2);
                     }
                 }
             }
@@ -210,13 +203,13 @@ public class MistraPlank implements Plank {
     /**
      * 减仓股票
      *
-     * @param holdShare 持仓记录
+     * @param holdShare           持仓记录
      * @param clearanceReasonEnum 清仓原因
-     * @param date 时间
-     * @param sellPrice 清仓价格
+     * @param date                时间
+     * @param sellPrice           清仓价格
      */
     private void reduceStock(HoldShares holdShare, ClearanceReasonEnum clearanceReasonEnum, Date date,
-        DailyRecord todayRecord, double sellPrice) {
+                             DailyRecord todayRecord, double sellPrice) {
         if (holdShare.getNumber() <= 0) {
             holdSharesMapper.delete(new QueryWrapper<HoldShares>().eq("id", holdShare.getId()));
             return;
@@ -235,9 +228,9 @@ public class MistraPlank implements Plank {
         tradeRecord.setName(holdShare.getName());
         tradeRecord.setCode(holdShare.getCode());
         tradeRecord.setDate(date);
-        tradeRecord.setMoney((int)money);
-        tradeRecord.setReason("减仓" + holdShare.getName() + number + "股，卖出金额" + (int)money + "元，当前可用余额"
-            + BALANCE_AVAILABLE.intValue() + "，减仓原因" + clearanceReasonEnum.getDesc());
+        tradeRecord.setMoney((int) money);
+        tradeRecord.setReason("减仓" + holdShare.getName() + number + "股，卖出金额" + (int) money + "元，当前可用余额"
+                + BALANCE_AVAILABLE.intValue() + "，减仓原因" + clearanceReasonEnum.getDesc());
         tradeRecord.setBalance(BALANCE.setScale(2, RoundingMode.HALF_UP));
         tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, RoundingMode.HALF_UP));
         tradeRecord.setPrice(new BigDecimal(sellPrice));
@@ -250,27 +243,27 @@ public class MistraPlank implements Plank {
         }
         holdShare.setNumber(holdShare.getNumber() - number);
         holdShare.setCost(holdShare.getBuyPrice().multiply(new BigDecimal(holdShare.getBuyNumber())).subtract(profit)
-            .divide(new BigDecimal(number), 2, RoundingMode.HALF_UP));
+                .divide(new BigDecimal(number), 2, RoundingMode.HALF_UP));
         holdShare.setProfit(holdShare.getProfit().add(profit));
         holdShare.setFifteenProfit(true);
         holdShare.setCurrentPrice(todayRecord.getClosePrice());
         holdShare.setRate(todayRecord.getClosePrice().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(),
-            2, RoundingMode.HALF_UP));
+                2, RoundingMode.HALF_UP));
         holdSharesMapper.updateById(holdShare);
         log.warn("{}日减仓 [{}],目前总盈利[{}] | 总金额 [{}] | 可用金额 [{}]", sdf.format(date), holdShare.getName(),
-            holdShare.getProfit().add(profit).intValue(), BALANCE.intValue(), BALANCE_AVAILABLE.intValue());
+                holdShare.getProfit().add(profit).intValue(), BALANCE.intValue(), BALANCE_AVAILABLE.intValue());
     }
 
     /**
      * 清仓股票
      *
-     * @param holdShare 持仓记录
+     * @param holdShare           持仓记录
      * @param clearanceReasonEnum 清仓原因
-     * @param date 时间
-     * @param sellPrice 清仓价格
+     * @param date                时间
+     * @param sellPrice           清仓价格
      */
     private void clearanceStock(HoldShares holdShare, ClearanceReasonEnum clearanceReasonEnum, Date date,
-        double sellPrice) {
+                                double sellPrice) {
         if (holdShare.getNumber() <= 0) {
             holdSharesMapper.delete(new QueryWrapper<HoldShares>().eq("id", holdShare.getId()));
             return;
@@ -279,7 +272,7 @@ public class MistraPlank implements Plank {
         double money = holdShare.getNumber() * sellPrice;
         // 本次卖出部分盈亏金额
         BigDecimal profit =
-            BigDecimal.valueOf(holdShare.getNumber() * (sellPrice - holdShare.getBuyPrice().doubleValue()));
+                BigDecimal.valueOf(holdShare.getNumber() * (sellPrice - holdShare.getBuyPrice().doubleValue()));
         // 总资产
         BALANCE = BALANCE.add(profit);
         // 总盈利
@@ -290,9 +283,9 @@ public class MistraPlank implements Plank {
         tradeRecord.setName(holdShare.getName());
         tradeRecord.setCode(holdShare.getCode());
         tradeRecord.setDate(date);
-        tradeRecord.setMoney((int)money);
-        tradeRecord.setReason("清仓" + holdShare.getName() + holdShare.getNumber() + "股，卖出金额" + (int)money + "元，当前可用余额"
-            + BALANCE_AVAILABLE.intValue() + "，清仓原因" + clearanceReasonEnum.getDesc());
+        tradeRecord.setMoney((int) money);
+        tradeRecord.setReason("清仓" + holdShare.getName() + holdShare.getNumber() + "股，卖出金额" + (int) money + "元，当前可用余额"
+                + BALANCE_AVAILABLE.intValue() + "，清仓原因" + clearanceReasonEnum.getDesc());
         tradeRecord.setBalance(BALANCE.setScale(2, RoundingMode.HALF_UP));
         tradeRecord.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, RoundingMode.HALF_UP));
         tradeRecord.setPrice(new BigDecimal(sellPrice));
@@ -306,19 +299,19 @@ public class MistraPlank implements Plank {
         clearance.setNumber(holdShare.getBuyNumber());
         clearance.setPrice(new BigDecimal(sellPrice));
         clearance
-            .setRate(profit.divide(BigDecimal.valueOf(holdShare.getBuyNumber() * holdShare.getBuyPrice().doubleValue()),
-                2, RoundingMode.HALF_UP));
+                .setRate(profit.divide(BigDecimal.valueOf(holdShare.getBuyNumber() * holdShare.getBuyPrice().doubleValue()),
+                        2, RoundingMode.HALF_UP));
         clearance.setProfit(profit);
         clearance.setReason("清仓" + holdShare.getName() + "总计盈亏" + profit.intValue() + "元，清仓原因:"
-            + clearanceReasonEnum.getDesc() + "，建仓日期" + sdf.format(holdShare.getBuyTime()));
+                + clearanceReasonEnum.getDesc() + "，建仓日期" + sdf.format(holdShare.getBuyTime()));
         clearance.setDate(date);
         clearance.setBalance(BALANCE.setScale(2, RoundingMode.HALF_UP));
         clearance.setAvailableBalance(BALANCE_AVAILABLE.setScale(2, RoundingMode.HALF_UP));
         clearance.setDayNumber(
-            Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime())).getDays());
+                Days.daysBetween(new LocalDate(holdShare.getBuyTime().getTime()), new LocalDate(date.getTime())).getDays());
         clearanceMapper.insert(clearance);
         holdSharesMapper.delete(new QueryWrapper<HoldShares>().eq("id", holdShare.getId()));
         log.warn("{}日清仓 [{}],目前总盈利[{}] | 总金额 [{}] | 可用金额 [{}]", sdf.format(date), holdShare.getName(),
-            profit.intValue(), BALANCE.intValue(), BALANCE_AVAILABLE.intValue());
+                profit.intValue(), BALANCE.intValue(), BALANCE_AVAILABLE.intValue());
     }
 }
