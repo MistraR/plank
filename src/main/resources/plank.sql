@@ -5715,17 +5715,21 @@ CREATE TABLE `hold_shares` (
   `name` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '名称',
   `code` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
   `number` int NOT NULL COMMENT '持股数量',
+  `buy_number` int NOT NULL COMMENT '建仓数量',
+  `available_volume` int NOT NULL COMMENT '可卖数量',
   `cost` decimal(10,2) NOT NULL COMMENT '当前成本价',
-  `current_price` decimal(10,2) NOT NULL COMMENT '当前价',
-  `rate` decimal(10,2) NOT NULL COMMENT '盈亏比率',
+  `current_price` decimal(10,2) DEFAULT NULL COMMENT '当前价',
+  `rate` decimal(10,2) DEFAULT NULL COMMENT '盈亏比率',
   `buy_price` decimal(10,2) NOT NULL COMMENT '建仓价',
   `buy_time` datetime NOT NULL COMMENT '建仓日期',
-  `fifteen_profit` tinyint NOT NULL COMMENT '收益是否到过15%',
-  `buy_number` int NOT NULL COMMENT '建仓数量',
-  `profit` decimal(10,2) NOT NULL COMMENT '利润',
-  `available_volume` int NOT NULL COMMENT '可卖数量',
+  `fifteen_profit` tinyint DEFAULT NULL COMMENT '收益是否到过15%',
+  `profit` decimal(10,2) DEFAULT NULL COMMENT '利润',
+  `type` tinyint NOT NULL COMMENT '1-模拟交易 2-真实交易',
+  `take_profit_price` decimal(10,2) DEFAULT NULL COMMENT '止盈价格',
+  `stop_loss_price` decimal(10,2) DEFAULT NULL COMMENT '止损价格',
+  `automatic_trading_type` varchar(32) DEFAULT NULL COMMENT '自动交易类型',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11655 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for holiday_calendar
@@ -5764,30 +5768,31 @@ INSERT INTO `robot` VALUES (1, 0, 'http://webhook', 1, '2022-10-31 18:51:26', '2
 -- Table structure for stock
 -- ----------------------------
 DROP TABLE IF EXISTS `stock`;
-CREATE TABLE `stock`  (
+CREATE TABLE `stock` (
   `code` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
   `name` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券名称',
-  `market_value` bigint(0) NOT NULL COMMENT '市值',
-  `transaction_amount` decimal(14, 2) NOT NULL COMMENT '当日成交额',
-  `current_price` decimal(14, 2) NOT NULL COMMENT '当前价格',
-  `purchase_price` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '预计建仓价格',
-  `volume` bigint(0) NOT NULL COMMENT '当日成交量',
-  `modify_time` datetime(0) NOT NULL COMMENT '最近更新日期',
-  `track` tinyint(1) UNSIGNED ZEROFILL NOT NULL COMMENT '是否开启建仓点监控',
-  `focus` tinyint(1) UNSIGNED ZEROFILL NOT NULL COMMENT '重点关注',
-  `shareholding` tinyint(1) UNSIGNED ZEROFILL NOT NULL COMMENT '是否持仓',
-  `classification` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '所属板块',
-  `ma5` decimal(10, 2) NULL DEFAULT NULL COMMENT '5日均线',
-  `ma10` decimal(10, 2) NULL DEFAULT NULL COMMENT '10日均线',
-  `ma20` decimal(10, 2) NULL DEFAULT NULL COMMENT '20日均线',
-  `purchase_type` tinyint(0) UNSIGNED NOT NULL DEFAULT 10 COMMENT '基准价类型 10即以MA10为基准价',
-  `ignore_monitor` tinyint(0) NOT NULL DEFAULT 0 COMMENT '是否忽略该股票，不监控',
-  `buy_plank` tinyint(1) NULL DEFAULT NULL COMMENT '是否打板买入',
-  `buy_amount` int(0) NULL DEFAULT NULL COMMENT '买入数量',
-  `buy_price` decimal(10, 2) NULL DEFAULT NULL COMMENT '买入价格',
-  `buy_time` datetime(0) NULL DEFAULT NULL COMMENT '最近一次自动下单打板时间',
+  `market_value` bigint NOT NULL COMMENT '市值',
+  `transaction_amount` decimal(14,2) NOT NULL COMMENT '当日成交额',
+  `current_price` decimal(14,2) NOT NULL COMMENT '当前价格',
+  `purchase_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '预计建仓价格',
+  `volume` bigint NOT NULL COMMENT '当日成交量',
+  `modify_time` datetime NOT NULL COMMENT '最近更新日期',
+  `track` tinyint(1) unsigned zerofill NOT NULL COMMENT '是否开启建仓点监控',
+  `focus` tinyint(1) unsigned zerofill NOT NULL COMMENT '重点关注',
+  `shareholding` tinyint(1) unsigned zerofill NOT NULL COMMENT '是否持仓',
+  `classification` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '所属板块',
+  `ma5` decimal(10,2) DEFAULT NULL COMMENT '5日均线',
+  `ma10` decimal(10,2) DEFAULT NULL COMMENT '10日均线',
+  `ma20` decimal(10,2) DEFAULT NULL COMMENT '20日均线',
+  `purchase_type` tinyint unsigned NOT NULL DEFAULT '10' COMMENT '基准价类型 10即以MA10为基准价',
+  `ignore_monitor` tinyint NOT NULL DEFAULT '0' COMMENT '是否忽略该股票，不监控',
+  `automatic_trading_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '自动交易类型',
+  `buy_amount` int DEFAULT NULL COMMENT '买入数量',
+  `buy_price` decimal(10,2) DEFAULT NULL COMMENT '买入价格',
+  `buy_time` datetime DEFAULT NULL COMMENT '最近一次自动买进时间',
+  `trigger_price` decimal(10,2) DEFAULT NULL COMMENT '触发自动买入的价格',
   PRIMARY KEY (`code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
 -- Records of stock
