@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -258,15 +259,15 @@ public class AutomaticTrading implements CommandLineRunner {
             stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
             stock.setBuyTime(new Date());
             stockMapper.updateById(stock);
-
             HoldShares holdShare = HoldShares.builder().buyTime(new Date())
                     .code(stock.getCode()).name(stock.getName()).cost(BigDecimal.valueOf(currentPrice)).availableVolume(0)
                     .fifteenProfit(false).number(stock.getBuyAmount()).profit(new BigDecimal(0)).buyTime(new Date())
-                    .stopLossPrice(BigDecimal.valueOf(currentPrice * 0.95)).takeProfitPrice(BigDecimal.valueOf(currentPrice * 1.07))
+                    .stopLossPrice(BigDecimal.valueOf(currentPrice * 0.95).setScale(2, RoundingMode.HALF_UP))
+                    .takeProfitPrice(BigDecimal.valueOf(currentPrice * 1.07).setScale(2, RoundingMode.HALF_UP))
+                    .salePrice(BigDecimal.valueOf(currentPrice * 0.91).setScale(2, RoundingMode.HALF_UP))
                     .currentPrice(BigDecimal.valueOf(currentPrice)).rate(new BigDecimal(0)).type(HoldSharesEnum.REALITY.name())
                     .buyPrice(BigDecimal.valueOf(currentPrice)).buyNumber(stock.getBuyAmount()).build();
             holdSharesMapper.insert(holdShare);
-
             log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), stock.getBuyAmount(), stock.getBuyPrice().doubleValue());
         } else {
             log.error("下单[{}]失败,message:{}", stock.getName(), response.getMessage());
