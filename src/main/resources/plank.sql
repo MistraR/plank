@@ -5769,8 +5769,8 @@ INSERT INTO `robot` VALUES (1, 0, 'http://webhook', 1, '2022-10-31 18:51:26', '2
 -- ----------------------------
 DROP TABLE IF EXISTS `stock`;
 CREATE TABLE `stock` (
-  `code` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
-  `name` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券名称',
+  `code` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '证券代码',
+  `name` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '证券名称',
   `market_value` bigint NOT NULL COMMENT '市值',
   `transaction_amount` decimal(14,2) NOT NULL COMMENT '当日成交额',
   `current_price` decimal(14,2) NOT NULL COMMENT '当前价格',
@@ -5780,7 +5780,7 @@ CREATE TABLE `stock` (
   `track` tinyint(1) unsigned zerofill NOT NULL COMMENT '是否开启建仓点监控',
   `focus` tinyint(1) unsigned zerofill NOT NULL COMMENT '重点关注',
   `shareholding` tinyint(1) unsigned zerofill NOT NULL COMMENT '是否持仓',
-  `classification` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '所属板块',
+  `classification` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '所属板块',
   `ma5` decimal(10,2) DEFAULT NULL COMMENT '5日均线',
   `ma10` decimal(10,2) DEFAULT NULL COMMENT '10日均线',
   `ma20` decimal(10,2) DEFAULT NULL COMMENT '20日均线',
@@ -5791,6 +5791,7 @@ CREATE TABLE `stock` (
   `buy_price` decimal(10,2) DEFAULT NULL COMMENT '买入价格',
   `buy_time` datetime DEFAULT NULL COMMENT '最近一次自动买进时间',
   `trigger_price` decimal(10,2) DEFAULT NULL COMMENT '触发自动买入的价格',
+  `abbreviation` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '缩写',
   PRIMARY KEY (`code`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
 
@@ -16793,5 +16794,7 @@ CREATE TABLE `user`  (
 -- Records of user
 -- ----------------------------
 INSERT INTO `user` VALUES (1, 'wild', 'e10adc3949ba59abbe56e057f20f883e', 'wild', '', '', '2022-10-31 18:51:26', '2022-10-31 18:51:26');
+
+update stock,stock_info set stock.abbreviation = stock_info.abbreviation where stock.name = stock_info.name;
 
 SET FOREIGN_KEY_CHECKS = 1;

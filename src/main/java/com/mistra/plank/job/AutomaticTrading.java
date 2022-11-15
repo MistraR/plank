@@ -260,7 +260,7 @@ public class AutomaticTrading implements CommandLineRunner {
             stockMapper.updateById(stock);
 
             HoldShares holdShare = HoldShares.builder().buyTime(new Date())
-                    .code(stock.getCode()).name(stock.getName()).cost(BigDecimal.valueOf(currentPrice)).availableVolume(stock.getBuyAmount())
+                    .code(stock.getCode()).name(stock.getName()).cost(BigDecimal.valueOf(currentPrice)).availableVolume(0)
                     .fifteenProfit(false).number(stock.getBuyAmount()).profit(new BigDecimal(0)).buyTime(new Date())
                     .stopLossPrice(BigDecimal.valueOf(currentPrice * 0.95)).takeProfitPrice(BigDecimal.valueOf(currentPrice * 1.07))
                     .currentPrice(BigDecimal.valueOf(currentPrice)).rate(new BigDecimal(0)).type(HoldSharesEnum.REALITY.name())

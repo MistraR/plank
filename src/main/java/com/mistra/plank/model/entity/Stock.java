@@ -85,6 +85,12 @@ public class Stock implements Comparable<Stock> {
     private BigDecimal ma20;
 
     /**
+     * 名称缩写
+     */
+    @TableField(value = "abbreviation")
+    private String abbreviation;
+
+    /**
      * 最近更新日期
      */
     @TableField(value = "modify_time")
