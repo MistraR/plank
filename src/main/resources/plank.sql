@@ -5724,12 +5724,13 @@ CREATE TABLE `hold_shares` (
   `buy_time` datetime NOT NULL COMMENT '建仓日期',
   `fifteen_profit` tinyint DEFAULT NULL COMMENT '收益是否到过15%',
   `profit` decimal(10,2) DEFAULT NULL COMMENT '利润',
-  `type` tinyint NOT NULL COMMENT '1-模拟交易 2-真实交易',
-  `take_profit_price` decimal(10,2) DEFAULT NULL COMMENT '止盈价格',
-  `stop_loss_price` decimal(10,2) DEFAULT NULL COMMENT '止损价格',
+  `type` varchar(32) NOT NULL COMMENT '1-模拟交易 2-真实交易',
+  `take_profit_price` decimal(10,2) DEFAULT NULL COMMENT '触发止盈价格',
+  `stop_loss_price` decimal(10,2) DEFAULT NULL COMMENT '触发止损价格',
   `automatic_trading_type` varchar(32) DEFAULT NULL COMMENT '自动交易类型',
+  `sale_price` decimal(10,2) DEFAULT NULL COMMENT '核按钮价格',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11655 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11657 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for holiday_calendar

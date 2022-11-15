@@ -268,6 +268,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     .currentPrice(BigDecimal.valueOf(currentPrice)).rate(new BigDecimal(0)).type(HoldSharesEnum.REALITY.name())
                     .buyPrice(BigDecimal.valueOf(currentPrice)).buyNumber(stock.getBuyAmount()).build();
             holdSharesMapper.insert(holdShare);
+            // 打板排队有可能只是排单，并没有成交
             log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), stock.getBuyAmount(), stock.getBuyPrice().doubleValue());
         } else {
             log.error("下单[{}]失败,message:{}", stock.getName(), response.getMessage());
