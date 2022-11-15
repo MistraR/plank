@@ -50,16 +50,22 @@ public class HoldShares {
     private String automaticTradingType;
 
     /**
-     * 止盈价格
+     * 触发止盈价格
      */
     @TableField(value = "take_profit_price")
     private BigDecimal takeProfitPrice;
 
     /**
-     * 止损价格
+     * 触发止损价格
      */
     @TableField(value = "stop_loss_price")
     private BigDecimal stopLossPrice;
+
+    /**
+     * 核按钮价格
+     */
+    @TableField(value = "sale_price")
+    private BigDecimal salePrice;
 
     /**
      * 持股数量

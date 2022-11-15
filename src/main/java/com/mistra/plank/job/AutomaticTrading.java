@@ -165,7 +165,7 @@ public class AutomaticTrading implements CommandLineRunner {
                             // 触发止盈、止损，挂跌停价卖出
                             SubmitRequest request = new SubmitRequest(1);
                             request.setAmount(data.getAvailableVolume());
-                            request.setPrice(price);
+                            request.setPrice(data.getSalePrice().doubleValue());
                             request.setStockCode(data.getCode().substring(2, 8));
                             request.setZqmc(data.getName());
                             request.setTradeType(SubmitRequest.S);
