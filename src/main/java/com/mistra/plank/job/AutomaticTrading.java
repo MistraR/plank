@@ -2,6 +2,7 @@ package com.mistra.plank.job;
 
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.StockUtil;
 import com.mistra.plank.dao.HoldSharesMapper;
@@ -101,7 +102,11 @@ public class AutomaticTrading implements CommandLineRunner {
         }
     }
 
-    @Scheduled(cron = "0 2 15 * * ?")
+    /**
+     * 防止忘记当日复盘，每天收盘后取消掉当天未成交的自动交易的监测
+     * 已成交的更新持仓可用数量
+     */
+    @Scheduled(cron = "0 1 15 * * ?")
     private void updateHoldShares() {
         List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                 .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
@@ -112,6 +117,9 @@ public class AutomaticTrading implements CommandLineRunner {
                 holdSharesMapper.updateById(holdShare);
             }
         }
+        LambdaUpdateWrapper<Stock> wrapper = new LambdaUpdateWrapper<Stock>()
+                .in(Stock::getAutomaticTradingType, AutomaticTradingEnum.PLANK.name(), AutomaticTradingEnum.SUCK.name());
+        stockMapper.update(Stock.builder().automaticTradingType(AutomaticTradingEnum.CANCEL.name()).build(), wrapper);
     }
 
     /**

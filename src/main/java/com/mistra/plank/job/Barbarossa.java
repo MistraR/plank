@@ -135,7 +135,7 @@ public class Barbarossa implements CommandLineRunner {
         });
     }
 
-    @Scheduled(cron = "0 2 15 * * ?")
+    @Scheduled(cron = "0 1 15 * * ?")
     private void analyzeData() {
         try {
             // 15点后读取当日交易数据

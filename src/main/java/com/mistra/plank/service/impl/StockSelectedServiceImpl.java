@@ -1,6 +1,7 @@
 package com.mistra.plank.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mistra.plank.dao.StockInfoDao;
 import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.dao.StockSelectedDao;
@@ -46,12 +47,9 @@ public class StockSelectedServiceImpl implements StockSelectedService {
 
     @Override
     public void tomorrowAutoTradePool(List<AutoTradeParam> autoTradeParams) {
-        List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>()
-                .in(Stock::getAutomaticTradingType, AutomaticTradingEnum.PLANK.name(), AutomaticTradingEnum.SUCK.name()));
-        for (Stock stock : stocks) {
-            stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
-            stockMapper.updateById(stock);
-        }
+        LambdaUpdateWrapper<Stock> wrapper = new LambdaUpdateWrapper<Stock>()
+                .in(Stock::getAutomaticTradingType, AutomaticTradingEnum.PLANK.name(), AutomaticTradingEnum.SUCK.name());
+        stockMapper.update(Stock.builder().automaticTradingType(AutomaticTradingEnum.CANCEL.name()).build(), wrapper);
         for (AutoTradeParam autoTradeParam : autoTradeParams) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>()
                     .eq(Stock::getName, autoTradeParam.getName()));
