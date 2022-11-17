@@ -270,8 +270,11 @@ public class AutomaticTrading implements CommandLineRunner {
             HoldShares holdShare = HoldShares.builder().buyTime(new Date())
                     .code(stock.getCode()).name(stock.getName()).cost(BigDecimal.valueOf(currentPrice)).availableVolume(0)
                     .fifteenProfit(false).number(stock.getBuyAmount()).profit(new BigDecimal(0)).buyTime(new Date())
+                    // 设置触发止损价
                     .stopLossPrice(BigDecimal.valueOf(currentPrice * 0.95).setScale(2, RoundingMode.HALF_UP))
+                    // 设置触发止盈价
                     .takeProfitPrice(BigDecimal.valueOf(currentPrice * 1.07).setScale(2, RoundingMode.HALF_UP))
+                    // 设置卖出价，直接跌停板核按钮
                     .salePrice(BigDecimal.valueOf(currentPrice * 0.91).setScale(2, RoundingMode.HALF_UP))
                     .currentPrice(BigDecimal.valueOf(currentPrice)).rate(new BigDecimal(0)).type(HoldSharesEnum.REALITY.name())
                     .buyPrice(BigDecimal.valueOf(currentPrice)).buyNumber(stock.getBuyAmount()).build();
