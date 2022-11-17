@@ -1,16 +1,20 @@
 package com.mistra.plank.controller;
 
-import java.util.Date;
-
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.mistra.plank.job.Barbarossa;
 import com.mistra.plank.job.DailyRecordProcessor;
 import com.mistra.plank.job.DragonListProcessor;
 import com.mistra.plank.job.StockProcessor;
+import com.mistra.plank.model.param.AutoTradeParam;
 import com.mistra.plank.model.param.FundHoldingsParam;
+import com.mistra.plank.model.param.SelfSelectParam;
+import com.mistra.plank.service.StockSelectedService;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author mistra@future.com
@@ -23,13 +27,15 @@ public class PlankController {
     private final StockProcessor stockProcessor;
     private final DragonListProcessor dragonListProcessor;
     private final DailyRecordProcessor dailyRecordProcessor;
+    private final StockSelectedService stockSelectedService;
 
     public PlankController(Barbarossa barbarossa, StockProcessor stockProcessor,
-                           DragonListProcessor dragonListProcessor, DailyRecordProcessor dailyRecordProcessor) {
+                           DragonListProcessor dragonListProcessor, DailyRecordProcessor dailyRecordProcessor, StockSelectedService stockSelectedService) {
         this.barbarossa = barbarossa;
         this.stockProcessor = stockProcessor;
         this.dragonListProcessor = dragonListProcessor;
         this.dailyRecordProcessor = dailyRecordProcessor;
+        this.stockSelectedService = stockSelectedService;
     }
 
     /**
@@ -93,4 +99,25 @@ public class PlankController {
                                    @PathVariable(value = "beginTime") Long beginTime, @PathVariable(value = "endTime") Long endTime) {
         barbarossa.fundHoldingsImport(fundHoldingsParam, new Date(beginTime), new Date(endTime));
     }
+
+    /**
+     * 编辑web页面自选
+     *
+     * @param selfSelectParam SelfSelectParam
+     */
+    @PostMapping("/add-self-select")
+    public void addSelfSelect(@RequestBody SelfSelectParam selfSelectParam) {
+        stockSelectedService.addSelfSelect(selfSelectParam);
+    }
+
+    /**
+     * 下一个交易日自动交易池
+     *
+     * @param autoTradeParams autoTradeParams
+     */
+    @PostMapping("/tomorrow-auto-trade-pool")
+    public void tomorrowAutoTradePool(@RequestBody List<AutoTradeParam> autoTradeParams) {
+        stockSelectedService.tomorrowAutoTradePool(autoTradeParams);
+    }
+
 }
