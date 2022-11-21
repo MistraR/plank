@@ -1,11 +1,11 @@
 package com.mistra.plank.model.dto;
 
-import java.math.BigDecimal;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 /**
  * 描述
@@ -52,6 +52,6 @@ public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
 
     @Override
     public int compareTo(StockRealTimePrice o) {
-        return (int)((o.purchaseRate * 100) - (this.purchaseRate * 100));
+        return (int)((o.increaseRate * 100) - (this.increaseRate * 100));
     }
 }

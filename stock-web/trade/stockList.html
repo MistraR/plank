@@ -103,9 +103,9 @@
               render: function (row) {
                 var html = '';
                 var options = {stockCode: row.stockCode, price: row.price, tradeType: 'B', stockName: row.name};
-                html += ' <a class="btn btn-sbumit" data-options=' + JSON.stringify(options) + '>买</a>';
+                html += ' <a class="btn btn-sbumit" data-options=' + JSON.stringify(options) + '>买入</a>';
                 options.tradeType = 'S';
-                html += ' <a class="btn btn-sbumit" data-options=' + JSON.stringify(options) + '>卖</a>';
+                html += ' <a class="btn btn-sbumit" data-options=' + JSON.stringify(options) + '>卖出</a>';
                 return html;
               }
             }

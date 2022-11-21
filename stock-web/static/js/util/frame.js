@@ -24,6 +24,7 @@ $(function () {
       content += '<li><a href="/user/login.html"><h2>登录</h2></a></li>';
     } else {
       content += '<li><a href="/user/profile.html"><h2>个人中心</h2></a></li>';
+      content += '<li><a href="https://xuangubao.cn/"><h2>选股宝</h2></a></li>';
       content += '<li><a href="/user/logout.html"><h2>注销</h2></a></li>';
     }
     content += '</ul></div>';
