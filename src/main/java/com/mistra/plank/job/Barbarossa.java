@@ -317,7 +317,11 @@ public class Barbarossa implements CommandLineRunner {
                 log.error("------------------------------ ↓持仓↓ -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (stockMap.get(realTimePrice.getName()).getShareholding()) {
-                        Barbarossa.log.warn(convertLog(realTimePrice));
+                        if (realTimePrice.getIncreaseRate() > 0) {
+                            Barbarossa.log.error(convertLog(realTimePrice));
+                        } else {
+                            Barbarossa.log.warn(convertLog(realTimePrice));
+                        }
                     }
                 }
                 realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
