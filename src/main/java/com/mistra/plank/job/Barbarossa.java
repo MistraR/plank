@@ -10,6 +10,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.common.util.HttpUtil;
+import com.mistra.plank.common.util.UploadDataListener;
 import com.mistra.plank.dao.*;
 import com.mistra.plank.model.dto.StockMainFundSample;
 import com.mistra.plank.model.dto.StockRealTimePrice;
@@ -20,9 +22,6 @@ import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.param.FundHoldingsParam;
 import com.mistra.plank.service.Plank;
 import com.mistra.plank.service.impl.ScreeningStocks;
-import com.mistra.plank.common.util.HttpUtil;
-import com.mistra.plank.common.util.StringUtil;
-import com.mistra.plank.common.util.UploadDataListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -40,6 +39,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+
+import static com.mistra.plank.common.util.StringUtil.collectionToString;
 
 /**
  * 涨停先锋
@@ -209,11 +210,11 @@ public class Barbarossa implements CommandLineRunner {
             }
         }
         if (CollectionUtils.isNotEmpty(failed)) {
-            // log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
+            log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
         }
         Collections.sort(samples);
         log.warn("新发现的上升趋势的股票一共[{}]支:{}", samples.size(),
-                StringUtil.collectionToString(samples.stream()
+                collectionToString(samples.stream()
                         .map(plankConfig.getPrintName() ? UpwardTrendSample::getName : UpwardTrendSample::getCode)
                         .collect(Collectors.toSet())));
         if (CollectionUtils.isNotEmpty(samples)) {
@@ -236,13 +237,13 @@ public class Barbarossa implements CommandLineRunner {
     public static double variance(double[] x) {
         int m = x.length;
         double sum = 0;
-        for (int i = 0; i < m; i++) {
-            sum += x[i];
+        for (double v : x) {
+            sum += v;
         }
         double dAve = sum / m;
         double dVar = 0;
-        for (int i = 0; i < m; i++) {
-            dVar += (x[i] - dAve) * (x[i] - dAve);
+        for (double v : x) {
+            dVar += (v - dAve) * (v - dAve);
         }
         return dVar / m;
     }
@@ -311,7 +312,7 @@ public class Barbarossa implements CommandLineRunner {
                 for (int i = 0; i < Math.min(mainFundDataAll.size(), 10); i++) {
                     topTen.add(mainFundDataAll.get(i));
                 }
-                log.warn(StringUtil.collectionToString(
+                log.warn(collectionToString(
                         topTen.stream().map(e -> e.getF14() + "[" + e.getF62() / W / W + "亿]" + e.getF3() + "%")
                                 .collect(Collectors.toList())));
                 log.error("------------------------------ ↓持仓↓ -----------------------------");
@@ -339,7 +340,7 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 log.error("---------------------------- ↓打板监测↓ ----------------------------");
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {
-                    log.warn("{}", StringUtil.collectionToString(AutomaticTrading.runningMap.values().stream().map(Stock::getName).collect(Collectors.toList())));
+                    log.warn("{}", collectionToString(AutomaticTrading.runningMap.values().stream().map(Stock::getName).collect(Collectors.toList())));
                 }
                 realTimePrices.clear();
                 Thread.sleep(5000);
@@ -368,14 +369,13 @@ public class Barbarossa implements CommandLineRunner {
                         if (TRACK_STOCK_MAP.containsKey(mainFundSample.getF14())) {
                             mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
                         }
-                    } catch (JSONException jsonException) {
-
+                    } catch (JSONException ignored) {
                     } catch (Exception exception) {
                         exception.printStackTrace();
                     }
                 });
-                List<StockMainFundSample> result = tmpList.stream().filter(e -> e != null && STOCK_NAME_SET.contains(e.getF14()) && e.getF62() != null).collect(Collectors.toList());
-                Collections.sort(result);
+                List<StockMainFundSample> result = tmpList.stream().filter(e -> e != null && STOCK_NAME_SET.contains(e.getF14()) && e.getF62() != null)
+                        .sorted().collect(Collectors.toList());
                 mainFundDataAll.clear();
                 mainFundDataAll.addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
                 mainFundData.clear();
@@ -401,7 +401,7 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private void analyzeMainFund() {
-        log.warn("3|5|10日主力净流入>3亿:" + StringUtil.collectionToString(mainFundDataAll.parallelStream()
+        log.warn("3|5|10日主力净流入>3亿:" + collectionToString(mainFundDataAll.parallelStream()
                 .filter(e -> e.getF267() > mainFundFilterAmount || e.getF164() > mainFundFilterAmount
                         || e.getF174() > mainFundFilterAmount)
                 .map(plankConfig.getPrintName() ? StockMainFundSample::getF14 : StockMainFundSample::getF12)
@@ -489,7 +489,7 @@ public class Barbarossa implements CommandLineRunner {
                         } else if (yesterdayOne.containsKey(name)) {
                             // 昨日首板，今天继续板，进阶2板
                             todayTwo.put(dailyRecord.getName(), v);
-                        } else if (!yesterdayOne.containsKey(name)) {
+                        } else {
                             // 昨日没有板，今日首板
                             todayOne.put(dailyRecord.getName(), v);
                         }
@@ -524,7 +524,7 @@ public class Barbarossa implements CommandLineRunner {
                         for (Stock stock : stocks) {
                             tmp.add(stock.getCode().substring(2, 8));
                         }
-                        log.warn("二板+:{}", StringUtil.collectionToString(tmp));
+                        log.warn("二板+:{}", collectionToString(tmp));
                     }
                 }
                 fivePlankStock.addAll(todayFive.keySet());
@@ -549,8 +549,8 @@ public class Barbarossa implements CommandLineRunner {
                 gemPlankStockTwice.add(entry.getKey());
             }
         }
-        log.warn("最近一个月5连板+的股票:{}", StringUtil.collectionToString(fivePlankStock));
-        log.warn("最近一个月创业板涨停2次+的股票:{}", StringUtil.collectionToString(gemPlankStockTwice));
+        log.warn("最近一个月5连板+的股票:{}", collectionToString(fivePlankStock));
+        log.warn("最近一个月创业板涨停2次+的股票:{}", collectionToString(gemPlankStockTwice));
         log.error("一板>一进二平均胜率：{}",
                 (double) Math
                         .round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
@@ -670,7 +670,7 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 更新 外资+基金 持仓
      * 基金的实时持仓市值是根据该季度(quarter)季报公布的持仓股数*当日收盘价 计算的。所以跟实际情况肯定存在差距的，仅作为参考
-     * 外资持仓市值是前一交易日最新的数据，是实时的
+     * 外资持仓市值是前一个交易日最新的数据，是实时的
      */
     private void updateForeignFundShareholding(Integer quarter) {
         HashMap<String, JSONObject> foreignShareholding = getForeignShareholding();
