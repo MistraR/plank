@@ -210,7 +210,7 @@ public class Barbarossa implements CommandLineRunner {
             }
         }
         if (CollectionUtils.isNotEmpty(failed)) {
-            log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
+//            log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
         }
         Collections.sort(samples);
         log.warn("新发现的上升趋势的股票一共[{}]支:{}", samples.size(),
