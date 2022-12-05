@@ -328,20 +328,20 @@ public class Barbarossa implements CommandLineRunner {
                 realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
                 log.error("------------------------------ ↓建仓↓ -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
-                    if (realTimePrice.getPurchaseRate() >= -1) {
+                    if (realTimePrice.getPurchaseRate() >= -2) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
-                log.error("---------------------------- ↓打板排单↓ ----------------------------");
-                List<Stock> buyStocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().ge(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))
-                        .le(Stock::getBuyTime, DateUtil.endOfDay(new Date())));
-                for (Stock buyStock : buyStocks) {
-                    log.warn("{} 数量:{},金额:{}", buyStock.getName(), buyStock.getBuyAmount(), buyStock.getBuyPrice());
-                }
-                log.error("---------------------------- ↓打板监测↓ ----------------------------");
-                if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {
-                    log.warn("{}", collectionToString(AutomaticTrading.runningMap.values().stream().map(Stock::getName).collect(Collectors.toList())));
-                }
+//                log.error("---------------------------- ↓打板排单↓ ----------------------------");
+//                List<Stock> buyStocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().ge(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))
+//                        .le(Stock::getBuyTime, DateUtil.endOfDay(new Date())));
+//                for (Stock buyStock : buyStocks) {
+//                    log.warn("{} 数量:{},金额:{}", buyStock.getName(), buyStock.getBuyAmount(), buyStock.getBuyPrice());
+//                }
+//                log.error("---------------------------- ↓打板监测↓ ----------------------------");
+//                if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {
+//                    log.warn("{}", collectionToString(AutomaticTrading.runningMap.values().stream().map(Stock::getName).collect(Collectors.toList())));
+//                }
                 realTimePrices.clear();
                 Thread.sleep(5000);
             }
@@ -396,7 +396,7 @@ public class Barbarossa implements CommandLineRunner {
                 .append("|现:").append(realTimePrice.getTodayRealTimePrice())
                 .append("|低:").append(realTimePrice.getTodayLowestPrice())
                 .append("|差距:").append(realTimePrice.getPurchaseRate())
-                .append("%|涨跌:").append(realTimePrice.getIncreaseRate())
+                .append("%|涨幅:").append(realTimePrice.getIncreaseRate())
                 .append("|主力:").append(realTimePrice.getMainFund()).append("万]").toString();
     }
 
