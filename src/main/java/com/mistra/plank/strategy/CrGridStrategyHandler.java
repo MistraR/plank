@@ -13,14 +13,14 @@ public class CrGridStrategyHandler extends GridStrategyHandler {
 
     @Override
     public TradeResultVo<GetOrdersDataResponse> getOrderData(int userId) {
-         TradeResultVo<CrGetOrdersDataResponse> tradeResultVo = tradeApiService.crGetOrdersData(new CrGetOrdersDataRequest(userId));
-         return buildResult(tradeResultVo);
+        TradeResultVo<CrGetOrdersDataResponse> tradeResultVo = tradeApiService.crGetOrdersData(new CrGetOrdersDataRequest(userId));
+        return buildResult(tradeResultVo);
     }
 
     @Override
     public TradeResultVo<GetDealDataResponse> getDealData(int userId) {
-        TradeResultVo<CrGetDealDataResponse> tradeResultVo =  tradeApiService.crGetDealData(new CrGetDealDataRequest(userId));
-         return buildResult(tradeResultVo);
+        TradeResultVo<CrGetDealDataResponse> tradeResultVo = tradeApiService.crGetDealData(new CrGetDealDataRequest(userId));
+        return buildResult(tradeResultVo);
     }
 
     @Override
@@ -52,14 +52,15 @@ public class CrGridStrategyHandler extends GridStrategyHandler {
         return "cr";
     }
 
-    private <T> TradeResultVo<T> buildResult(TradeResultVo<? extends T> tradeResultVo) {
-        TradeResultVo<T> resultVo =  new TradeResultVo<>();
-         resultVo.setStatus(tradeResultVo.getStatus());
-         resultVo.setMessage(tradeResultVo.getMessage());
-         if (tradeResultVo.success()) {
-             resultVo.setData(tradeResultVo.getData().stream().map(v -> v).collect(Collectors.toList()));
-         }
-         return resultVo;
+    protected <T> TradeResultVo<T> buildResult(TradeResultVo<? extends T> tradeResultVo) {
+        TradeResultVo<T> resultVo = new TradeResultVo<>();
+        resultVo.setStatus(tradeResultVo.getStatus());
+        resultVo.setMessage(tradeResultVo.getMessage());
+        if (tradeResultVo.success()) {
+            resultVo.setData(tradeResultVo.getData().stream().map(v -> v).collect(Collectors.toList()));
+        }
+        return resultVo;
     }
+
 
 }

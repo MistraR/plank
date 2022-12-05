@@ -4,6 +4,7 @@ import com.mistra.plank.common.exception.ServiceException;
 import com.mistra.plank.common.exception.UnauthorizedException;
 import com.mistra.plank.common.util.HttpUtil;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -40,9 +41,14 @@ public class TradeClient {
     }
 
     public void openSession() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectionRequestTimeout(2)
+                .setConnectTimeout(2)
+                .setSocketTimeout(2).build();
+
         ClientWrapper wrapper = new ClientWrapper();
         wrapper.cookieStore = new BasicCookieStore();
-        wrapper.httpClient = HttpClients.custom().setDefaultCookieStore(wrapper.cookieStore).build();
+        wrapper.httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).setDefaultCookieStore(wrapper.cookieStore).build();
         threadLocal.set(wrapper);
     }
 

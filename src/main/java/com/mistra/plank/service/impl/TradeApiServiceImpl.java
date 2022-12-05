@@ -19,15 +19,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
 
 @Service
 public class TradeApiServiceImpl extends AbstractTradeApiService {
 
     private final Logger logger = LoggerFactory.getLogger(TradeApiServiceImpl.class);
+
+    //    @Value(value = "${emSecSecurityServerUrl}")
+    private String emSecSecurityServerUrl;
 
     private static final List<String> IgnoreList = Arrays.asList("class", "userId", "method");
 
@@ -194,9 +197,16 @@ public class TradeApiServiceImpl extends AbstractTradeApiService {
         TradeMethod tradeMethod = tradeService.getTradeMethodByName(request.getMethod());
         TradeUser tradeUser = tradeService.getTradeUserById(request.getUserId());
 
+        setRequestSecInfo(request);
         request.setPassword(encodePassword(request.getPassword()));
 
         Map<String, String> header = getHeader(request);
+
+        if (!StringUtils.hasLength(request.getSecInfo())) {
+            logger.info("authentication use mac User-Agent");
+            header.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/536.66");
+        }
+
         Map<String, Object> params = getParams(request);
         params.put("userId", tradeUser.getAccountId());
         try {
@@ -217,6 +227,25 @@ public class TradeApiServiceImpl extends AbstractTradeApiService {
                 resultVo.setData(Collections.singletonList(response));
             }
             return resultVo;
+        } finally {
+            tradeClient.destoryCurrentSession();
+        }
+    }
+
+    private void setRequestSecInfo(AuthenticationRequest request) {
+        if (emSecSecurityServerUrl == null) {
+            return;
+        }
+
+        try {
+            tradeClient.openSession();
+            String content = tradeClient.sendNewInstance(emSecSecurityServerUrl + request.getIdentifyCode(), null, null);
+            @SuppressWarnings("unchecked")
+            Map<String, String> map = JSON.parseObject(content, Map.class);
+            String userInfo = map.get("userInfo");
+            request.setSecInfo(userInfo);
+        } catch (Exception e) {
+            logger.info("not code get from EM SecSecurity Server");
         } finally {
             tradeClient.destoryCurrentSession();
         }

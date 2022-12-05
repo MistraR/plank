@@ -7,6 +7,7 @@ public class AuthenticationRequest extends BaseTradeRequest {
     private String identifyCode;
     private String duration = "1800";
     private String authCode;
+    private String secInfo;
     private String type = "Z";
 
     public AuthenticationRequest(int userId) {
@@ -53,6 +54,14 @@ public class AuthenticationRequest extends BaseTradeRequest {
         this.authCode = authCode;
     }
 
+    public String getSecInfo() {
+        return secInfo;
+    }
+
+    public void setSecInfo(String secInfo) {
+        this.secInfo = secInfo;
+    }
+
     public String getType() {
         return type;
     }
@@ -63,7 +72,8 @@ public class AuthenticationRequest extends BaseTradeRequest {
 
     @Override
     public String getMethod() {
-        return TradeRequestMethod.Authentication.value();
+        return BaseTradeRequest.TradeRequestMethod.Authentication.value();
     }
+
 
 }
