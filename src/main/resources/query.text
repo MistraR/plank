@@ -1,15 +1,16 @@
+update stock,stock_info set stock.abbreviation = stock_info.abbreviation where stock.name = stock_info.name;
 SELECT count(id) FROM	daily_record WHERE	DATE_FORMAT(date,'%Y-%m-%d') = '2022-05-05';
 SELECT count(id) FROM	daily_record WHERE	DATE_FORMAT(date,'%Y-%m-%d') = DATE_FORMAT(now(),'%Y-%m-%d');
-# 根据板块查询公司  储能 风电 白酒 光伏 半导体 医疗服务 锂电池 医美 龙头 电力设备
+# 根据板块查询公司  储能 白酒 光伏 半导体 医疗服务 锂电池 龙头 电力设备
 SELECT * FROM stock WHERE classification='电力设备' and track=1 ORDER BY RIGHT(code,6) DESC;
 # 某公司的基金季度增减持仓明细
 SELECT name AS '公司',quarter AS '季度',shareholding_count AS '基金季末持股/万股',fund_total_market AS '基金季末持仓市值/万',fund_total_market_dynamic AS '基金季末持仓市值/万(实时)',foreign_total_market_dynamic AS '外资持仓市值/万(实时)',
 foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',average_price AS '季度均价',shareholding_change_amount AS '基金增持金额/万',shareholding_change_count AS '持股数量变动/万股',IF(shareholding_change_count<0,'-','+') AS '增持/减持'
-FROM foreign_fund_holdings_tracking WHERE name = '圣邦股份' ORDER BY quarter DESC;
+FROM foreign_fund_holdings_tracking WHERE name = '迈瑞医疗' ORDER BY quarter DESC;
 
 # 某季度开始的汇总增持金额-所有公司
 SELECT name AS '公司',change_amount AS '累计增持金额/万' FROM (SELECT name,SUM(shareholding_change_amount) AS change_amount FROM foreign_fund_holdings_tracking
-WHERE quarter>=202202 GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
+WHERE quarter>=202203 GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
 
 # 某板块所有公司某季度的基金持仓汇总
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',fund_total_market_dynamic AS '基金季末持仓市值/万(实时)',f.foreign_total_market_dynamic AS '外资持仓市值/万(实时)',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度基金增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
@@ -23,11 +24,12 @@ WHERE f.quarter=202203 ORDER BY f.foreign_fund_total_market_dynamic DESC
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万(实时)',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度基金增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
 WHERE s.focus=1 AND f.quarter=202203 ORDER BY f.foreign_fund_total_market_dynamic DESC
 
-# 10月份重点买入的公司
+# 12月份重点买入的公司  PLANK SUCK CANCEL
 SELECT * FROM stock WHERE name IN ('隆基绿能','宁德时代','五粮液','迈瑞医疗','TCL中环','泸州老窖','阳光电源','亿纬锂能','药明康德','紫光国微','立讯精密','比亚迪') ORDER BY shareholding DESC;
-SELECT * FROM stock WHERE focus=1 ORDER BY classification;
-SELECT * FROM stock WHERE name IN ('恩捷股份','恒瑞医药','北方华创','韦尔股份','华友钴业','晶澳科技','欣旺达');
-SELECT * FROM stock WHERE name IN ('东方电缆','中天科技','爱尔眼科','立讯精密');
+SELECT * FROM stock WHERE track=1 ORDER BY classification;
+SELECT * FROM stock WHERE name IN ('亿纬锂能','恩捷股份','阳光电源','立讯精密','华友钴业','晶澳科技','','','');
+
+
 
 
 
