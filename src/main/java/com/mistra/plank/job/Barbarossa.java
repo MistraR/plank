@@ -166,9 +166,11 @@ public class Barbarossa implements CommandLineRunner {
      * 找出日k均线多头排列的股票
      */
     private void movingAverageRise() {
-        List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getIgnoreMonitor, false).ge(Stock::getMa5, 0));
+        List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getIgnoreMonitor, false)
+                .ge(Stock::getMa5, 0).ge(Stock::getTransactionAmount, 500000000));
         List<String> list = stocks.stream().filter(stock -> stock.getMa5().compareTo(stock.getMa10()) > 0
-                && stock.getMa10().compareTo(stock.getMa20()) > 0).map(Stock::getCode).collect(Collectors.toList());
+                        && stock.getMa10().compareTo(stock.getMa20()) > 0).map(stock -> StringUtils.substring(stock.getCode(), 2, 8))
+                .collect(Collectors.toList());
         log.warn("日k均线多头排列:{}", collectionToString(list));
     }
 
