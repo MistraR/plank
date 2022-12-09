@@ -149,6 +149,8 @@ public class Barbarossa implements CommandLineRunner {
             analyzePlank();
             // 分析主力流入数据
             analyzeMainFund();
+            // 分析日k均线多头排列的股票
+            movingAverageRise();
             // 分析上升趋势的股票
             analyzeUpwardTrend();
             // 爆量回踩
@@ -158,6 +160,16 @@ public class Barbarossa implements CommandLineRunner {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 找出日k均线多头排列的股票
+     */
+    private void movingAverageRise() {
+        List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getIgnoreMonitor, false).ge(Stock::getMa5, 0));
+        List<String> list = stocks.stream().filter(stock -> stock.getMa5().compareTo(stock.getMa10()) > 0
+                && stock.getMa10().compareTo(stock.getMa20()) > 0).map(Stock::getCode).collect(Collectors.toList());
+        log.warn("日k均线多头排列:{}", collectionToString(list));
     }
 
     /**
