@@ -151,7 +151,7 @@ public class Barbarossa implements CommandLineRunner {
             analyzeMainFund();
             // 分析日k均线多头排列的股票
             movingAverageRise();
-            // 分析上升趋势的股票
+            // 分析上升趋势的股票，周k均线多头排列
             analyzeUpwardTrend();
             // 爆量回踩
             screeningStocks.explosiveVolumeBack(new Date());
@@ -174,11 +174,8 @@ public class Barbarossa implements CommandLineRunner {
 
     /**
      * 找出周均线向上发散，上升趋势的股票
-     * <p>
      * 周均线MA03>MA05>MA10>MA20
-     * <p>
      * 上市不足20个交易日的次新股就不计算了
-     * <p>
      * 趋势股选出来之后我一般会直接用.txt文档导入到东方财富windows版客户端，再来人为筛选一遍k线好看的票
      */
     private void analyzeUpwardTrend() {
