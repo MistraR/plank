@@ -261,13 +261,9 @@ public class Barbarossa implements CommandLineRunner {
 
     /**
      * 此方法主要用来预警接近建仓价的股票
-     * <p>
      * 实时监测数据 显示股票实时涨跌幅度，最高，最低价格，主力流入
-     * <p>
      * 想要监测哪些股票需要手动在数据库stock表更改track字段为true
-     * <p>
      * 我一般会选择趋势股或赛道股，所以默认把MA10作为建仓基准价格，可以手动修改stock.purchase_type字段来设置，5-则以MA5为基准价格,最多MA20
-     * <p>
      * 股价除权之后需要重新爬取交易数据，算均价就不准了
      */
     @Scheduled(cron = "0 */1 * * * ?")
