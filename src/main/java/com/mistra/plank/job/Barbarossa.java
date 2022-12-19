@@ -136,7 +136,7 @@ public class Barbarossa implements CommandLineRunner {
         });
     }
 
-    @Scheduled(cron = "0 1 15 * * ?")
+    @Scheduled(cron = "0 55 15 * * ?")
     private void analyzeData() {
         try {
             // 15点后读取当日交易数据
@@ -169,7 +169,7 @@ public class Barbarossa implements CommandLineRunner {
         List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getIgnoreMonitor, false)
                 .ge(Stock::getMa5, 0).ge(Stock::getTransactionAmount, 500000000));
         List<String> list = stocks.stream().filter(stock -> stock.getMa5().compareTo(stock.getMa10()) > 0
-                        && stock.getMa10().compareTo(stock.getMa20()) > 0).map(stock -> StringUtils.substring(stock.getCode(), 2, 8))
+                && stock.getMa10().compareTo(stock.getMa20()) > 0).map(stock -> StringUtils.substring(stock.getCode(), 2, 8))
                 .collect(Collectors.toList());
         log.warn("日k均线多头排列:{}", collectionToString(list));
     }
@@ -271,7 +271,45 @@ public class Barbarossa implements CommandLineRunner {
         if (AutomaticTrading.isTradeTime() && plankConfig.getEnableMonitor() && !monitoring.get()) {
             executorService.submit(this::monitorStock);
             executorService.submit(this::queryMainFundData);
+            executorService.submit(this::smallMarketMainFundData);
             monitoring.set(true);
+        }
+    }
+
+    /**
+     * 50亿以下，实时净流入大5000万
+     * 50-100亿的，实时净流入大于1亿
+     */
+    private void smallMarketMainFundData() {
+        // 取市值10亿到100亿的股票
+        List<Stock> smallMarketStocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().le(Stock::getMarketValue, 10000000000L)
+                .ge(Stock::getMarketValue, 1000000000L));
+        if (CollectionUtils.isNotEmpty(smallMarketStocks)) {
+            Set<String> set = smallMarketStocks.stream().map(Stock::getName).collect(Collectors.toSet());
+            while (AutomaticTrading.isTradeTime()) {
+                try {
+                    String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
+                    JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
+                    List<StockMainFundSample> tmpList = new ArrayList<>();
+                    List<String> stock = new ArrayList<>();
+                    array.parallelStream().forEach(e -> {
+                        try {
+                            StockMainFundSample mainFundSample = JSONObject.parseObject(e.toString(), StockMainFundSample.class);
+                            tmpList.add(mainFundSample);
+                            if (set.contains(mainFundSample.getF14()) && mainFundSample.getF62() > 30000000) {
+                                // 主力流入>3kw
+                                stock.add(mainFundSample.getF14());
+                            }
+                        } catch (Exception exception) {
+                            exception.printStackTrace();
+                        }
+                    });
+                    log.warn("市值[10e,100e]主力流入>3kw:{}", collectionToString(stock));
+                    Thread.sleep(3000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
