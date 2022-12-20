@@ -300,6 +300,7 @@ public class Barbarossa implements CommandLineRunner {
                                 // 主力流入>3kw
                                 stock.add(mainFundSample.getF14());
                             }
+                        } catch (JSONException ignored) {
                         } catch (Exception exception) {
                             exception.printStackTrace();
                         }
