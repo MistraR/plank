@@ -48,32 +48,32 @@
           },
           dataSrc: 'data',
           columns: [
+            // {
+            //   title: '序号',
+            //   render: function (row) {
+            //     return ++index;
+            //   }
+            // },
             {
-              title: '序号',
-              render: function (row) {
-                return ++index;
-              }
-            },
-            {
-              title: '股票名称',
+              title: '名称',
               render: function (row) {
                 return row.name;
               }
             },
+            // {
+            //   title: '代码',
+            //   render: function (row) {
+            //     return row.stockCode;
+            //   }
+            // },
             {
-              title: '股票代码',
-              render: function (row) {
-                return row.stockCode;
-              }
-            },
-            {
-              title: '总/可用',
+              title: '总/可',
               render: function (row) {
                 return row.totalVolume + '/' + row.availableVolume;
               }
             },
             {
-              title: '当前价格/成本价格',
+              title: '当前/成本',
               render: function (row) {
                 return row.price + '/' + row.costPrice;
               }
@@ -103,9 +103,9 @@
               render: function (row) {
                 var html = '';
                 var options = {stockCode: row.stockCode, price: row.price, tradeType: 'B', stockName: row.name};
-                html += ' <a class="btn btn-sbumit" data-options=' + JSON.stringify(options) + '>买入</a>';
+                html += ' <a class="btn btn-sbumit" data-options=' + JSON.stringify(options) + '>B</a>';
                 options.tradeType = 'S';
-                html += ' <a class="btn btn-sbumit" data-options=' + JSON.stringify(options) + '>卖出</a>';
+                html += ' <a class="btn btn-sbumit" data-options=' + JSON.stringify(options) + '>S</a>';
                 return html;
               }
             }
