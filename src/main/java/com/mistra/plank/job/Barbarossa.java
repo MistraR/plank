@@ -125,7 +125,7 @@ public class Barbarossa implements CommandLineRunner {
     @Override
     public void run(String... args) {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().notLike("name", "%ST%")
-                .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%C%").notLike("name", "%N%")
+                .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%").notLike("code", "%688%"));
         stocks.forEach(e -> {
             if (!e.getIgnoreMonitor() && (e.getShareholding() || e.getTrack())) {
@@ -134,6 +134,10 @@ public class Barbarossa implements CommandLineRunner {
             STOCK_MAP.put(e.getCode(), e.getName());
             STOCK_NAME_SET.add(e.getName());
         });
+        // 单独拉取某只股票的每日交易数据
+//        HashMap<String, String> map = new HashMap<>();
+//        map.put("SZ002129", "TCL中环");
+//        dailyRecordProcessor.run(map);
     }
 
     @Scheduled(cron = "0 1 15 * * ?")
