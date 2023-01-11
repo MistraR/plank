@@ -354,7 +354,7 @@ public class Barbarossa implements CommandLineRunner {
 //                    log.warn("{}", collectionToString(AutomaticTrading.runningMap.values().stream().map(Stock::getName).collect(Collectors.toList())));
 //                }
                 realTimePrices.clear();
-                Thread.sleep(5000);
+                Thread.sleep(3000);
             }
         } catch (Exception e) {
             e.printStackTrace();
