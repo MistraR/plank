@@ -52,6 +52,8 @@ import static com.mistra.plank.common.util.StringUtil.collectionToString;
 @Component
 public class Barbarossa implements CommandLineRunner {
 
+    private static final int maxPoolSize = Runtime.getRuntime().availableProcessors();
+
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     private final StockMapper stockMapper;
     private final StockProcessor stockProcessor;
@@ -65,7 +67,7 @@ public class Barbarossa implements CommandLineRunner {
     private final DailyRecordProcessor dailyRecordProcessor;
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
 
-    public static final ExecutorService executorService = new ThreadPoolExecutor(10, 20, 0L, TimeUnit.MILLISECONDS,
+    public static final ExecutorService executorService = new ThreadPoolExecutor(10, maxPoolSize, 0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(5000), new NamedThreadFactory("T", false));
     /**
      * 主力趋势流入 过滤金额 >3亿
