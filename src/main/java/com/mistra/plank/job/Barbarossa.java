@@ -67,7 +67,8 @@ public class Barbarossa implements CommandLineRunner {
     private final DailyRecordProcessor dailyRecordProcessor;
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
 
-    public static final ExecutorService executorService = new ThreadPoolExecutor(10, maxPoolSize, 0L, TimeUnit.MILLISECONDS,
+    public static final ExecutorService executorService = new ThreadPoolExecutor(Math.min(maxPoolSize, 5),
+            Math.min(maxPoolSize, 10), 0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(5000), new NamedThreadFactory("T", false));
     /**
      * 主力趋势流入 过滤金额 >3亿
