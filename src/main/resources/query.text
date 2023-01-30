@@ -9,28 +9,23 @@ FROM foreign_fund_holdings_tracking WHERE name = '圣邦股份' ORDER BY quarter
 
 # 某季度开始的汇总增持金额-所有公司
 SELECT name AS '公司',change_amount AS '累计增持金额/万' FROM (SELECT name,SUM(shareholding_change_amount) AS change_amount FROM foreign_fund_holdings_tracking
-WHERE quarter>=202202 GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
+WHERE quarter>=202204 GROUP BY name) AS tmp ORDER BY tmp.change_amount DESC;
 
 # 某板块所有公司某季度的基金持仓汇总
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',fund_total_market_dynamic AS '基金季末持仓市值/万(实时)',f.foreign_total_market_dynamic AS '外资持仓市值/万(实时)',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度基金增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
-WHERE s.classification='白酒' AND f.quarter=202203 ORDER BY f.foreign_fund_total_market_dynamic DESC
+WHERE s.classification='光伏' AND f.quarter=202204 ORDER BY f.foreign_fund_total_market_dynamic DESC
 
 # 某季度基金持仓市值排行-动态计算基金市值
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万(实时)',f.foreign_total_market_dynamic AS '外资持仓市值/万(实时)',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度基金增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
-WHERE f.quarter=202203 ORDER BY f.foreign_fund_total_market_dynamic DESC
+WHERE f.quarter=202204 ORDER BY f.foreign_fund_total_market_dynamic DESC
 
 # 重点关注的公司某季度基金市值排行-动态计算基金市值
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万(实时)',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度基金增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
-WHERE s.focus=1 AND f.quarter=202203 ORDER BY f.foreign_fund_total_market_dynamic DESC
+WHERE s.focus=1 AND f.quarter=202204 ORDER BY f.foreign_fund_total_market_dynamic DESC
 
 # 10月份重点买入的公司
 SELECT * FROM stock WHERE name IN ('隆基绿能','宁德时代','五粮液','迈瑞医疗','','泸州老窖','阳光电源','亿纬锂能','药明康德','紫光国微','立讯精密','比亚迪') ORDER BY shareholding DESC;
 
-SELECT * FROM stock WHERE name IN ('恩捷股份','维科技术','北方华创','北方稀土','华友钴业','晶澳科技','爱尔眼科','海康威视','欣旺达');
+SELECT * FROM stock WHERE name IN ('恩捷股份','维科技术','中航产融','','华友钴业','晶澳科技','爱尔眼科','','TCL中环','英飞拓');
 
-
-
-
-
-
-
+SELECT * FROM stock WHERE shareholding=1
