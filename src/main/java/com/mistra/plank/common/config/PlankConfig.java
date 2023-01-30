@@ -49,6 +49,8 @@ public class PlankConfig {
 
     /**
      * 东财 抓取外资持仓数据
+     *
+     * https://data.eastmoney.com/hsgtcg/list.html?dtype=Y
      */
     private String foreignShareholdingUrl;
 
