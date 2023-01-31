@@ -426,8 +426,6 @@ public class Barbarossa implements CommandLineRunner {
      * 分析最近一个月各连板晋级率
      */
     public void analyzePlank() {
-        // 5连板+的股票
-        HashSet<String> fivePlankStock = new HashSet<>();
         Date date = new DateTime(DateUtils.addDays(new Date(), -30)).withHourOfDay(0).withMinuteOfHour(0)
                 .withSecondOfMinute(0).withMillisOfSecond(0).toDate();
         // 首板一进二胜率
@@ -537,7 +535,6 @@ public class Barbarossa implements CommandLineRunner {
                         log.warn("二板+:{}", collectionToString(tmp));
                     }
                 }
-                fivePlankStock.addAll(todayFive.keySet());
                 yesterdayOne.clear();
                 yesterdayOne.putAll(todayOne);
                 yesterdayTwo.clear();
@@ -553,7 +550,6 @@ public class Barbarossa implements CommandLineRunner {
             }
             date = DateUtils.addDays(date, 1);
         } while (date.getTime() < System.currentTimeMillis());
-        log.warn("最近一个月5连板+的股票:{}", collectionToString(fivePlankStock));
         log.error("一板>一进二平均胜率：{}",
                 (double) Math
                         .round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
