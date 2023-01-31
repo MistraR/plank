@@ -5,7 +5,7 @@ SELECT * FROM stock WHERE classification='电力设备' and track=1 ORDER BY RIG
 # 某公司的基金季度增减持仓明细
 SELECT name AS '公司',quarter AS '季度',shareholding_count AS '基金季末持股/万股',fund_total_market AS '基金季末持仓市值/万',fund_total_market_dynamic AS '基金季末持仓市值/万(实时)',foreign_total_market_dynamic AS '外资持仓市值/万(实时)',
 foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',average_price AS '季度均价',shareholding_change_amount AS '基金增持金额/万',shareholding_change_count AS '持股数量变动/万股',IF(shareholding_change_count<0,'-','+') AS '增持/减持'
-FROM foreign_fund_holdings_tracking WHERE name = '亿纬锂能' ORDER BY quarter DESC;
+FROM foreign_fund_holdings_tracking WHERE name = '华友钴业' ORDER BY quarter DESC;
 
 # 某季度开始的汇总增持金额-所有公司
 SELECT name AS '公司',change_amount AS '累计增持金额/万' FROM (SELECT name,SUM(shareholding_change_amount) AS change_amount FROM foreign_fund_holdings_tracking
@@ -22,13 +22,14 @@ WHERE f.quarter=202204 ORDER BY f.foreign_fund_total_market_dynamic DESC
 # 重点关注的公司某季度基金市值排行-动态计算基金市值
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万(实时)',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度基金增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
 WHERE s.focus=1 AND f.quarter=202204 ORDER BY f.foreign_fund_total_market_dynamic DESC
-
+SELECT * FROM stock WHERE shareholding=1
+SELECT * FROM stock WHERE focus=1
 # 2023重点买入的公司
 SELECT * FROM stock WHERE name IN ('宁德时代','五粮液','隆基绿能','迈瑞医疗','泸州老窖','阳光电源','亿纬锂能','药明康德','比亚迪') ORDER BY shareholding DESC;
 # 第二梯队
-SELECT * FROM stock WHERE name IN ('恩捷股份','东方财富','华友钴业','晶澳科技','爱尔眼科','中国中免','TCL中环','立讯精密','招商银行','通威股份',);
+SELECT * FROM stock WHERE name IN ('恩捷股份','东方财富','华友钴业','晶澳科技','爱尔眼科','中国中免','TCL中环','立讯精密','通威股份');
 # 超短
 SELECT * FROM stock WHERE name IN ('维科技术','中航产融','','拓尔思');
-SELECT * FROM stock WHERE shareholding=1
+
 
 1rsD8xDrG8q0KsbJ
