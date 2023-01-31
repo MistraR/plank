@@ -428,7 +428,6 @@ public class Barbarossa implements CommandLineRunner {
     public void analyzePlank() {
         // 5连板+的股票
         HashSet<String> fivePlankStock = new HashSet<>();
-        HashMap<String, Integer> gemPlankStockNumber = new HashMap<>();
         Date date = new DateTime(DateUtils.addDays(new Date(), -30)).withHourOfDay(0).withMinuteOfHour(0)
                 .withSecondOfMinute(0).withMillisOfSecond(0).toDate();
         // 首板一进二胜率
@@ -480,9 +479,6 @@ public class Barbarossa implements CommandLineRunner {
                     double v = dailyRecord.getIncreaseRate().doubleValue();
                     String name = dailyRecord.getName();
                     String code = dailyRecord.getCode();
-                    if (code.contains("SZ30") && v > 19.4 && v < 21) {
-                        gemPlankStockNumber.put(name, gemPlankStockNumber.getOrDefault(name, 0) + 1);
-                    }
                     if ((!code.contains("SZ30") && v > 9.4 && v < 11)
                             || (code.contains("SZ30") && v > 19.4 && v < 21)) {
                         if (yesterdaySix.containsKey(name)) {
@@ -557,14 +553,7 @@ public class Barbarossa implements CommandLineRunner {
             }
             date = DateUtils.addDays(date, 1);
         } while (date.getTime() < System.currentTimeMillis());
-        List<String> gemPlankStockTwice = new ArrayList<>();
-        for (Map.Entry<String, Integer> entry : gemPlankStockNumber.entrySet()) {
-            if (entry.getValue() > 1) {
-                gemPlankStockTwice.add(entry.getKey());
-            }
-        }
         log.warn("最近一个月5连板+的股票:{}", collectionToString(fivePlankStock));
-        log.warn("最近一个月创业板涨停2次+的股票:{}", collectionToString(gemPlankStockTwice));
         log.error("一板>一进二平均胜率：{}",
                 (double) Math
                         .round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
