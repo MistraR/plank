@@ -163,7 +163,7 @@ public class Barbarossa implements CommandLineRunner {
             // 爆量回踩
             screeningStocks.explosiveVolumeBack(new Date());
             // 分析红三兵股票
-            screeningStocks.checkRedThreeSoldiersStock(new Date());
+            //screeningStocks.checkRedThreeSoldiersStock(new Date());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -183,7 +183,7 @@ public class Barbarossa implements CommandLineRunner {
 
     /**
      * 找出周均线向上发散，上升趋势的股票
-     * 周均线MA03>MA05>MA10>MA20
+     * 周均线MA3>MA5>MA10>MA20
      * 上市不足20个交易日的次新股就不计算了
      * 趋势股选出来之后我一般会直接用.txt文档导入到东方财富windows版客户端，再来人为筛选一遍k线好看的票
      */
@@ -321,7 +321,7 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 Collections.sort(realTimePrices);
                 System.out.println("\n\n\n");
-                log.error("------------------------ ↓主力净流入Top10↓ -------------------------");
+                log.error("------------------------ 主力净流入Top10 -------------------------");
                 List<StockMainFundSample> topTen = new ArrayList<>();
                 for (int i = 0; i < Math.min(mainFundDataAll.size(), 10); i++) {
                     topTen.add(mainFundDataAll.get(i));
@@ -329,7 +329,7 @@ public class Barbarossa implements CommandLineRunner {
                 log.warn(collectionToString(
                         topTen.stream().map(e -> e.getF14() + "[" + e.getF62() / W / W + "亿]" + e.getF3() + "%")
                                 .collect(Collectors.toList())));
-                log.error("------------------------------ ↓持仓↓ -----------------------------");
+                log.error("------------------------------ 持仓 -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (stockMap.get(realTimePrice.getName()).getShareholding()) {
                         if (realTimePrice.getIncreaseRate() > 0) {
@@ -340,19 +340,19 @@ public class Barbarossa implements CommandLineRunner {
                     }
                 }
                 realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
-                log.error("------------------------------ ↓建仓↓ -----------------------------");
+                log.error("------------------------------ 建仓 -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (realTimePrice.getPurchaseRate() >= -2) {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
-//                log.error("---------------------------- ↓打板排单↓ ----------------------------");
+//                log.error("---------------------------- 打板排单 ----------------------------");
 //                List<Stock> buyStocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().ge(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))
 //                        .le(Stock::getBuyTime, DateUtil.endOfDay(new Date())));
 //                for (Stock buyStock : buyStocks) {
 //                    log.warn("{} 数量:{},金额:{}", buyStock.getName(), buyStock.getBuyAmount(), buyStock.getBuyPrice());
 //                }
-//                log.error("---------------------------- ↓打板监测↓ ----------------------------");
+//                log.error("---------------------------- 打板监测 ----------------------------");
 //                if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {
 //                    log.warn("{}", collectionToString(AutomaticTrading.runningMap.values().stream().map(Stock::getName).collect(Collectors.toList())));
 //                }
