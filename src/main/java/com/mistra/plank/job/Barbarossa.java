@@ -2,7 +2,6 @@ package com.mistra.plank.job;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.thread.NamedThreadFactory;
-import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
@@ -11,15 +10,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
-import com.mistra.plank.common.util.UploadDataListener;
 import com.mistra.plank.config.SystemConstant;
 import com.mistra.plank.dao.*;
 import com.mistra.plank.model.dto.StockMainFundSample;
 import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.DailyRecord;
-import com.mistra.plank.model.entity.ForeignFundHoldingsTracking;
 import com.mistra.plank.model.entity.Stock;
-import com.mistra.plank.model.param.FundHoldingsParam;
 import com.mistra.plank.service.Plank;
 import com.mistra.plank.service.impl.ScreeningStocks;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +25,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -60,7 +55,6 @@ public class Barbarossa implements CommandLineRunner {
     private final PlankConfig plankConfig;
     private final ScreeningStocks screeningStocks;
     private final DailyRecordProcessor dailyRecordProcessor;
-    private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
     private final AnalyzeProcessor analyzePlank;
     public static final ExecutorService executorService = new ThreadPoolExecutor(availableProcessors,
             availableProcessors * 2, 100L, TimeUnit.SECONDS,
@@ -81,13 +75,11 @@ public class Barbarossa implements CommandLineRunner {
      * 需要监控关注的票 key-name value-Stock
      */
     public static final HashMap<String, Stock> TRACK_STOCK_MAP = new HashMap<>();
-
     public static final CopyOnWriteArrayList<StockMainFundSample> mainFundData = new CopyOnWriteArrayList<>();
     public static final CopyOnWriteArrayList<StockMainFundSample> mainFundDataAll = new CopyOnWriteArrayList<>();
     public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataMap = new ConcurrentHashMap<>(64);
     public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataAllMap =
             new ConcurrentHashMap<>(5000);
-
     /**
      * 模拟交易总金额
      */
@@ -96,7 +88,6 @@ public class Barbarossa implements CommandLineRunner {
      * 模拟交易可用金额
      */
     public static BigDecimal BALANCE_AVAILABLE = new BigDecimal(100 * SystemConstant.W);
-
     /**
      * 是否开启监控中
      */
@@ -105,8 +96,7 @@ public class Barbarossa implements CommandLineRunner {
     public Barbarossa(StockMapper stockMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
                       ClearanceMapper clearanceMapper, TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
                       Plank plank, PlankConfig plankConfig, ScreeningStocks screeningStocks,
-                      DailyRecordProcessor dailyRecordProcessor, FundHoldingsTrackingMapper fundHoldingsTrackingMapper,
-                      AnalyzeProcessor analyzePlank) {
+                      DailyRecordProcessor dailyRecordProcessor, AnalyzeProcessor analyzePlank) {
         this.stockMapper = stockMapper;
         this.stockProcessor = stockProcessor;
         this.dailyRecordMapper = dailyRecordMapper;
@@ -117,7 +107,6 @@ public class Barbarossa implements CommandLineRunner {
         this.plankConfig = plankConfig;
         this.screeningStocks = screeningStocks;
         this.dailyRecordProcessor = dailyRecordProcessor;
-        this.fundHoldingsTrackingMapper = fundHoldingsTrackingMapper;
         this.analyzePlank = analyzePlank;
     }
 
@@ -146,7 +135,7 @@ public class Barbarossa implements CommandLineRunner {
             // 更新每只股票收盘价，当日成交量，MA5 MA10 MA20
             stockProcessor.run();
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
-            stockProcessor.updateForeignFundShareholding(202204);
+            stockProcessor.updateForeignFundShareholding();
             // 分析连板数据
             analyzePlank.analyzePlank();
             // 分析主力流入数据
@@ -155,7 +144,7 @@ public class Barbarossa implements CommandLineRunner {
             screeningStocks.movingAverageRise();
             // 分析上升趋势的股票，周k均线多头排列
             analyzePlank.analyzeUpwardTrend();
-            // 爆量回踩
+            // 分析爆量回踩
             screeningStocks.explosiveVolumeBack(new Date());
         } catch (Exception e) {
             e.printStackTrace();
@@ -340,49 +329,6 @@ public class Barbarossa implements CommandLineRunner {
                 plank.buyStock(stocks, date, fundsPart);
             }
             plank.sellStock(date);
-        }
-    }
-
-    public void fundHoldingsImport(FundHoldingsParam fundHoldingsParam, Date beginTime, Date endTime) {
-        UploadDataListener<ForeignFundHoldingsTracking> uploadDataListener = new UploadDataListener<>(500);
-        try {
-            EasyExcel.read(fundHoldingsParam.getFile().getInputStream(), ForeignFundHoldingsTracking.class,
-                    uploadDataListener).sheet().headRowNumber(2).doRead();
-        } catch (IOException e) {
-            log.error("read excel file error,file name:{}", fundHoldingsParam.getFile().getName());
-        }
-        for (Map.Entry<Integer, ForeignFundHoldingsTracking> entry : uploadDataListener.getMap().entrySet()) {
-            executorService.submit(() -> {
-                ForeignFundHoldingsTracking fundHoldingsTracking = entry.getValue();
-                try {
-                    Stock stock =
-                            stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getName, fundHoldingsTracking.getName()));
-                    fundHoldingsTracking.setCode(stock.getCode());
-                    fundHoldingsTracking.setQuarter(fundHoldingsParam.getQuarter());
-                    List<DailyRecord> dailyRecordList = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
-                            .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime).le(DailyRecord::getDate, endTime));
-                    if (CollectionUtils.isEmpty(dailyRecordList)) {
-                        HashMap<String, String> stockMap = new HashMap<>();
-                        stockMap.put(stock.getCode(), stock.getName());
-                        dailyRecordProcessor.run(stockMap);
-                        Thread.sleep(60 * 1000);
-                        dailyRecordList = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
-                                .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime).le(DailyRecord::getDate, endTime));
-                    }
-                    double average = dailyRecordList.stream().map(DailyRecord::getClosePrice)
-                            .mapToInt(BigDecimal::intValue).average().orElse(0D);
-                    fundHoldingsTracking.setAveragePrice(new BigDecimal(average));
-                    fundHoldingsTracking
-                            .setShareholdingChangeAmount(average * fundHoldingsTracking.getShareholdingChangeCount());
-                    fundHoldingsTracking.setModifyTime(new Date());
-                    fundHoldingsTracking.setForeignTotalMarketDynamic(0L);
-                    fundHoldingsTracking.setForeignFundTotalMarketDynamic(0L);
-                    fundHoldingsTrackingMapper.insert(fundHoldingsTracking);
-                    log.warn("更新 [{}] {}季报基金持仓数据完成！", stock.getName(), fundHoldingsParam.getQuarter());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
         }
     }
 }

@@ -1,11 +1,13 @@
 package com.mistra.plank.job;
 
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.common.util.UploadDataListener;
 import com.mistra.plank.dao.DailyRecordMapper;
 import com.mistra.plank.dao.FundHoldingsTrackingMapper;
 import com.mistra.plank.dao.StockMapper;
@@ -14,11 +16,13 @@ import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.ForeignFundHoldingsTracking;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.common.util.HttpUtil;
+import com.mistra.plank.model.param.FundHoldingsParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,13 +40,15 @@ public class StockProcessor {
     private final PlankConfig plankConfig;
 
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
+    private final DailyRecordProcessor dailyRecordProcessor;
 
     public StockProcessor(StockMapper stockMapper, DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig,
-                          FundHoldingsTrackingMapper fundHoldingsTrackingMapper) {
+                          FundHoldingsTrackingMapper fundHoldingsTrackingMapper, DailyRecordProcessor dailyRecordProcessor) {
         this.stockMapper = stockMapper;
         this.dailyRecordMapper = dailyRecordMapper;
         this.plankConfig = plankConfig;
         this.fundHoldingsTrackingMapper = fundHoldingsTrackingMapper;
+        this.dailyRecordProcessor = dailyRecordProcessor;
     }
 
     public void run() {
@@ -130,10 +136,10 @@ public class StockProcessor {
      * 基金的实时持仓市值是根据该季度(quarter)季报公布的持仓股数*当日收盘价 计算的。所以跟实际情况肯定存在差距的，仅作为参考
      * 外资持仓市值是前一个交易日最新的数据，是实时的
      */
-    public void updateForeignFundShareholding(Integer quarter) {
+    public void updateForeignFundShareholding() {
         HashMap<String, JSONObject> foreignShareholding = getForeignShareholding();
         List<ForeignFundHoldingsTracking> fundHoldings = fundHoldingsTrackingMapper
-                .selectList(new LambdaQueryWrapper<ForeignFundHoldingsTracking>().eq(ForeignFundHoldingsTracking::getQuarter, quarter));
+                .selectList(new LambdaQueryWrapper<ForeignFundHoldingsTracking>().eq(ForeignFundHoldingsTracking::getQuarter, "202204"));
         List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>()
                 .in(Stock::getName, fundHoldings.stream().map(ForeignFundHoldingsTracking::getName).collect(Collectors.toList())));
         if (org.apache.commons.collections4.CollectionUtils.isEmpty(foreignShareholding.values()) || org.apache.commons.collections4.CollectionUtils.isEmpty(fundHoldings)
@@ -188,5 +194,48 @@ public class StockProcessor {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public void fundHoldingsImport(FundHoldingsParam fundHoldingsParam, Date beginTime, Date endTime) {
+        UploadDataListener<ForeignFundHoldingsTracking> uploadDataListener = new UploadDataListener<>(500);
+        try {
+            EasyExcel.read(fundHoldingsParam.getFile().getInputStream(), ForeignFundHoldingsTracking.class,
+                    uploadDataListener).sheet().headRowNumber(2).doRead();
+        } catch (IOException e) {
+            log.error("read excel file error,file name:{}", fundHoldingsParam.getFile().getName());
+        }
+        for (Map.Entry<Integer, ForeignFundHoldingsTracking> entry : uploadDataListener.getMap().entrySet()) {
+            Barbarossa.executorService.submit(() -> {
+                ForeignFundHoldingsTracking fundHoldingsTracking = entry.getValue();
+                try {
+                    Stock stock =
+                            stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getName, fundHoldingsTracking.getName()));
+                    fundHoldingsTracking.setCode(stock.getCode());
+                    fundHoldingsTracking.setQuarter(fundHoldingsParam.getQuarter());
+                    List<DailyRecord> dailyRecordList = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
+                            .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime).le(DailyRecord::getDate, endTime));
+                    if (org.apache.commons.collections4.CollectionUtils.isEmpty(dailyRecordList)) {
+                        HashMap<String, String> stockMap = new HashMap<>();
+                        stockMap.put(stock.getCode(), stock.getName());
+                        dailyRecordProcessor.run(stockMap);
+                        Thread.sleep(60 * 1000);
+                        dailyRecordList = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
+                                .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime).le(DailyRecord::getDate, endTime));
+                    }
+                    double average = dailyRecordList.stream().map(DailyRecord::getClosePrice)
+                            .mapToInt(BigDecimal::intValue).average().orElse(0D);
+                    fundHoldingsTracking.setAveragePrice(new BigDecimal(average));
+                    fundHoldingsTracking
+                            .setShareholdingChangeAmount(average * fundHoldingsTracking.getShareholdingChangeCount());
+                    fundHoldingsTracking.setModifyTime(new Date());
+                    fundHoldingsTracking.setForeignTotalMarketDynamic(0L);
+                    fundHoldingsTracking.setForeignFundTotalMarketDynamic(0L);
+                    fundHoldingsTrackingMapper.insert(fundHoldingsTracking);
+                    log.warn("更新 [{}] {}季报基金持仓数据完成！", stock.getName(), fundHoldingsParam.getQuarter());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 }

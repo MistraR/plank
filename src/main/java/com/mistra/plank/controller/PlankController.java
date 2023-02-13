@@ -78,7 +78,7 @@ public class PlankController {
     @PostMapping("/fund-holdings/{beginTime}/{endTime}")
     public void fundHoldingsImport(FundHoldingsParam fundHoldingsParam,
                                    @PathVariable(value = "beginTime") Long beginTime, @PathVariable(value = "endTime") Long endTime) {
-        barbarossa.fundHoldingsImport(fundHoldingsParam, new Date(beginTime), new Date(endTime));
+        stockProcessor.fundHoldingsImport(fundHoldingsParam, new Date(beginTime), new Date(endTime));
     }
 
     /**

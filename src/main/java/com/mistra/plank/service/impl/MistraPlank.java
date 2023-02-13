@@ -3,6 +3,7 @@ package com.mistra.plank.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.config.SystemConstant;
 import com.mistra.plank.dao.ClearanceMapper;
 import com.mistra.plank.dao.DailyRecordMapper;
 import com.mistra.plank.dao.HoldSharesMapper;
@@ -26,7 +27,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.OptionalDouble;
 
-import static com.mistra.plank.job.Barbarossa.*;
+import static com.mistra.plank.job.Barbarossa.BALANCE;
+import static com.mistra.plank.job.Barbarossa.BALANCE_AVAILABLE;
 
 /**
  * 描述
@@ -87,7 +89,7 @@ public class MistraPlank implements Plank {
                     (selectPage.getRecords().get(1).getOpenPrice().subtract(selectPage.getRecords().get(0).getClosePrice()))
                             .divide(selectPage.getRecords().get(0).getClosePrice(), 2, RoundingMode.HALF_UP).doubleValue();
             if (openRatio > -0.03 && openRatio < plankConfig.getBuyPlankRatioLimit().doubleValue()
-                    && BALANCE_AVAILABLE.intValue() > W) {
+                    && BALANCE_AVAILABLE.intValue() > SystemConstant.W) {
                 HoldShares one = holdSharesMapper.selectOne(new QueryWrapper<HoldShares>().eq("code", stock.getCode()));
                 if (Objects.isNull(one)) {
                     int money = BALANCE.intValue() / fundsPart;

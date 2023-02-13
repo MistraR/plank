@@ -50,8 +50,8 @@ public class AnalyzeProcessor {
 
     public void analyzeMainFund() {
         log.warn("3|5|10日主力净流入>3亿:" + collectionToString(Barbarossa.mainFundDataAll.parallelStream()
-                .filter(e -> e.getF267() > SystemConstant.MAINFUND_FILTER_AMOUNT || e.getF164() > SystemConstant.MAINFUND_FILTER_AMOUNT
-                        || e.getF174() > SystemConstant.MAINFUND_FILTER_AMOUNT)
+                .filter(e -> e.getF267() > SystemConstant.TRANSACTION_AMOUNT_FILTER || e.getF164() > SystemConstant.TRANSACTION_AMOUNT_FILTER
+                        || e.getF174() > SystemConstant.TRANSACTION_AMOUNT_FILTER)
                 .map(plankConfig.getPrintName() ? StockMainFundSample::getF14 : StockMainFundSample::getF12)
                 .collect(Collectors.toSet())));
     }
