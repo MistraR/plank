@@ -1,7 +1,6 @@
 package com.mistra.plank.controller;
 
 import com.mistra.plank.job.Barbarossa;
-import com.mistra.plank.job.DailyRecordProcessor;
 import com.mistra.plank.job.DragonListProcessor;
 import com.mistra.plank.job.StockProcessor;
 import com.mistra.plank.model.param.AutoTradeParam;
@@ -26,32 +25,14 @@ public class PlankController {
     private final Barbarossa barbarossa;
     private final StockProcessor stockProcessor;
     private final DragonListProcessor dragonListProcessor;
-    private final DailyRecordProcessor dailyRecordProcessor;
     private final StockSelectedService stockSelectedService;
 
     public PlankController(Barbarossa barbarossa, StockProcessor stockProcessor,
-                           DragonListProcessor dragonListProcessor, DailyRecordProcessor dailyRecordProcessor, StockSelectedService stockSelectedService) {
+                           DragonListProcessor dragonListProcessor, StockSelectedService stockSelectedService) {
         this.barbarossa = barbarossa;
         this.stockProcessor = stockProcessor;
         this.dragonListProcessor = dragonListProcessor;
-        this.dailyRecordProcessor = dailyRecordProcessor;
         this.stockSelectedService = stockSelectedService;
-    }
-
-    /**
-     * 抓取近日股票涨跌数据
-     */
-    @PostMapping("/collectData")
-    public void collectData() {
-        dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
-    }
-
-    /**
-     * 分析连板晋级率
-     */
-    @PostMapping("/analyze")
-    public void analyze() {
-        barbarossa.analyzePlank();
     }
 
     /**

@@ -63,10 +63,8 @@ public class MistraPlank implements Plank {
             case DRAGON_LIST:
                 return screeningStocks.checkDragonListStock(date);
             case EXPLOSIVE_VOLUME_BACK:
-                return screeningStocks.explosiveVolumeBack(date);
-            case RED_THREE_SOLDIERS:
             default:
-                return screeningStocks.checkRedThreeSoldiersStock(DateUtils.addDays(date, -1));
+                return screeningStocks.explosiveVolumeBack(date);
         }
     }
 
