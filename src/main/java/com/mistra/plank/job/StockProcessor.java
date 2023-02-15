@@ -1,5 +1,6 @@
 package com.mistra.plank.job;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -7,6 +8,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.common.util.HttpUtil;
 import com.mistra.plank.common.util.UploadDataListener;
 import com.mistra.plank.dao.DailyRecordMapper;
 import com.mistra.plank.dao.FundHoldingsTrackingMapper;
@@ -15,7 +17,6 @@ import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.ForeignFundHoldingsTracking;
 import com.mistra.plank.model.entity.Stock;
-import com.mistra.plank.common.util.HttpUtil;
 import com.mistra.plank.model.param.FundHoldingsParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -139,7 +140,7 @@ public class StockProcessor {
     public void updateForeignFundShareholding() {
         HashMap<String, JSONObject> foreignShareholding = getForeignShareholding();
         List<ForeignFundHoldingsTracking> fundHoldings = fundHoldingsTrackingMapper
-                .selectList(new LambdaQueryWrapper<ForeignFundHoldingsTracking>().eq(ForeignFundHoldingsTracking::getQuarter, "202204"));
+                .selectList(new LambdaQueryWrapper<ForeignFundHoldingsTracking>().eq(ForeignFundHoldingsTracking::getQuarter, getQuarter()));
         List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>()
                 .in(Stock::getName, fundHoldings.stream().map(ForeignFundHoldingsTracking::getName).collect(Collectors.toList())));
         if (org.apache.commons.collections4.CollectionUtils.isEmpty(foreignShareholding.values()) || org.apache.commons.collections4.CollectionUtils.isEmpty(fundHoldings)
@@ -236,6 +237,25 @@ public class StockProcessor {
                     e.printStackTrace();
                 }
             });
+        }
+    }
+
+    /**
+     * 获取上一个季度字符串
+     *
+     * @return 202204
+     */
+    private String getQuarter() {
+        Date date = DateUtils.addDays(new Date(), -90);
+        int n = DateUtil.month(date);
+        if (n <= 3) {
+            return DateUtil.year(date) + "01";
+        } else if (n <= 6) {
+            return DateUtil.year(date) + "02";
+        } else if (n <= 9) {
+            return DateUtil.year(date) + "03";
+        } else {
+            return DateUtil.year(date) + "04";
         }
     }
 }

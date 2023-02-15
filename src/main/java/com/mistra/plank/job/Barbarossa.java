@@ -58,28 +58,28 @@ public class Barbarossa implements CommandLineRunner {
     private final AnalyzeProcessor analyzePlank;
     public static final ExecutorService executorService = new ThreadPoolExecutor(availableProcessors,
             availableProcessors * 2, 100L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(5000), new NamedThreadFactory("T", false));
+            new LinkedBlockingQueue<>(4096), new NamedThreadFactory("T", false));
     /**
      * 所有股票 key-code value-name
      */
-    public static final HashMap<String, String> STOCK_MAP = new HashMap<>();
+    public static final HashMap<String, String> STOCK_MAP_ALL = new HashMap<>(4096);
     /**
-     * 昨日成交>3亿的股票 key-code value-name
+     * 需要监控关注的机构趋势票 key-name value-Stock
      */
-    public static final HashMap<String, String> STOCK_MAP_GE_3E = new HashMap<>();
+    public static final HashMap<String, Stock> STOCK_MAP_TRACK = new HashMap<>(32);
+    /**
+     * 昨日成交额大于3亿的股票
+     */
+    public static final HashMap<String, String> STOCK_MAP_GE_3E = new HashMap<>(2048);
     /**
      * 所有股票 name
      */
-    public static final HashSet<String> STOCK_NAME_SET = new HashSet<>();
-    /**
-     * 需要监控关注的票 key-name value-Stock
-     */
-    public static final HashMap<String, Stock> TRACK_STOCK_MAP = new HashMap<>();
+    public static final HashSet<String> STOCK_NAME_SET_ALL = new HashSet<>();
     public static final CopyOnWriteArrayList<StockMainFundSample> mainFundData = new CopyOnWriteArrayList<>();
     public static final CopyOnWriteArrayList<StockMainFundSample> mainFundDataAll = new CopyOnWriteArrayList<>();
     public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataMap = new ConcurrentHashMap<>(64);
     public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataAllMap =
-            new ConcurrentHashMap<>(5000);
+            new ConcurrentHashMap<>(4096);
     /**
      * 模拟交易总金额
      */
@@ -112,26 +112,28 @@ public class Barbarossa implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>().notLike("name", "%ST%")
+        List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
+                // 默认过滤掉了北交所，科创板，ST
+                .notLike("name", "%ST%").notLike("code", "%688%")
                 .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
-                .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%")
-                .notLike("code", "%688%"));
+                .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
+        log.info("一共加载[{}]支股票", stocks.size());
         stocks.forEach(e -> {
-            if (!e.getIgnoreMonitor() && (e.getShareholding() || e.getTrack())) {
-                TRACK_STOCK_MAP.put(e.getName(), e);
+            if ((e.getShareholding() || e.getTrack())) {
+                STOCK_MAP_TRACK.put(e.getName(), e);
             } else if (e.getTransactionAmount().intValue() > SystemConstant.TRANSACTION_AMOUNT_FILTER) {
                 STOCK_MAP_GE_3E.put(e.getCode(), e.getName());
             }
-            STOCK_MAP.put(e.getCode(), e.getName());
+            STOCK_MAP_ALL.put(e.getCode(), e.getName());
         });
-        STOCK_NAME_SET.addAll(STOCK_MAP.keySet());
+        STOCK_NAME_SET_ALL.addAll(STOCK_MAP_ALL.keySet());
     }
 
     @Scheduled(cron = "0 1 15 * * ?")
     private void analyzeData() {
         try {
             // 15点后读取当日交易数据
-            dailyRecordProcessor.run(Barbarossa.STOCK_MAP);
+            dailyRecordProcessor.run(Barbarossa.STOCK_MAP_ALL);
             // 更新每只股票收盘价，当日成交量，MA5 MA10 MA20
             stockProcessor.run();
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
@@ -143,9 +145,9 @@ public class Barbarossa implements CommandLineRunner {
             // 分析日k均线多头排列的股票
             screeningStocks.movingAverageRise();
             // 分析上升趋势的股票，周k均线多头排列
-            analyzePlank.analyzeUpwardTrend();
+            screeningStocks.upwardTrend();
             // 分析爆量回踩
-            screeningStocks.explosiveVolumeBack(new Date());
+            screeningStocks.explosiveVolumeBack();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -161,9 +163,9 @@ public class Barbarossa implements CommandLineRunner {
     @Scheduled(cron = "0 */1 * * * ?")
     public void monitor() {
         if (AutomaticTrading.isTradeTime() && plankConfig.getEnableMonitor() && !monitoring.get()) {
+            monitoring.set(true);
             executorService.submit(this::monitorStock);
             executorService.submit(this::queryMainFundData);
-            monitoring.set(true);
         }
     }
 
@@ -171,7 +173,7 @@ public class Barbarossa implements CommandLineRunner {
         try {
             List<StockRealTimePrice> realTimePrices = new ArrayList<>();
             while (AutomaticTrading.isTradeTime()) {
-                List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getIgnoreMonitor, false)
+                List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>()
                         .eq(Stock::getTrack, true).or().eq(Stock::getShareholding, true));
                 Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
                 for (Stock stock : stocks) {
@@ -265,7 +267,7 @@ public class Barbarossa implements CommandLineRunner {
                         StockMainFundSample mainFundSample = JSONObject.parseObject(e.toString(), StockMainFundSample.class);
                         tmpList.add(mainFundSample);
                         mainFundDataAllMap.put(mainFundSample.getF14(), mainFundSample);
-                        if (TRACK_STOCK_MAP.containsKey(mainFundSample.getF14())) {
+                        if (STOCK_MAP_TRACK.containsKey(mainFundSample.getF14())) {
                             mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
                         }
                     } catch (JSONException ignored) {
@@ -273,13 +275,13 @@ public class Barbarossa implements CommandLineRunner {
                         exception.printStackTrace();
                     }
                 });
-                List<StockMainFundSample> result = tmpList.stream().filter(e -> e != null && STOCK_NAME_SET.contains(e.getF14()) && e.getF62() != null)
+                List<StockMainFundSample> result = tmpList.stream().filter(e -> e != null && STOCK_NAME_SET_ALL.contains(e.getF14()) && e.getF62() != null)
                         .sorted().collect(Collectors.toList());
                 mainFundDataAll.clear();
                 mainFundDataAll.addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
                 mainFundData.clear();
                 mainFundData.addAll(
-                        result.stream().filter(e -> TRACK_STOCK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
+                        result.stream().filter(e -> STOCK_MAP_TRACK.containsKey(e.getF14())).collect(Collectors.toList()));
                 Thread.sleep(3000);
             } catch (Exception e) {
                 e.printStackTrace();
