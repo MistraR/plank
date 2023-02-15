@@ -114,7 +114,7 @@ public class StockProcessor {
         return StockRealTimePrice.builder().currentPrice(quote.getDouble("current"))
                 .highestPrice(quote.getDouble("high")).lowestPrice(quote.getDouble("low"))
                 .isPlank(quote.getDouble("current").equals(quote.getDouble("limit_up")))
-                .increaseRate(quote.getDouble("chg")).limitDown(quote.getDouble("limit_down"))
+                .increaseRate(quote.getDouble("percent")).limitDown(quote.getDouble("limit_down"))
                 .limitUp(quote.getDouble("limit_up")).build();
     }
 
