@@ -44,6 +44,9 @@ ocr:
         user: ''
 plank:
   automaticTrading: true
+  automaticTradingMoney: 40000
+  automaticPlankTrading: true
+  singleTransactionLimitAmount: 4000
   enableMonitor: true
   buyPlankRatioLimit: 0.07
   buyStrategyEnum: DRAGON_LIST

@@ -114,7 +114,7 @@ public class StockProcessor {
         String url = plankConfig.getXueQiuStockLimitUpPriceUrl().replace("{code}", code);
         String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
         JSONObject quote = JSON.parseObject(body).getJSONObject("data").getJSONObject("quote");
-        return StockRealTimePrice.builder().currentPrice(quote.getDouble("current"))
+        return StockRealTimePrice.builder().currentPrice(quote.getDouble("current")).code(code)
                 .highestPrice(quote.getDouble("high")).lowestPrice(quote.getDouble("low"))
                 .isPlank(quote.getDouble("current").equals(quote.getDouble("limit_up")))
                 .increaseRate(quote.getDouble("percent")).limitDown(quote.getDouble("limit_down"))

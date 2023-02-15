@@ -33,9 +33,9 @@ public class AutomaticPlankTrading implements CommandLineRunner {
 
     private final AutomaticTrading automaticTrading;
     /**
-     * 涨幅>7个点的股票，50毫秒查询一次数据，上板则下单排队
+     * 主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，上板则下单排队
      */
-    private static final ConcurrentHashSet<String> INCR_GE_7 = new ConcurrentHashSet<>();
+    private static final ConcurrentHashSet<String> PLANK_MONITOR = new ConcurrentHashSet<>();
 
     public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor, AutomaticTrading automaticTrading) {
         this.plankConfig = plankConfig;
@@ -44,15 +44,15 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     }
 
     /**
-     * 每30秒过滤涨幅大于7个点股票，放入INCR_GE_7
+     * 每30秒过滤主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，放入PLANK_MONITOR
      */
-    @Scheduled(cron = "*/30 * * * * ?")
-    private void filterIncrGe7() {
+    @Scheduled(cron = "*/5 * * * * ?")
+    private void filterStock() {
         if (AutomaticTrading.isTradeTime() && AutomaticTrading.todayCostMoney < plankConfig.getAutomaticTradingMoney()) {
             List<List<String>> lists = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_MAP_GE_3E.keySet()),
                     Barbarossa.executorService.getMaximumPoolSize());
             for (List<String> list : lists) {
-                Barbarossa.executorService.submit(() -> filterIncrGe7(list));
+                Barbarossa.executorService.submit(() -> filterStock(list));
             }
         }
     }
@@ -62,11 +62,12 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      *
      * @param codes codes
      */
-    private void filterIncrGe7(List<String> codes) {
+    private void filterStock(List<String> codes) {
         codes.forEach(e -> {
             StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
-            if (stockRealTimePriceByCode.getIncreaseRate() > 7) {
-                INCR_GE_7.add(e);
+            if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 18) ||
+                    (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 8)) {
+                PLANK_MONITOR.add(e);
             }
         });
     }
@@ -76,7 +77,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     @Override
     public void run(String... args) throws Exception {
-        filterIncrGe7();
+        filterStock();
         Barbarossa.executorService.submit(this::autoPlank);
     }
 
@@ -87,8 +88,8 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     private void autoPlank() {
         Date date = new Date();
         while (DateUtil.hour(date, true) < 10 && AutomaticTrading.todayCostMoney < plankConfig.getAutomaticTradingMoney()) {
-            if (AutomaticTrading.isTradeTime() && !INCR_GE_7.isEmpty()) {
-                for (String code : INCR_GE_7) {
+            if (AutomaticTrading.isTradeTime() && !PLANK_MONITOR.isEmpty()) {
+                for (String code : PLANK_MONITOR) {
                     StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(code);
                     if (stockRealTimePriceByCode.isPlank() &&
                             stockRealTimePriceByCode.getCurrentPrice() * 100 < plankConfig.getSingleTransactionLimitAmount()) {
@@ -101,9 +102,9 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                         automaticTrading.buy(Barbarossa.STOCK_MAP_GE_3E.get(code), amount, stockRealTimePriceByCode.getLimitUp(),
                                 AutomaticTradingEnum.AUTO_PLANK);
                         Barbarossa.STOCK_MAP_GE_3E.remove(code);
-                        INCR_GE_7.remove(code);
+                        PLANK_MONITOR.remove(code);
                     } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {
-                        INCR_GE_7.remove(code);
+                        PLANK_MONITOR.remove(code);
                     }
                 }
             } else {

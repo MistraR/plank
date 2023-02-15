@@ -19,6 +19,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
 
+    private String code;
+
     private String name;
 
     private Double highestPrice;
