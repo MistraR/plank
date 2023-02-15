@@ -38,6 +38,11 @@ public class PlankConfig {
     private String xueQiuStockDetailUrl;
 
     /**
+     * 雪球 获取某只股票当天实时价格,是否涨停等信息
+     */
+    private String xueQiuStockLimitUpPriceUrl;
+
+    /**
      * 雪球 某只股票当日资金流入趋势接口 {code}=SZ300750
      */
     private String todayFundTrendUrl;
@@ -49,7 +54,7 @@ public class PlankConfig {
 
     /**
      * 东财 抓取外资持仓数据
-     *
+     * <p>
      * https://data.eastmoney.com/hsgtcg/list.html?dtype=Y
      */
     private String foreignShareholdingUrl;

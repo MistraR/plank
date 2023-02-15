@@ -117,7 +117,7 @@ public class Barbarossa implements CommandLineRunner {
                 .notLike("name", "%ST%").notLike("code", "%688%")
                 .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
-        log.info("一共加载[{}]支股票", stocks.size());
+        log.warn("一共加载[{}]支股票", stocks.size());
         stocks.forEach(e -> {
             if ((e.getShareholding() || e.getTrack())) {
                 STOCK_MAP_TRACK.put(e.getName(), e);
@@ -187,7 +187,7 @@ public class Barbarossa implements CommandLineRunner {
                         continue;
                     }
                     StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
-                    double v = stockRealTimePrice.getTodayRealTimePrice();
+                    double v = stockRealTimePrice.getCurrentPrice();
                     List<BigDecimal> collect = dailyRecords.subList(0, purchaseType - 1).stream()
                             .map(DailyRecord::getClosePrice).collect(Collectors.toList());
                     collect.add(new BigDecimal(v).setScale(2, RoundingMode.HALF_UP));
@@ -292,9 +292,9 @@ public class Barbarossa implements CommandLineRunner {
     private String convertLog(StockRealTimePrice realTimePrice) {
         return new StringBuilder().append(realTimePrice.getName())
                 .append((realTimePrice.getName().length() == 3 ? "  " : ""))
-                .append("[高:").append(realTimePrice.getTodayHighestPrice())
-                .append("|现:").append(realTimePrice.getTodayRealTimePrice())
-                .append("|低:").append(realTimePrice.getTodayLowestPrice())
+                .append("[高:").append(realTimePrice.getHighestPrice())
+                .append("|现:").append(realTimePrice.getCurrentPrice())
+                .append("|低:").append(realTimePrice.getLowestPrice())
                 .append("|差距:").append(realTimePrice.getPurchaseRate())
                 .append("%|涨幅:").append(realTimePrice.getIncreaseRate())
                 .append("|主力:").append(realTimePrice.getMainFund()).append("万]").toString();

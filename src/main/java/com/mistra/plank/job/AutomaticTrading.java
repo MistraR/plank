@@ -7,6 +7,7 @@ import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.StockUtil;
 import com.mistra.plank.dao.HoldSharesMapper;
 import com.mistra.plank.dao.StockMapper;
+import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
@@ -32,10 +33,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author rui.wang
  * @ Version: 1.0
  * @ Time: 2022/11/1 14:18
- * @ Description: 自动交易任务
+ * @ Description: 自动交易任务，需要自己在数据库 stock表 手动编辑自己想要交易的股票，买入模式(打板还是低吸)，买入数量，价格，暂时还没有UI页面供操作
  * 买入：1.打板，发现上板则立即挂买单排板  2.低吸，发现股票价格触发到低吸价格，挂涨停价买入
  * 卖出：1.止损，跌破止损价，挂跌停价割肉  2.止盈，触发止盈标准挂跌停价卖出
- * 需要自己在数据库 stock表 手动编辑自己想要监控打板的股票，买入数量，价格
  */
 @Slf4j
 @Component
@@ -77,7 +77,7 @@ public class AutomaticTrading implements CommandLineRunner {
     /**
      * 每3秒更新一次需要打板的股票
      */
-    @Scheduled(cron = "*/30 * * * * ?")
+    @Scheduled(cron = "*/3 * * * * ?")
     private void plank() {
         if (plankConfig.getAutomaticTrading() && isTradeTime()) {
             List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getAutomaticTradingType,
@@ -106,7 +106,7 @@ public class AutomaticTrading implements CommandLineRunner {
      * 防止忘记当日复盘，每天收盘后取消掉当天未成交的自动交易的监测
      * 已成交的更新持仓可用数量
      */
-    @Scheduled(cron = "0 1 15 * * ?")
+    @Scheduled(cron = "0 2 15 * * ?")
     private void updateHoldShares() {
         List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                 .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
@@ -169,7 +169,7 @@ public class AutomaticTrading implements CommandLineRunner {
                 try {
                     HoldShares data = holdSharesMapper.selectById(holdShare.getId());
                     if (Objects.nonNull(data)) {
-                        double price = stockProcessor.getStockRealTimePriceByCode(data.getCode()).getTodayRealTimePrice();
+                        double price = stockProcessor.getStockRealTimePriceByCode(data.getCode()).getCurrentPrice();
                         if (price <= data.getStopLossPrice().doubleValue() || data.getTakeProfitPrice().doubleValue() <= price) {
                             // 触发止盈、止损，挂跌停价卖出
                             SubmitRequest request = new SubmitRequest(1);
@@ -216,7 +216,7 @@ public class AutomaticTrading implements CommandLineRunner {
             while (!buy.get() && isTradeTime()) {
                 try {
                     automaticTrading(stock, buy);
-                    Thread.sleep(200);
+                    Thread.sleep(100);
                     if (!lock.isLocked()) {
                         if (!map.containsKey(stock.getCode())) {
                             runningMap.remove(stock.getCode());
@@ -231,14 +231,15 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     private void automaticTrading(Stock stock, AtomicBoolean buy) {
-        double price = stockProcessor.getStockRealTimePriceByCode(stock.getCode()).getTodayRealTimePrice();
-        if (price != 0d) {
-            if (stock.getAutomaticTradingType().equals(AutomaticTradingEnum.PLANK.name()) && price >= stock.getTriggerPrice().doubleValue()) {
+        StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
+        if (Objects.nonNull(stockRealTimePrice)) {
+            if (stock.getAutomaticTradingType().equals(AutomaticTradingEnum.PLANK.name()) && stockRealTimePrice.isPlank()) {
                 // 触发打板下单条件，挂单
-                buy(stock, buy, price);
-            } else if (stock.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name()) && price <= stock.getTriggerPrice().doubleValue()) {
+                buy(stock, buy, stockRealTimePrice.getLimitUp());
+            } else if (stock.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name()) &&
+                    stockRealTimePrice.getCurrentPrice() <= stock.getTriggerPrice().doubleValue()) {
                 // 触发低吸下单条件，挂单
-                buy(stock, buy, price);
+                buy(stock, buy, stockRealTimePrice.getLimitDown());
             }
         }
     }

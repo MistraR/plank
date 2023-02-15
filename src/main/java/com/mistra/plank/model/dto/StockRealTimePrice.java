@@ -21,14 +21,14 @@ public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
 
     private String name;
 
-    private Double todayHighestPrice;
+    private Double highestPrice;
 
-    private Double todayLowestPrice;
+    private Double lowestPrice;
 
     /**
      * 实时价格
      */
-    private Double todayRealTimePrice;
+    private Double currentPrice;
 
     /**
      * 建仓价 每日更新股票会更新为当日的MA10均价
@@ -50,8 +50,23 @@ public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
      */
     private Long mainFund;
 
+    /**
+     * 当前是否涨停
+     */
+    private boolean isPlank;
+
+    /**
+     * 跌停价
+     */
+    private Double limitDown;
+
+    /**
+     * 涨停价
+     */
+    private Double limitUp;
+
     @Override
     public int compareTo(StockRealTimePrice o) {
-        return (int)((o.increaseRate * 100) - (this.increaseRate * 100));
+        return (int) ((o.increaseRate * 100) - (this.increaseRate * 100));
     }
 }

@@ -113,24 +113,15 @@ public class StockProcessor {
      * @return StockRealTimePrice
      */
     public StockRealTimePrice getStockRealTimePriceByCode(String code) {
-        String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", code)
-                .replace("{time}", String.valueOf(System.currentTimeMillis()))
-                .replace("{recentDayNumber}", "1");
+        String url = plankConfig.getXueQiuStockLimitUpPriceUrl().replace("{code}", code);
         String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
-        JSONObject data = JSON.parseObject(body).getJSONObject("data");
-        JSONArray list = data.getJSONArray("item");
-        if (CollectionUtils.isNotEmpty(list)) {
-            JSONArray o = (JSONArray) list.get(0);
-            return StockRealTimePrice.builder().todayRealTimePrice(o.getDoubleValue(5))
-                    .todayHighestPrice(o.getDoubleValue(3))
-                    .todayLowestPrice(o.getDoubleValue(4))
-                    .increaseRate(o.getDoubleValue(7))
-                    .build();
-        } else {
-            throw new RuntimeException("获取某只股票的最新价格失败！");
-        }
+        JSONObject quote = JSON.parseObject(body).getJSONObject("data").getJSONObject("quote");
+        return StockRealTimePrice.builder().currentPrice(quote.getDouble("current"))
+                .highestPrice(quote.getDouble("high")).lowestPrice(quote.getDouble("low"))
+                .isPlank(quote.getDouble("current").equals(quote.getDouble("limit_up")))
+                .increaseRate(quote.getDouble("chg")).limitDown(quote.getDouble("limit_down"))
+                .limitUp(quote.getDouble("limit_up")).build();
     }
-
 
     /**
      * 更新 外资+基金 持仓
