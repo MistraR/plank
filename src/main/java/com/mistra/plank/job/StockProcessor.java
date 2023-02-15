@@ -17,6 +17,7 @@ import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.ForeignFundHoldingsTracking;
 import com.mistra.plank.model.entity.Stock;
+import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.model.param.FundHoldingsParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
@@ -73,7 +74,9 @@ public class StockProcessor {
                                         .orderByDesc(DailyRecord::getDate)).getRecords();
                         exist.setModifyTime(today);
                         exist.setCurrentPrice(current);
+                        exist.setPlankNumber(0);
                         exist.setTransactionAmount(current.multiply(volume));
+                        exist.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
                         if (dailyRecords.size() >= 20) {
                             exist.setMa5(BigDecimal
                                     .valueOf(dailyRecords.subList(0, 5).stream().map(DailyRecord::getClosePrice)

@@ -1,6 +1,7 @@
 package com.mistra.plank.job;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.config.SystemConstant;
 import com.mistra.plank.dao.DailyRecordMapper;
@@ -151,6 +152,22 @@ public class AnalyzeProcessor {
                             new ArrayList<>(todayFive.keySet()), todaySix.keySet().size(),
                             new ArrayList<>(todaySix.keySet()), todaySeven.keySet().size(),
                             new ArrayList<>(todaySeven.keySet()));
+                    if (DateUtils.isSameDay(new Date(), date)) {
+                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
+                                .set(Stock::getPlankNumber, 1).in(Stock::getName, todayOne.values()));
+                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
+                                .set(Stock::getPlankNumber, 2).in(Stock::getName, todayTwo.values()));
+                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
+                                .set(Stock::getPlankNumber, 3).in(Stock::getName, todayThree.values()));
+                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
+                                .set(Stock::getPlankNumber, 4).in(Stock::getName, todayFour.values()));
+                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
+                                .set(Stock::getPlankNumber, 5).in(Stock::getName, todayFive.values()));
+                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
+                                .set(Stock::getPlankNumber, 6).in(Stock::getName, todaySix.values()));
+                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
+                                .set(Stock::getPlankNumber, 7).in(Stock::getName, todaySeven.values()));
+                    }
                     List<String> tmp = new ArrayList<>();
                     tmp.addAll(todayTwo.keySet());
                     tmp.addAll(todayThree.keySet());

@@ -138,6 +138,12 @@ public class Stock implements Comparable<Stock> {
     @TableField(value = "buy_time")
     private Date buyTime;
 
+    /**
+     * 当前连板数
+     */
+    @TableField(value = "plank_num")
+    private Integer plankNumber;
+
     @Override
     public int compareTo(Stock o) {
         return (int) (this.transactionAmount.doubleValue()) - (int) (o.transactionAmount.doubleValue());

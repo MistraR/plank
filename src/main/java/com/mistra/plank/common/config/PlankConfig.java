@@ -54,7 +54,6 @@ public class PlankConfig {
 
     /**
      * 东财 抓取外资持仓数据
-     * <p>
      * https://data.eastmoney.com/hsgtcg/list.html?dtype=Y
      */
     private String foreignShareholdingUrl;
@@ -138,6 +137,16 @@ public class PlankConfig {
      * 是否开启自动交易
      */
     private Boolean automaticTrading;
+
+    /**
+     * 每日自动交易买入金额上限
+     */
+    private Double automaticTradingMoney;
+
+    /**
+     * 自动打板单笔交易金额上限
+     */
+    private Integer singleTransactionLimitAmount;
 
     /**
      * 是否开启持仓监控

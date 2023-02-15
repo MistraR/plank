@@ -70,7 +70,7 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 昨日成交额大于3亿的股票
      */
-    public static final HashMap<String, String> STOCK_MAP_GE_3E = new HashMap<>(2048);
+    public static final HashMap<String, Stock> STOCK_MAP_GE_3E = new HashMap<>(2048);
     /**
      * 所有股票 name
      */
@@ -121,15 +121,18 @@ public class Barbarossa implements CommandLineRunner {
         stocks.forEach(e -> {
             if ((e.getShareholding() || e.getTrack())) {
                 STOCK_MAP_TRACK.put(e.getName(), e);
-            } else if (e.getTransactionAmount().intValue() > SystemConstant.TRANSACTION_AMOUNT_FILTER) {
-                STOCK_MAP_GE_3E.put(e.getCode(), e.getName());
+            } else if (e.getTransactionAmount().intValue() > SystemConstant.TRANSACTION_AMOUNT_FILTER
+                    && (Objects.isNull(e.getPlankNumber()) || e.getPlankNumber() == 0)
+                    && (Objects.isNull(e.getBuyTime()) || !DateUtils.isSameDay(new Date(), e.getBuyTime()))) {
+                // 过滤掉昨日连板以及成交额小于3亿的股票
+                STOCK_MAP_GE_3E.put(e.getCode(), e);
             }
             STOCK_MAP_ALL.put(e.getCode(), e.getName());
         });
         STOCK_NAME_SET_ALL.addAll(STOCK_MAP_ALL.keySet());
     }
 
-    @Scheduled(cron = "0 1 15 * * ?")
+    @Scheduled(cron = "0 18 18 * * ?")
     private void analyzeData() {
         try {
             // 15点后读取当日交易数据

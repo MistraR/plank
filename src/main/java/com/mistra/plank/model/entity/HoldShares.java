@@ -62,12 +62,6 @@ public class HoldShares {
     private BigDecimal stopLossPrice;
 
     /**
-     * 核按钮价格
-     */
-    @TableField(value = "sale_price")
-    private BigDecimal salePrice;
-
-    /**
      * 持股数量
      */
     @TableField(value = "number")
@@ -78,18 +72,6 @@ public class HoldShares {
      */
     @TableField(value = "available_volume")
     private Integer availableVolume;
-
-    /**
-     * 当前成本价
-     */
-    @TableField(value = "cost")
-    private BigDecimal cost;
-
-    /**
-     * 今日收盘价
-     */
-    @TableField(value = "current_price")
-    private BigDecimal currentPrice;
 
     /**
      * 盈亏比率

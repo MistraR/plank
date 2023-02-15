@@ -98,9 +98,8 @@ public class MistraPlank implements Plank {
                     double cost = number * 100 * dailyRecord.getOpenPrice().doubleValue();
                     BALANCE_AVAILABLE = BALANCE_AVAILABLE.subtract(new BigDecimal(cost));
                     HoldShares holdShare = HoldShares.builder().buyTime(DateUtils.addHours(dailyRecord.getDate(), 9))
-                            .code(stock.getCode()).name(stock.getName()).cost(dailyRecord.getOpenPrice())
-                            .fifteenProfit(false).number(number * 100).profit(new BigDecimal(0))
-                            .currentPrice(dailyRecord.getOpenPrice()).rate(new BigDecimal(0)).type(HoldSharesEnum.SIMULATION.name())
+                            .code(stock.getCode()).name(stock.getName()).fifteenProfit(false).number(number * 100)
+                            .profit(new BigDecimal(0)).rate(new BigDecimal(0)).type(HoldSharesEnum.SIMULATION.name())
                             .buyPrice(dailyRecord.getOpenPrice()).buyNumber(number * 100).build();
                     holdSharesMapper.insert(holdShare);
                     TradeRecord tradeRecord = new TradeRecord();
@@ -242,11 +241,8 @@ public class MistraPlank implements Plank {
             return;
         }
         holdShare.setNumber(holdShare.getNumber() - number);
-        holdShare.setCost(holdShare.getBuyPrice().multiply(new BigDecimal(holdShare.getBuyNumber())).subtract(profit)
-                .divide(new BigDecimal(number), 2, RoundingMode.HALF_UP));
         holdShare.setProfit(holdShare.getProfit().add(profit));
         holdShare.setFifteenProfit(true);
-        holdShare.setCurrentPrice(todayRecord.getClosePrice());
         holdShare.setRate(todayRecord.getClosePrice().subtract(holdShare.getBuyPrice()).divide(holdShare.getBuyPrice(),
                 2, RoundingMode.HALF_UP));
         holdSharesMapper.updateById(holdShare);

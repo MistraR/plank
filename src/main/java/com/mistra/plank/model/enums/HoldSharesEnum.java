@@ -9,7 +9,7 @@ package com.mistra.plank.model.enums;
 public enum HoldSharesEnum {
 
     /**
-     * 持仓类型
+     * 持仓类型 SIMULATION-模拟炒股，REALITY-实盘
      */
     SIMULATION, REALITY;
 
