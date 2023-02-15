@@ -174,8 +174,7 @@ public class Barbarossa implements CommandLineRunner {
             List<StockRealTimePrice> realTimePrices = new ArrayList<>();
             while (AutomaticTrading.isTradeTime()) {
                 List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>()
-                        .eq(Stock::getTrack, true).or().eq(Stock::getShareholding, true));
-                Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
+                        .in(Stock::getName, STOCK_MAP_TRACK.keySet()));
                 for (Stock stock : stocks) {
                     // 默认把MA10作为建仓基准价格
                     int purchaseType = Objects.isNull(stock.getPurchaseType()) || stock.getPurchaseType() == 0 ? 10
@@ -218,7 +217,7 @@ public class Barbarossa implements CommandLineRunner {
                                 .collect(Collectors.toList())));
                 log.error("------------------------------ 持仓 -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
-                    if (stockMap.get(realTimePrice.getName()).getShareholding()) {
+                    if (STOCK_MAP_TRACK.get(realTimePrice.getName()).getShareholding()) {
                         if (realTimePrice.getIncreaseRate() > 0) {
                             Barbarossa.log.error(convertLog(realTimePrice));
                         } else {
@@ -226,7 +225,7 @@ public class Barbarossa implements CommandLineRunner {
                         }
                     }
                 }
-                realTimePrices.removeIf(e -> stockMap.get(e.getName()).getShareholding());
+                realTimePrices.removeIf(e -> STOCK_MAP_TRACK.get(e.getName()).getShareholding());
                 log.error("------------------------------ 建仓 -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (realTimePrice.getPurchaseRate() >= -2) {
