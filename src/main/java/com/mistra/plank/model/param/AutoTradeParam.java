@@ -34,13 +34,8 @@ public class AutoTradeParam {
     private Integer buyAmount;
 
     /**
-     * 买入价格
-     */
-    private BigDecimal buyPrice;
-
-    /**
      * 触发自动买入的价格
      */
-    private BigDecimal triggerPrice;
+    private BigDecimal suckTriggerPrice;
 
 }

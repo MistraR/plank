@@ -36,6 +36,15 @@ import java.util.concurrent.locks.ReentrantLock;
  * @ Description: 自动交易任务，需要自己在数据库 stock表 手动编辑自己想要交易的股票，买入模式(打板还是低吸)，买入数量，价格，暂时还没有UI页面供操作
  * 买入：1.打板，发现上板则立即挂买单排板  2.低吸，发现股票价格触发到低吸价格，挂涨停价买入
  * 卖出：1.止损，跌破止损价，挂跌停价割肉  2.止盈，触发止盈标准挂跌停价卖出
+ * 编辑自动交易接口地址:/tomorrow-auto-trade-pool
+ * 参数：[
+ * {
+ * "name": "亿纬锂能",
+ * "automaticTradingType": "PLANK",
+ * "buyAmount": 100,
+ * "triggerPrice": 100.93
+ * }
+ * ]
  */
 @Slf4j
 @Component
@@ -237,7 +246,7 @@ public class AutomaticTrading implements CommandLineRunner {
                 // 触发打板下单条件，挂单
                 buy(stock, buy, stockRealTimePrice.getLimitUp());
             } else if (stock.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name()) &&
-                    stockRealTimePrice.getCurrentPrice() <= stock.getTriggerPrice().doubleValue()) {
+                    stockRealTimePrice.getCurrentPrice() <= stock.getSuckTriggerPrice().doubleValue()) {
                 // 触发低吸下单条件，挂单
                 buy(stock, buy, stockRealTimePrice.getLimitDown());
             }
@@ -253,7 +262,7 @@ public class AutomaticTrading implements CommandLineRunner {
     private void buy(Stock stock, AtomicBoolean buy, double currentPrice) {
         SubmitRequest request = new SubmitRequest(1);
         request.setAmount(stock.getBuyAmount());
-        request.setPrice(stock.getBuyPrice().doubleValue());
+        request.setPrice(currentPrice);
         request.setStockCode(stock.getCode().substring(2, 8));
         request.setZqmc(stock.getName());
         request.setTradeType(SubmitRequest.B);
@@ -281,7 +290,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     .buyPrice(BigDecimal.valueOf(currentPrice)).buyNumber(stock.getBuyAmount()).build();
             holdSharesMapper.insert(holdShare);
             // 打板排队有可能只是排单，并没有成交
-            log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), stock.getBuyAmount(), stock.getBuyPrice().doubleValue());
+            log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), stock.getBuyAmount(), currentPrice);
         } else {
             log.error("下单[{}]失败,message:{}", stock.getName(), response.getMessage());
         }

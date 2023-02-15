@@ -56,8 +56,7 @@ public class StockSelectedServiceImpl implements StockSelectedService {
             if (Objects.nonNull(stock)) {
                 stock.setAutomaticTradingType(autoTradeParam.getAutomaticTradingType());
                 stock.setBuyAmount(autoTradeParam.getBuyAmount());
-                stock.setBuyPrice(autoTradeParam.getBuyPrice());
-                stock.setTriggerPrice(autoTradeParam.getTriggerPrice());
+                stock.setSuckTriggerPrice(autoTradeParam.getSuckTriggerPrice());
                 stockMapper.updateById(stock);
                 StockInfo stockInfo = stockInfoDao.selectOne(new LambdaQueryWrapper<StockInfo>().eq(StockInfo::getName, stock.getName()));
                 if (Objects.nonNull(stockInfo)) {

@@ -236,7 +236,7 @@ public class Barbarossa implements CommandLineRunner {
                 List<Stock> buyStocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().ge(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(Stock::getBuyTime, DateUtil.endOfDay(new Date())));
                 for (Stock buyStock : buyStocks) {
-                    log.warn("{} 数量:{},金额:{}", buyStock.getName(), buyStock.getBuyAmount(), buyStock.getBuyPrice());
+                    log.warn("{} 数量:{}", buyStock.getName(), buyStock.getBuyAmount());
                 }
                 log.error("---------------------------- 打板监测 ----------------------------");
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {

@@ -49,12 +49,6 @@ public class Stock implements Comparable<Stock> {
     private BigDecimal purchasePrice;
 
     /**
-     * 当日成交量（手）
-     */
-    @TableField(value = "volume")
-    private Long volume;
-
-    /**
      * 当日成交额
      */
     @TableField(value = "transaction_amount")
@@ -133,16 +127,10 @@ public class Stock implements Comparable<Stock> {
     private Integer buyAmount;
 
     /**
-     * 买入价格
-     */
-    @TableField(value = "buy_price")
-    private BigDecimal buyPrice;
-
-    /**
      * 触发自动买入的价格
      */
-    @TableField(value = "trigger_price")
-    private BigDecimal triggerPrice;
+    @TableField(value = "suck_trigger_price")
+    private BigDecimal suckTriggerPrice;
 
     /**
      * 最近一次自动下单打板时间
