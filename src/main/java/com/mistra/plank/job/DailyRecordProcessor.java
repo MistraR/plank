@@ -1,28 +1,21 @@
 package com.mistra.plank.job;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
-import org.apache.commons.collections.CollectionUtils;
-import org.springframework.stereotype.Component;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.common.util.HttpUtil;
 import com.mistra.plank.dao.DailyRecordMapper;
 import com.mistra.plank.model.entity.DailyRecord;
-import com.mistra.plank.common.util.HttpUtil;
-
-import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 22:09 @ Description: 更新股票每日成交数据 @ Copyright (c) Mistra,All Rights
@@ -34,9 +27,6 @@ public class DailyRecordProcessor {
 
     private final DailyRecordMapper dailyRecordMapper;
     private final PlankConfig plankConfig;
-
-    private final ThreadPoolExecutor executorService = new ThreadPoolExecutor(20, 20, 0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(5000), new NamedThreadFactory("每日交易数据线程-", false));
 
     public DailyRecordProcessor(DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig) {
         this.dailyRecordMapper = dailyRecordMapper;
@@ -51,14 +41,7 @@ public class DailyRecordProcessor {
         }
         log.warn("开始更新股票每日成交数据！");
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            executorService.submit(() -> run(entry.getKey(), entry.getValue()));
-        }
-        while (executorService.getQueue().size() != 0) {
-            try {
-                Thread.sleep(60 * 1000);
-            } catch (InterruptedException interruptedException) {
-                interruptedException.printStackTrace();
-            }
+            Barbarossa.executorService.submit(() -> run(entry.getKey(), entry.getValue()));
         }
         log.warn("更新股票每日成交数据完成！");
     }
