@@ -153,20 +153,13 @@ public class AnalyzeProcessor {
                             new ArrayList<>(todaySix.keySet()), todaySeven.keySet().size(),
                             new ArrayList<>(todaySeven.keySet()));
                     if (DateUtils.isSameDay(new Date(), date)) {
-                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
-                                .set(Stock::getPlankNumber, 1).in(Stock::getName, todayOne.values()));
-                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
-                                .set(Stock::getPlankNumber, 2).in(Stock::getName, todayTwo.values()));
-                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
-                                .set(Stock::getPlankNumber, 3).in(Stock::getName, todayThree.values()));
-                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
-                                .set(Stock::getPlankNumber, 4).in(Stock::getName, todayFour.values()));
-                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
-                                .set(Stock::getPlankNumber, 5).in(Stock::getName, todayFive.values()));
-                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
-                                .set(Stock::getPlankNumber, 6).in(Stock::getName, todaySix.values()));
-                        stockMapper.update(null, new LambdaUpdateWrapper<Stock>()
-                                .set(Stock::getPlankNumber, 7).in(Stock::getName, todaySeven.values()));
+                        updateStock(todayOne.keySet(), 1);
+                        updateStock(todayTwo.keySet(), 2);
+                        updateStock(todayThree.keySet(), 3);
+                        updateStock(todayFour.keySet(), 4);
+                        updateStock(todayFive.keySet(), 5);
+                        updateStock(todaySix.keySet(), 6);
+                        updateStock(todaySeven.keySet(), 7);
                     }
                     List<String> tmp = new ArrayList<>();
                     tmp.addAll(todayTwo.keySet());
@@ -223,6 +216,13 @@ public class AnalyzeProcessor {
                 (double) Math
                         .round(sixToSeven.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
                         / 100);
+    }
+
+    private void updateStock(Set<String> names, int plankNumber) {
+        if (CollectionUtils.isNotEmpty(names)) {
+            LambdaUpdateWrapper<Stock> wrapper = new LambdaUpdateWrapper<Stock>().in(Stock::getName, names);
+            stockMapper.update(Stock.builder().plankNumber(plankNumber).build(), wrapper);
+        }
     }
 
     private void promotion(HashMap<String, BigDecimal> promotion, HashMap<String, Double> today,

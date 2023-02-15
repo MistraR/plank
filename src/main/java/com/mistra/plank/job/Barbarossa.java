@@ -132,7 +132,7 @@ public class Barbarossa implements CommandLineRunner {
         STOCK_NAME_SET_ALL.addAll(STOCK_MAP_ALL.keySet());
     }
 
-    @Scheduled(cron = "0 18 18 * * ?")
+    @Scheduled(cron = "0 1 15 * * ?")
     private void analyzeData() {
         try {
             // 15点后读取当日交易数据
