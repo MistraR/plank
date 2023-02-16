@@ -3,6 +3,7 @@
 #### Introduction
 
 - 自动交易：集成了东方财富的自动交易接口，代码搬运来自于：https://github.com/bosspen1/stock
+- 自动打板：AutomaticPlankTrading，开启plank.automaticPlankTrading=true，默认策略打10点以前涨停的首板，反包板
 - 抓取数据：A股每支股票每日的成交数据，涨跌幅度，最高最低价等等，每日的龙虎榜数据
 - 监控数据：监控自己的持仓，重点关注的股票，主力实时流入
 - 选股策略：找出爆量回踩的票，找出最近走上升趋势的股票等
@@ -12,6 +13,7 @@
 
 快速上手参考：src/main/resources/deployment.docx
 - 自动交易从 AutomaticTrading.plank() 方法入手
+- 自动打板从 AutomaticPlankTrading 入手
 - 持仓数据监控从 Barbarossa.monitor() 方法入手
 - 分析历史连板数据从 Barbarossa.analyzeData() 方法入手
 
