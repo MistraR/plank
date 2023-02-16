@@ -168,7 +168,7 @@ public class AutomaticTrading implements CommandLineRunner {
         // 监控持仓，止盈止损
         List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                 .eq(HoldShares::getType, HoldSharesEnum.REALITY.name())
-                .ge(HoldShares::getAvailableVolume, 0));
+                .gt(HoldShares::getAvailableVolume, 0));
         if (CollectionUtils.isNotEmpty(holdShares)) {
             for (HoldShares holdShare : holdShares) {
                 Barbarossa.executorService.submit(new SaleTask(holdShare));
