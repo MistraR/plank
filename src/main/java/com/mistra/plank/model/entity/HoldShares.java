@@ -104,6 +104,12 @@ public class HoldShares {
     private Boolean fifteenProfit;
 
     /**
+     * 今日是否触板,炸板则挂跌停走人
+     */
+    @TableField(value = "today_plank")
+    private Boolean todayPlank;
+
+    /**
      * 建仓日期
      */
     @TableField(value = "buy_time")

@@ -186,12 +186,28 @@ public class AutomaticTrading implements CommandLineRunner {
 
         @Override
         public void run() {
-            while (isTradeTime() && Objects.nonNull(holdShare)) {
+            while (isTradeTime() && Objects.nonNull(holdShare) && holdShare.getAvailableVolume() > 0) {
                 try {
                     holdShare = holdSharesMapper.selectById(holdShare.getId());
                     StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(holdShare.getCode());
                     if (stockRealTimePrice.getCurrentPrice() <= holdShare.getStopLossPrice().doubleValue()) {
                         // 触发止损,挂跌停价卖出
+                        log.error("{} 触发止损,挂跌停价卖出", holdShare.getName());
+                        sale(holdShare, stockRealTimePrice);
+                        break;
+                    }
+                    // 当前盈利
+                    holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
+                            * holdShare.getBuyNumber()));
+                    if (stockRealTimePrice.isPlank()) {
+                        // 当日触板
+                        log.error("{} 封板", holdShare.getName());
+                        holdShare.setTodayPlank(true);
+                    }
+                    holdSharesMapper.updateById(holdShare);
+                    if (holdShare.getTodayPlank() && !stockRealTimePrice.isPlank()) {
+                        // 当日炸板,挂跌停价卖出
+                        log.error("{} 炸板,挂跌停价卖出", holdShare.getName());
                         sale(holdShare, stockRealTimePrice);
                         break;
                     }
@@ -199,12 +215,14 @@ public class AutomaticTrading implements CommandLineRunner {
                             holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name())) {
                         if (holdShare.getTakeProfitPrice().doubleValue() <= stockRealTimePrice.getCurrentPrice()) {
                             sale(holdShare, stockRealTimePrice);
+                            log.error("{} 触发止盈,挂跌停价卖出", holdShare.getName());
                             break;
                         }
                     }
                     if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.AUTO_PLANK.name())) {
                         if (DateUtil.hour(new Date(), true) > 11 && !stockRealTimePrice.isPlank()) {
-                            // 11点前还没有涨停,挂跌停价卖出
+                            // 11点前还未涨停,挂跌停价卖出
+                            log.error("{} 11点前还未涨停,挂跌停价卖出", holdShare.getName());
                             sale(holdShare, stockRealTimePrice);
                             break;
                         }
