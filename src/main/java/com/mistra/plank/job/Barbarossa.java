@@ -56,7 +56,7 @@ public class Barbarossa implements CommandLineRunner {
     private final AnalyzeProcessor analyzePlank;
     public static final ThreadPoolExecutor executorService = new ThreadPoolExecutor(availableProcessors,
             availableProcessors * 2, 100L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(8192), new NamedThreadFactory("T", false));
+            new LinkedBlockingQueue<>(5000), new NamedThreadFactory("T", false));
     /**
      * 所有股票 key-code value-name
      */
