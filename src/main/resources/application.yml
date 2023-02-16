@@ -46,7 +46,7 @@ plank:
   automaticTrading: true
   automaticTradingMoney: 40000
   automaticPlankTrading: true
-  automaticPlankTradingTimeLimit: 11
+  automaticPlankTradingTimeLimit: 10
   singleTransactionLimitAmount: 5000
   stockTurnoverFilter: 300000000
   enableMonitor: true

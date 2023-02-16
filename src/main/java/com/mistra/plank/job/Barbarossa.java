@@ -189,7 +189,8 @@ public class Barbarossa implements CommandLineRunner {
                             : stock.getPurchaseType();
                     List<DailyRecord> dailyRecords =
                             dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, stock.getCode())
-                                    .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -purchaseType * 3)).orderByDesc(DailyRecord::getDate));
+                                    .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -purchaseType * 3))
+                                    .orderByDesc(DailyRecord::getDate));
                     if (dailyRecords.size() < purchaseType) {
                         log.error("{}的交易数据不完整，不够{}个交易日数据！请先爬取交易数据！", stock.getCode(), stock.getPurchaseType());
                         continue;
@@ -241,14 +242,14 @@ public class Barbarossa implements CommandLineRunner {
                     }
                 }
                 log.error("---------------------------- 打板排单 ----------------------------");
-                List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>().ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
+                List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
+                        .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
-                for (HoldShares buyStock : buyStocks) {
-                    log.warn("{} 数量:{}", buyStock.getName(), buyStock.getBuyNumber());
-                }
+                log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
                 log.error("---------------------------- 打板监测 ----------------------------");
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {
-                    log.warn("{}", collectionToString(AutomaticTrading.runningMap.values().stream().map(Stock::getName).collect(Collectors.toList())));
+                    log.warn("{}", collectionToString(AutomaticTrading.runningMap.values().stream()
+                            .map(Stock::getName).collect(Collectors.toList())));
                 }
                 realTimePrices.clear();
                 Thread.sleep(3000);
@@ -282,7 +283,8 @@ public class Barbarossa implements CommandLineRunner {
                         exception.printStackTrace();
                     }
                 });
-                List<StockMainFundSample> result = tmpList.stream().filter(e -> e != null && STOCK_NAME_SET_ALL.contains(e.getF14()) && e.getF62() != null)
+                List<StockMainFundSample> result = tmpList.stream().filter(e -> e != null &&
+                                STOCK_NAME_SET_ALL.contains(e.getF14()) && e.getF62() != null)
                         .sorted().collect(Collectors.toList());
                 mainFundDataAll.clear();
                 mainFundDataAll.addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));

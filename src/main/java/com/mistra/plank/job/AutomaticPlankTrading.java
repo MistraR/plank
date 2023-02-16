@@ -44,7 +44,8 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     private static final ConcurrentHashSet<String> PLANK_MONITOR = new ConcurrentHashSet<>();
 
-    public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor, AutomaticTrading automaticTrading, StockMapper stockMapper) {
+    public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor,
+                                 AutomaticTrading automaticTrading, StockMapper stockMapper) {
         this.plankConfig = plankConfig;
         this.stockProcessor = stockProcessor;
         this.automaticTrading = automaticTrading;

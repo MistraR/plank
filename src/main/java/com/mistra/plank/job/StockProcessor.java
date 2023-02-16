@@ -20,6 +20,7 @@ import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.model.param.FundHoldingsParam;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Component;
 
@@ -137,8 +138,8 @@ public class StockProcessor {
                 .selectList(new LambdaQueryWrapper<ForeignFundHoldingsTracking>().eq(ForeignFundHoldingsTracking::getQuarter, getQuarter()));
         List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>()
                 .in(Stock::getName, fundHoldings.stream().map(ForeignFundHoldingsTracking::getName).collect(Collectors.toList())));
-        if (org.apache.commons.collections4.CollectionUtils.isEmpty(foreignShareholding.values()) || org.apache.commons.collections4.CollectionUtils.isEmpty(fundHoldings)
-                || org.apache.commons.collections4.CollectionUtils.isEmpty(stocks)) {
+        if (CollectionUtils.isEmpty(foreignShareholding.values()) || CollectionUtils.isEmpty(fundHoldings)
+                || CollectionUtils.isEmpty(stocks)) {
             return;
         }
         Map<String, Stock> stockMap = stocks.stream().collect(Collectors.toMap(Stock::getName, e -> e));
@@ -208,14 +209,16 @@ public class StockProcessor {
                     fundHoldingsTracking.setCode(stock.getCode());
                     fundHoldingsTracking.setQuarter(fundHoldingsParam.getQuarter());
                     List<DailyRecord> dailyRecordList = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
-                            .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime).le(DailyRecord::getDate, endTime));
+                            .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime)
+                            .le(DailyRecord::getDate, endTime));
                     if (org.apache.commons.collections4.CollectionUtils.isEmpty(dailyRecordList)) {
                         HashMap<String, String> stockMap = new HashMap<>();
                         stockMap.put(stock.getCode(), stock.getName());
                         dailyRecordProcessor.run(stockMap);
                         Thread.sleep(60 * 1000);
                         dailyRecordList = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
-                                .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime).le(DailyRecord::getDate, endTime));
+                                .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime)
+                                .le(DailyRecord::getDate, endTime));
                     }
                     double average = dailyRecordList.stream().map(DailyRecord::getClosePrice)
                             .mapToInt(BigDecimal::intValue).average().orElse(0D);
