@@ -178,10 +178,6 @@ public class ScreeningStocks {
         return result;
     }
 
-    private double differencePercentage(BigDecimal x, BigDecimal y) {
-        return (double) Math.round(((x.doubleValue() - y.doubleValue()) / y.doubleValue()) * 100) / 100;
-    }
-
     /**
      * 找出周均线向上发散，上升趋势的股票
      * 周均线MA3>MA5>MA10>MA20

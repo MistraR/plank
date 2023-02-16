@@ -139,11 +139,12 @@ public class AutomaticPlankTrading implements CommandLineRunner {
 
     /**
      * 是否开启自动打板
+     * 只打11点前封板的票
      *
      * @return boolean
      */
     private boolean openAutoPlank() {
-        return DateUtil.hour(new Date(), true) < 12 &&
+        return DateUtil.hour(new Date(), true) < 11 &&
                 AutomaticTrading.todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoney();
     }
 }
