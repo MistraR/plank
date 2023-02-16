@@ -155,7 +155,7 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         List<HoldShares> shares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                 .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date())));
         for (HoldShares share : shares) {
@@ -182,6 +182,9 @@ public class AutomaticTrading implements CommandLineRunner {
             this.holdShare = holdShare;
         }
 
+        /**
+         * 自动交易的止盈止损策略
+         */
         @Override
         public void run() {
             while (isTradeTime() && Objects.nonNull(holdShare) && holdShare.getAvailableVolume() > 0) {
@@ -325,7 +328,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     // 设置触发止损价
                     .stopLossPrice(BigDecimal.valueOf(currentPrice * 0.96).setScale(2, RoundingMode.HALF_UP))
                     // 设置触发止盈价
-                    .takeProfitPrice(BigDecimal.valueOf(currentPrice * 1.07).setScale(2, RoundingMode.HALF_UP))
+                    .takeProfitPrice(BigDecimal.valueOf(currentPrice * 1.05).setScale(2, RoundingMode.HALF_UP))
                     .rate(new BigDecimal(0)).automaticTradingType(stock.getAutomaticTradingType())
                     .buyPrice(BigDecimal.valueOf(currentPrice)).build();
             holdSharesMapper.insert(holdShare);
@@ -371,7 +374,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     // 设置触发止损价
                     .stopLossPrice(BigDecimal.valueOf(price * 0.96).setScale(2, RoundingMode.HALF_UP))
                     // 设置触发止盈价
-                    .takeProfitPrice(BigDecimal.valueOf(price * 1.07).setScale(2, RoundingMode.HALF_UP))
+                    .takeProfitPrice(BigDecimal.valueOf(price * 1.05).setScale(2, RoundingMode.HALF_UP))
                     .rate(new BigDecimal(0)).automaticTradingType(automaticTradingType.name())
                     .buyPrice(BigDecimal.valueOf(price)).build();
             holdSharesMapper.insert(holdShare);

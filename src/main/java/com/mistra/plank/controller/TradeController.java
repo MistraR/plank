@@ -1,9 +1,10 @@
 package com.mistra.plank.controller;
 
-import com.mistra.plank.tradeapi.TradeResultVo;
-import com.mistra.plank.tradeapi.request.*;
-import com.mistra.plank.tradeapi.response.*;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.common.exception.FieldInputException;
+import com.mistra.plank.common.util.StockUtil;
+import com.mistra.plank.dao.HoldSharesMapper;
+import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.StockSelected;
 import com.mistra.plank.model.entity.TradeMethod;
 import com.mistra.plank.model.entity.TradeUser;
@@ -18,7 +19,10 @@ import com.mistra.plank.model.vo.trade.TradeRuleVo;
 import com.mistra.plank.service.StockSelectedService;
 import com.mistra.plank.service.TradeApiService;
 import com.mistra.plank.service.TradeService;
-import com.mistra.plank.common.util.StockUtil;
+import com.mistra.plank.tradeapi.TradeResultVo;
+import com.mistra.plank.tradeapi.request.*;
+import com.mistra.plank.tradeapi.response.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,6 +48,9 @@ public class TradeController extends BaseController {
 
     @Autowired
     private StockSelectedService stockSelectedService;
+
+    @Autowired
+    private HoldSharesMapper holdSharesMapper;
 
     @RequestMapping("queryVerifyCodeUrl")
     public CommonResponse queryVerifyCodeUrl() {
@@ -185,7 +192,17 @@ public class TradeController extends BaseController {
         if (response.success()) {
             message = response.getData().get(0).getWtbh();
         }
-
+        // WEB页面手动卖出的，同时更新掉数据库持仓表的数据
+        List<HoldShares> holdShares = holdSharesMapper.selectList(new QueryWrapper<HoldShares>().eq("name", stockName));
+        if (CollectionUtils.isNotEmpty(holdShares)) {
+            for (HoldShares holdShare : holdShares) {
+                if (holdShare.getAvailableVolume() > 0) {
+                    holdShare.setAvailableVolume(holdShare.getAvailableVolume() - amount);
+                    holdShare.setProfit(BigDecimal.valueOf((holdShare.getBuyPrice().doubleValue() - price) * amount));
+                    holdSharesMapper.updateById(holdShare);
+                }
+            }
+        }
         return CommonResponse.buildResponse(message);
     }
 
