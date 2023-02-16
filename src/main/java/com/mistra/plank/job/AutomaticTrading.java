@@ -11,7 +11,6 @@ import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
-import com.mistra.plank.model.enums.HoldSharesEnum;
 import com.mistra.plank.service.TradeApiService;
 import com.mistra.plank.tradeapi.TradeResultVo;
 import com.mistra.plank.tradeapi.request.SubmitRequest;
@@ -128,7 +127,7 @@ public class AutomaticTrading implements CommandLineRunner {
                 .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
         if (CollectionUtils.isNotEmpty(holdShares)) {
             for (HoldShares holdShare : holdShares) {
-                holdShare.setAvailableVolume(holdShare.getBuyNumber());
+                holdShare.setAvailableVolume(holdShare.getNumber());
                 holdSharesMapper.updateById(holdShare);
             }
         }
@@ -160,14 +159,13 @@ public class AutomaticTrading implements CommandLineRunner {
         List<HoldShares> shares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                 .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date())));
         for (HoldShares share : shares) {
-            todayCostMoney.set((int) (todayCostMoney.intValue() + share.getBuyPrice().doubleValue() * share.getBuyNumber()));
+            todayCostMoney.set((int) (todayCostMoney.intValue() + share.getBuyPrice().doubleValue() * share.getNumber()));
             pendingOrderSet.add(share.getCode());
         }
         // 自动买入
         plank();
         // 监控持仓，止盈止损
         List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
-                .eq(HoldShares::getType, HoldSharesEnum.REALITY.name())
                 .gt(HoldShares::getAvailableVolume, 0));
         if (CollectionUtils.isNotEmpty(holdShares)) {
             for (HoldShares holdShare : holdShares) {
@@ -198,7 +196,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     }
                     // 当前盈利
                     holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
-                            * holdShare.getBuyNumber()));
+                            * holdShare.getNumber()));
                     if (stockRealTimePrice.isPlank()) {
                         // 当日触板
                         log.error("{} 封板", holdShare.getName());
@@ -246,7 +244,7 @@ public class AutomaticTrading implements CommandLineRunner {
         TradeResultVo<SubmitResponse> response = tradeApiService.submit(request);
         holdShare.setAvailableVolume(0);
         holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
-                * holdShare.getBuyNumber()));
+                * holdShare.getNumber()));
         holdSharesMapper.updateById(holdShare);
         if (response.success()) {
             log.warn("触发{}止盈、止损，交易成功!", holdShare.getName());
@@ -321,13 +319,13 @@ public class AutomaticTrading implements CommandLineRunner {
             buy.set(true);
             HoldShares holdShare = HoldShares.builder().buyTime(new Date())
                     .code(stock.getCode()).name(stock.getName()).availableVolume(0)
-                    .fifteenProfit(false).number(stock.getBuyAmount()).profit(new BigDecimal(0))
+                    .number(stock.getBuyAmount()).profit(new BigDecimal(0))
                     // 设置触发止损价
                     .stopLossPrice(BigDecimal.valueOf(currentPrice * 0.96).setScale(2, RoundingMode.HALF_UP))
                     // 设置触发止盈价
                     .takeProfitPrice(BigDecimal.valueOf(currentPrice * 1.07).setScale(2, RoundingMode.HALF_UP))
-                    .rate(new BigDecimal(0)).type(HoldSharesEnum.REALITY.name()).automaticTradingType(stock.getAutomaticTradingType())
-                    .buyPrice(BigDecimal.valueOf(currentPrice)).buyNumber(stock.getBuyAmount()).build();
+                    .rate(new BigDecimal(0)).automaticTradingType(stock.getAutomaticTradingType())
+                    .buyPrice(BigDecimal.valueOf(currentPrice)).build();
             holdSharesMapper.insert(holdShare);
             // 已经挂单，就修改为不监控该股票了
             stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
@@ -365,13 +363,13 @@ public class AutomaticTrading implements CommandLineRunner {
             stockMapper.updateById(stock);
             HoldShares holdShare = HoldShares.builder().buyTime(new Date())
                     .code(stock.getCode()).name(stock.getName()).availableVolume(0)
-                    .fifteenProfit(false).number(amount).profit(new BigDecimal(0))
+                    .number(amount).profit(new BigDecimal(0))
                     // 设置触发止损价
                     .stopLossPrice(BigDecimal.valueOf(price * 0.96).setScale(2, RoundingMode.HALF_UP))
                     // 设置触发止盈价
                     .takeProfitPrice(BigDecimal.valueOf(price * 1.07).setScale(2, RoundingMode.HALF_UP))
-                    .rate(new BigDecimal(0)).type(HoldSharesEnum.REALITY.name()).automaticTradingType(automaticTradingType.name())
-                    .buyPrice(BigDecimal.valueOf(price)).buyNumber(amount).build();
+                    .rate(new BigDecimal(0)).automaticTradingType(automaticTradingType.name())
+                    .buyPrice(BigDecimal.valueOf(price)).build();
             holdSharesMapper.insert(holdShare);
             log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), amount, price);
         } else {

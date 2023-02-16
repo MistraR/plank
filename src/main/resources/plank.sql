@@ -18,27 +18,6 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
--- Table structure for clearance
--- ----------------------------
-DROP TABLE IF EXISTS `clearance`;
-CREATE TABLE `clearance`  (
-  `id` bigint(0) NOT NULL AUTO_INCREMENT,
-  `date` datetime(0) NOT NULL COMMENT '日期',
-  `name` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '名称',
-  `code` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
-  `cost_price` decimal(10, 2) NOT NULL COMMENT '买入成本价',
-  `number` int(0) NOT NULL COMMENT '数量',
-  `price` decimal(10, 2) NOT NULL COMMENT '清仓价格',
-  `rate` decimal(10, 2) NOT NULL COMMENT '盈亏比率',
-  `balance` decimal(10, 2) NOT NULL COMMENT '账户余额',
-  `available_balance` decimal(10, 2) NOT NULL COMMENT '可用余额',
-  `reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '清仓原因',
-  `profit` decimal(10, 2) NOT NULL COMMENT '盈亏利润',
-  `day_number` int(0) NOT NULL COMMENT '持股天数',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 11573 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
 -- Table structure for daily_index
 -- ----------------------------
 DROP TABLE IF EXISTS `daily_index`;
@@ -4870,25 +4849,6 @@ CREATE TABLE `daily_record`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 9221450 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for dragon_list
--- ----------------------------
-DROP TABLE IF EXISTS `dragon_list`;
-CREATE TABLE `dragon_list`  (
-  `id` bigint(0) NOT NULL AUTO_INCREMENT,
-  `date` datetime(0) NOT NULL COMMENT '上榜日期',
-  `name` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '名称',
-  `code` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
-  `net_buy` bigint(0) NOT NULL COMMENT '净买入(W)',
-  `buy` bigint(0) NOT NULL COMMENT '买入(W)',
-  `sell` bigint(0) NOT NULL COMMENT '卖出(W)',
-  `price` decimal(10, 2) NOT NULL COMMENT '收盘价',
-  `market_value` bigint(0) NOT NULL COMMENT '流通市值',
-  `accum_amount` bigint(0) NOT NULL COMMENT '成交额',
-  `change_rate` decimal(10, 2) NOT NULL COMMENT '涨跌幅',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 41247 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
 -- Table structure for execute_info
 -- ----------------------------
 DROP TABLE IF EXISTS `execute_info`;
@@ -5398,14 +5358,11 @@ CREATE TABLE `hold_shares`  (
   `name` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '名称',
   `code` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
   `number` int(0) NOT NULL COMMENT '持股数量',
-  `buy_number` int(0) NOT NULL COMMENT '建仓数量',
   `available_volume` int(0) NOT NULL COMMENT '可卖数量',
   `rate` decimal(10, 2) NULL DEFAULT NULL COMMENT '盈亏比率',
   `buy_price` decimal(10, 2) NOT NULL COMMENT '建仓价',
   `buy_time` datetime(0) NOT NULL COMMENT '建仓日期',
-  `fifteen_profit` tinyint(0) NULL DEFAULT NULL COMMENT '收益是否到过15%',
   `profit` decimal(10, 2) NULL DEFAULT NULL COMMENT '利润',
-  `type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '1-模拟交易 2-真实交易',
   `take_profit_price` decimal(10, 2) NULL DEFAULT NULL COMMENT '触发止盈价格',
   `stop_loss_price` decimal(10, 2) NULL DEFAULT NULL COMMENT '触发止损价格',
   `automatic_trading_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '自动交易类型',
@@ -16439,25 +16396,6 @@ CREATE TABLE `trade_order`  (
   `update_time` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0),
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for trade_record
--- ----------------------------
-DROP TABLE IF EXISTS `trade_record`;
-CREATE TABLE `trade_record`  (
-  `id` bigint(0) NOT NULL AUTO_INCREMENT,
-  `date` datetime(0) NOT NULL COMMENT '日期',
-  `type` tinyint(0) NOT NULL COMMENT '交易类型0-买入1-卖出',
-  `name` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '名称',
-  `code` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
-  `money` int(0) NOT NULL COMMENT '金额',
-  `number` int(0) NOT NULL COMMENT '数量',
-  `price` decimal(10, 2) NOT NULL COMMENT '价格',
-  `balance` decimal(10, 2) NOT NULL COMMENT '账户余额',
-  `reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '交易原因',
-  `available_balance` decimal(10, 2) NOT NULL COMMENT '可用余额',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 24498 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for trade_rule

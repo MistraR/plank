@@ -1,17 +1,13 @@
 package com.mistra.plank.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.StringUtil;
 import com.mistra.plank.dao.DailyRecordMapper;
-import com.mistra.plank.dao.DragonListMapper;
 import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.job.Barbarossa;
 import com.mistra.plank.model.dto.UpwardTrendSample;
 import com.mistra.plank.model.entity.DailyRecord;
-import com.mistra.plank.model.entity.DragonList;
 import com.mistra.plank.model.entity.Stock;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -40,14 +36,11 @@ public class ScreeningStocks {
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     private final DailyRecordMapper dailyRecordMapper;
     private final StockMapper stockMapper;
-    private final DragonListMapper dragonListMapper;
     private final PlankConfig plankConfig;
 
-    public ScreeningStocks(DailyRecordMapper dailyRecordMapper, StockMapper stockMapper,
-                           DragonListMapper dragonListMapper, PlankConfig plankConfig) {
+    public ScreeningStocks(DailyRecordMapper dailyRecordMapper, StockMapper stockMapper, PlankConfig plankConfig) {
         this.dailyRecordMapper = dailyRecordMapper;
         this.stockMapper = stockMapper;
-        this.dragonListMapper = dragonListMapper;
         this.plankConfig = plankConfig;
     }
 
@@ -124,57 +117,6 @@ public class ScreeningStocks {
             }
         }
         return null;
-    }
-
-    /**
-     * 根据龙虎榜检查可以买的票 首板或者2板 10日涨幅介于10-22% 计算前8天的振幅在15%以内
-     *
-     * @param date 开盘日期
-     * @return List<Stock>
-     */
-    public List<Stock> checkDragonListStock(Date date) {
-        List<DragonList> dragonLists = dragonListMapper.selectList(new QueryWrapper<DragonList>().ge("date", date)
-                .lt("date", DateUtils.addDays(date, 1)).ge("price", 5).le("price", 100).notLike("name", "%ST%")
-                .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%C%").notLike("name", "%N%")
-                .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%").notLike("code", "%688%"));
-        if (CollectionUtils.isEmpty(dragonLists)) {
-            return null;
-        }
-        List<DailyRecord> dailyRecords = new ArrayList<>();
-        for (DragonList dragonList : dragonLists) {
-            Page<DailyRecord> page = dailyRecordMapper.selectPage(new Page<>(1, 30),
-                    new QueryWrapper<DailyRecord>().eq("code", dragonList.getCode()).le("date", date)
-                            .ge("date", DateUtils.addDays(date, -30)).orderByDesc("date"));
-            if (page.getRecords().size() > 10) {
-                dailyRecords.addAll(page.getRecords().subList(0, 10));
-            }
-        }
-        Map<String, List<DailyRecord>> map = dailyRecords.stream().collect(Collectors.groupingBy(DailyRecord::getCode));
-        List<String> stockCode = new ArrayList<>();
-        for (Map.Entry<String, List<DailyRecord>> entry : map.entrySet()) {
-            // 近8日涨幅
-            BigDecimal eightRatio = entry.getValue().get(0).getClosePrice()
-                    .divide(entry.getValue().get(8).getClosePrice(), 2, RoundingMode.HALF_UP);
-            // 近3日涨幅
-            BigDecimal threeRatio = entry.getValue().get(0).getClosePrice()
-                    .divide(entry.getValue().get(3).getClosePrice(), 2, RoundingMode.HALF_UP);
-            // 前3个交易日大跌的也排除
-            if (eightRatio.doubleValue() <= 1.22 && eightRatio.doubleValue() >= 1.1 && threeRatio.doubleValue() < 1.22
-                    && entry.getValue().get(0).getIncreaseRate().doubleValue() > 0.04
-                    && entry.getValue().get(1).getIncreaseRate().doubleValue() > -0.04
-                    && entry.getValue().get(2).getIncreaseRate().doubleValue() > -0.04) {
-                stockCode.add(entry.getKey());
-            }
-        }
-        dragonLists = dragonLists.stream().filter(dragonList -> stockCode.contains(dragonList.getCode()))
-                .collect(Collectors.toList());
-        dragonLists =
-                dragonLists.stream().sorted((a, b) -> b.getNetBuy().compareTo(a.getNetBuy())).collect(Collectors.toList());
-        List<Stock> result = new ArrayList<>();
-        for (DragonList dragonList : dragonLists) {
-            result.add(stockMapper.selectOne(new QueryWrapper<Stock>().eq("code", dragonList.getCode())));
-        }
-        return result;
     }
 
     /**

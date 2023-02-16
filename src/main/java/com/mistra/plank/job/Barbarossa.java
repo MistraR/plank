@@ -17,7 +17,6 @@ import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
-import com.mistra.plank.service.Plank;
 import com.mistra.plank.service.impl.ScreeningStocks;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -49,10 +48,7 @@ public class Barbarossa implements CommandLineRunner {
     private final StockMapper stockMapper;
     private final StockProcessor stockProcessor;
     private final DailyRecordMapper dailyRecordMapper;
-    private final ClearanceMapper clearanceMapper;
-    private final TradeRecordMapper tradeRecordMapper;
     private final HoldSharesMapper holdSharesMapper;
-    private final Plank plank;
     private final PlankConfig plankConfig;
     private final ScreeningStocks screeningStocks;
     private final DailyRecordProcessor dailyRecordProcessor;
@@ -82,29 +78,17 @@ public class Barbarossa implements CommandLineRunner {
     public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataAllMap =
             new ConcurrentHashMap<>(4096);
     /**
-     * 模拟交易总金额
-     */
-    public static BigDecimal BALANCE = new BigDecimal(100 * SystemConstant.W);
-    /**
-     * 模拟交易可用金额
-     */
-    public static BigDecimal BALANCE_AVAILABLE = new BigDecimal(100 * SystemConstant.W);
-    /**
      * 是否开启监控中
      */
     private final AtomicBoolean monitoring = new AtomicBoolean(false);
 
     public Barbarossa(StockMapper stockMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
-                      ClearanceMapper clearanceMapper, TradeRecordMapper tradeRecordMapper, HoldSharesMapper holdSharesMapper,
-                      Plank plank, PlankConfig plankConfig, ScreeningStocks screeningStocks,
+                      HoldSharesMapper holdSharesMapper, PlankConfig plankConfig, ScreeningStocks screeningStocks,
                       DailyRecordProcessor dailyRecordProcessor, AnalyzeProcessor analyzePlank) {
         this.stockMapper = stockMapper;
         this.stockProcessor = stockProcessor;
         this.dailyRecordMapper = dailyRecordMapper;
-        this.clearanceMapper = clearanceMapper;
-        this.tradeRecordMapper = tradeRecordMapper;
         this.holdSharesMapper = holdSharesMapper;
-        this.plank = plank;
         this.plankConfig = plankConfig;
         this.screeningStocks = screeningStocks;
         this.dailyRecordProcessor = dailyRecordProcessor;
@@ -310,36 +294,4 @@ public class Barbarossa implements CommandLineRunner {
                 .append("|主力:").append(realTimePrice.getMainFund()).append("万]").toString();
     }
 
-    /**
-     * 以历史数据为样本，根据配置的买入，卖出，分仓策略自动交易
-     */
-    public void barbarossa(Integer fundsPart, Long beginDay) {
-        // 清除老数据
-        holdSharesMapper.delete(new QueryWrapper<>());
-        clearanceMapper.delete(new QueryWrapper<>());
-        tradeRecordMapper.delete(new QueryWrapper<>());
-        BALANCE = new BigDecimal(100 * SystemConstant.W);
-        BALANCE_AVAILABLE = new BigDecimal(100 * SystemConstant.W);
-        Date date = new Date(beginDay);
-        DateUtils.setHours(date, 0);
-        DateUtils.setMinutes(date, 0);
-        DateUtils.setSeconds(date, 0);
-        DateUtils.setMilliseconds(date, 0);
-        do {
-            this.barbarossa(date, fundsPart);
-            date = DateUtils.addDays(date, 1);
-        } while (date.getTime() < System.currentTimeMillis());
-    }
-
-    private void barbarossa(Date date, Integer fundsPart) {
-        int week = DateUtil.dayOfWeek(date);
-        if (week < 7 && week > 1) {
-            // 工作日
-            List<Stock> stocks = plank.checkStock(date);
-            if (CollectionUtils.isNotEmpty(stocks) && BALANCE_AVAILABLE.intValue() > SystemConstant.W) {
-                plank.buyStock(stocks, date, fundsPart);
-            }
-            plank.sellStock(date);
-        }
-    }
 }

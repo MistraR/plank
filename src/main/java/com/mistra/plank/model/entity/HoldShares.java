@@ -38,12 +38,6 @@ public class HoldShares {
     private String code;
 
     /**
-     * HoldSharesEnum
-     */
-    @TableField(value = "type")
-    private String type;
-
-    /**
      * 自动交易类型 AutomaticTradingEnum
      */
     @TableField(value = "automatic_trading_type")
@@ -90,18 +84,6 @@ public class HoldShares {
      */
     @TableField(value = "profit")
     private BigDecimal profit;
-
-    /**
-     * 建仓数量
-     */
-    @TableField(value = "buy_number")
-    private Integer buyNumber;
-
-    /**
-     * 收益是否到过15%
-     */
-    @TableField(value = "fifteen_profit")
-    private Boolean fifteenProfit;
 
     /**
      * 今日是否触板,炸板则挂跌停走人

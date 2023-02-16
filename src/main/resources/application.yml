@@ -48,29 +48,15 @@ plank:
   automaticPlankTrading: true
   automaticPlankTradingTimeLimit: 10
   singleTransactionLimitAmount: 5000
-  stockTurnoverFilter: 300000000
+  stockTurnoverFilter: 500000000
   enableMonitor: true
-  buyPlankRatioLimit: 0.07
-  buyStrategyEnum: DRAGON_LIST
-  clearanceDay: 3
-  deficitMovingAverage: 6
-  deficitRatio: -0.05
-  dragonListTime: 1652200614000
-  dragonListUrl: http://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery1123023269286711375536_1637390018591&sortColumns=BILLBOARD_NET_AMT%2CTRADE_DATE%2CSECURITY_CODE&sortTypes=-1%2C-1%2C1&pageSize=50&pageNumber=1&reportName=RPT_DAILYBILLBOARD_DETAILS&columns=SECURITY_CODE%2CSECUCODE%2CSECURITY_NAME_ABBR%2CTRADE_DATE%2CEXPLAIN%2CCLOSE_PRICE%2CCHANGE_RATE%2CBILLBOARD_NET_AMT%2CBILLBOARD_BUY_AMT%2CBILLBOARD_SELL_AMT%2CBILLBOARD_DEAL_AMT%2CACCUM_AMOUNT%2CDEAL_NET_RATIO%2CDEAL_AMOUNT_RATIO%2CTURNOVERRATE%2CFREE_MARKET_CAP%2CEXPLANATION%2CD1_CLOSE_ADJCHRATE%2CD2_CLOSE_ADJCHRATE%2CD5_CLOSE_ADJCHRATE%2CD10_CLOSE_ADJCHRATE&source=WEB&client=WEB&filter=(TRADE_DATE%3C%3D%27{time}%27)(TRADE_DATE%3E%3D%27{time}%27)
-  foreignShareholdingUrl: https://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112304010956559881589_1675054117441&sortColumns=HOLD_MARKET_CAP&sortTypes=-1&pageSize=500&pageNumber=1&reportName=RPT_MUTUAL_STOCK_NORTHSTA&columns=ALL&source=WEB&client=WEB&filter=(TRADE_DATE%3D%272023-01-20%27)(INTERVAL_TYPE%3D%223%22)
-  mainFundUrl: https://push2.eastmoney.com/api/qt/clist/get?fid=f62&po=1&pz=6000&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m:0+t:6+f:!2,m:0+t:13+f:!2,m:0+t:80+f:!2,m:1+t:2+f:!2,m:1+t:23+f:!2&fields=f12,f14,f3,f62,f184,f267,f127,f268,f164,f109,f165,f174,f160,f175
   printName: true
-  profitClearanceRatio: 0.04
-  profitHalfRatio: 0.08
-  profitQuarterRatio: 0.1
-  profitUpperRatio: 0.12
   recentDayNumber: 1
-  stockPriceLowerLimit: 6
-  stockPriceUpperLimit: 1000
-  todayFundTrendUrl: http://stock.xueqiu.com/v5/stock/capital/flow.json?symbol={code}
-  xueQiuAllStockUrl: http://xueqiu.com/service/screener/screen?category=CN&exchange=sh_sz&areacode=&indcode=&order_by=symbol&order=desc&page={page}&size=200&only_count=0&current=&pct=&mc=&volume=&_=1637244021109
   xueQiuCookie: device_id=e40e3ad4aae8c6cdb009e6713d7a7989; s=bw12h1o6cr; bid=9ea105651fb1563867b3225ba28c0f26_l8o4y1es; remember=1; xq_is_login=1; u=5733707261; xq_a_token=5d4c18098a527f7065dae9b250e9c7ff70367ca5; xqat=5d4c18098a527f7065dae9b250e9c7ff70367ca5; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjU3MzM3MDcyNjEsImlzcyI6InVjIiwiZXhwIjoxNjc4ODQzODM3LCJjdG0iOjE2NzYyNTE4Mzc1NDcsImNpZCI6ImQ5ZDBuNEFadXAifQ.NphNBTHY5tTycxxUqIU5LNSmNT86Zc43oqgLRGUOXtZBMxS8BIdASVfvyrpYjdv4GvzLKKR-7ipwRNAxOsOr4uvB0elYh-0UUxsA8VkAWauCae0DA2HbHA9WpH9CdeNZ7ZeYgqDFX4dJvt57O3tLzxbJ2fpph91JBofuhvJdMI0iD9YkbenmQ9ED60PCpxyw4Ebl_ULdDzsvSTwsvIZi4uhfld5ZFL71k55VuukWCBCSFmRxt46DG42ml4JNgtpUtUojvuhSpxZB3f7r5pv9QT6Hi3vomEZnCVG6rU7mfRELbTfQ_iQKgpy6uIsY99Jx49yXaU9VvjXuXV-0pO9abA; xq_r_token=42240ea238de7255e82bae91172ddfcc63f4bfef; Hm_lvt_1db88642e346389874251b5a1eded6e3=1675052957,1675837297,1675937248,1676251841; snbim_minify=true; is_overseas=0; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1676252290
+  mainFundUrl: https://push2.eastmoney.com/api/qt/clist/get?fid=f62&po=1&pz=6000&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m:0+t:6+f:!2,m:0+t:13+f:!2,m:0+t:80+f:!2,m:1+t:2+f:!2,m:1+t:23+f:!2&fields=f12,f14,f3,f62,f184,f267,f127,f268,f164,f109,f165,f174,f160,f175
+  todayFundTrendUrl: http://stock.xueqiu.com/v5/stock/capital/flow.json?symbol={code}
   xueQiuStockDetailUrl: http://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={code}&begin={time}&period=day&type=before&count=-{recentDayNumber}&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance
+  foreignShareholdingUrl: https://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112304010956559881589_1675054117441&sortColumns=HOLD_MARKET_CAP&sortTypes=-1&pageSize=500&pageNumber=1&reportName=RPT_MUTUAL_STOCK_NORTHSTA&columns=ALL&source=WEB&client=WEB&filter=(TRADE_DATE%3D%272023-01-20%27)(INTERVAL_TYPE%3D%223%22)
   xueQiuStockLimitUpPriceUrl: https://stock.xueqiu.com/v5/stock/quote.json?symbol={code}&extend=detail
 
 logging:
