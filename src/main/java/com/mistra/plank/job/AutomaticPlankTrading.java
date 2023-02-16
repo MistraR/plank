@@ -56,14 +56,14 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     @Scheduled(cron = "*/5 * * * * ?")
     private void filterStock() {
-        if (AutomaticTrading.isTradeTime() && AutomaticTrading.todayCostMoney < plankConfig.getAutomaticTradingMoney()) {
+        if (openAutoPlank()) {
             List<List<String>> lists = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_MAP_GE_3E.keySet()),
                     Barbarossa.executorService.getMaximumPoolSize());
             for (List<String> list : lists) {
                 Barbarossa.executorService.submit(() -> filterStock(list));
             }
+            log.warn("当前打板监测股票:{}", PLANK_MONITOR);
         }
-        log.warn("当前打板监测股票:{}", PLANK_MONITOR);
     }
 
     /**
@@ -76,8 +76,12 @@ public class AutomaticPlankTrading implements CommandLineRunner {
             StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
             if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 18) ||
                     (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 8)) {
-                if (stockRealTimePriceByCode.getCurrentPrice() * 100 <= plankConfig.getSingleTransactionLimitAmount() && !PLANK_MONITOR.contains(e)) {
+                if (stockRealTimePriceByCode.getCurrentPrice() * 100 <= plankConfig.getSingleTransactionLimitAmount()
+                        && !PLANK_MONITOR.contains(e)) {
                     PLANK_MONITOR.add(e);
+                    if (AutomaticTrading.pendingOrderSet.contains(e)) {
+                        PLANK_MONITOR.remove(e);
+                    }
                     log.warn("{} 新加入打板监测,当前共监测:{}支股票", e, PLANK_MONITOR.size());
                 }
             }
@@ -98,8 +102,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      * 或者10点以前涨停的板
      */
     private void autoPlank() {
-        Date date = new Date();
-        while (DateUtil.hour(date, true) < 12 && AutomaticTrading.todayCostMoney < plankConfig.getAutomaticTradingMoney()) {
+        while (openAutoPlank()) {
             try {
                 if (AutomaticTrading.isTradeTime() && !PLANK_MONITOR.isEmpty()) {
                     for (String code : PLANK_MONITOR) {
@@ -110,28 +113,37 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                 Barbarossa.STOCK_MAP_GE_3E.remove(code);
                                 PLANK_MONITOR.remove(code);
                                 // 上板，下单排队
-                                int sum = 0;
-                                int amount = 0;
-                                for (amount = 100; sum <= plankConfig.getSingleTransactionLimitAmount(); amount = amount + 100) {
+                                int sum = 0, amount = 0;
+                                for (amount = 100; sum <= plankConfig.getSingleTransactionLimitAmount(); amount += 100) {
                                     sum = (int) (amount * stockRealTimePriceByCode.getCurrentPrice());
                                 }
-                                amount = amount - 100;
+                                amount -= 100;
                                 if (amount > 100) {
-                                    automaticTrading.buy(Barbarossa.STOCK_MAP_GE_3E.get(code), amount, stockRealTimePriceByCode.getLimitUp(),
-                                            AutomaticTradingEnum.AUTO_PLANK);
+                                    automaticTrading.buy(stock, amount, stockRealTimePriceByCode.getLimitUp(), AutomaticTradingEnum.AUTO_PLANK);
                                 }
                             }
                         } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {
                             PLANK_MONITOR.remove(code);
                         }
                     }
+                    Thread.sleep(200);
                 } else {
-                    Thread.sleep(2 * 1000);
+                    Thread.sleep(2000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         log.warn("------------------------ 终止打板监测 ------------------------");
+    }
+
+    /**
+     * 是否开启自动打板
+     *
+     * @return boolean
+     */
+    private boolean openAutoPlank() {
+        return DateUtil.hour(new Date(), true) < 12 &&
+                AutomaticTrading.todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoney();
     }
 }

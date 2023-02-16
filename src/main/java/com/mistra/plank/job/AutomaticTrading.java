@@ -27,6 +27,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -68,14 +69,14 @@ public class AutomaticTrading implements CommandLineRunner {
     public static final ConcurrentHashMap<String, Stock> runningMap = new ConcurrentHashMap<>();
 
     /**
-     * 已经成功挂单的股票
+     * 当日已经成功挂单的股票
      */
-    private static final HashSet<String> pendingOrderSet = new HashSet<>();
+    public static final HashSet<String> pendingOrderSet = new HashSet<>();
 
     /**
      * 今日自动交易花费金额
      */
-    public static double todayCostMoney = 0;
+    public static AtomicInteger todayCostMoney = new AtomicInteger(0);
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -159,7 +160,8 @@ public class AutomaticTrading implements CommandLineRunner {
         List<HoldShares> shares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                 .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date())));
         for (HoldShares share : shares) {
-            todayCostMoney += share.getBuyPrice().doubleValue() * share.getBuyNumber();
+            todayCostMoney.set((int) (todayCostMoney.intValue() + share.getBuyPrice().doubleValue() * share.getBuyNumber()));
+            pendingOrderSet.add(share.getCode());
         }
         // 自动买入
         plank();
@@ -248,7 +250,7 @@ public class AutomaticTrading implements CommandLineRunner {
 
         @Override
         public void run() {
-            while (!buy.get() && isTradeTime() && todayCostMoney < plankConfig.getAutomaticTradingMoney()) {
+            while (!buy.get() && isTradeTime() && todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoney()) {
                 try {
                     automaticTrading(stock, buy);
                     Thread.sleep(100);
@@ -338,6 +340,7 @@ public class AutomaticTrading implements CommandLineRunner {
         request.setMarket(StockUtil.getStockMarket(request.getStockCode()));
         TradeResultVo<SubmitResponse> response = tradeApiService.submit(request);
         if (response.success()) {
+            pendingOrderSet.add(stock.getCode());
             // 已经挂单，就修改为不监控该股票了
             stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
             stock.setBuyTime(new Date());
@@ -352,7 +355,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     .rate(new BigDecimal(0)).type(HoldSharesEnum.REALITY.name()).automaticTradingType(automaticTradingType.name())
                     .buyPrice(BigDecimal.valueOf(price)).buyNumber(amount).build();
             holdSharesMapper.insert(holdShare);
-            log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), stock.getBuyAmount(), price);
+            log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), amount, price);
         } else {
             log.error("下单[{}]失败,message:{}", stock.getName(), response.getMessage());
         }
