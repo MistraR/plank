@@ -304,6 +304,8 @@ public class AutomaticTrading implements CommandLineRunner {
      * @param buy   AtomicBoolean
      */
     private void buy(Stock stock, AtomicBoolean buy, double currentPrice) {
+        if (pendingOrderSet.contains(stock.getCode()))
+            return;
         SubmitRequest request = new SubmitRequest(1);
         request.setAmount(stock.getBuyAmount());
         request.setPrice(currentPrice);
@@ -347,6 +349,8 @@ public class AutomaticTrading implements CommandLineRunner {
      * @param automaticTradingType 买入价格
      */
     public void buy(Stock stock, int amount, double price, AutomaticTradingEnum automaticTradingType) {
+        if (pendingOrderSet.contains(stock.getCode()))
+            return;
         SubmitRequest request = new SubmitRequest(1);
         request.setAmount(amount);
         request.setPrice(price);

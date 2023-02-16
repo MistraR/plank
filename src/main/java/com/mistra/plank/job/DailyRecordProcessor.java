@@ -33,7 +33,7 @@ public class DailyRecordProcessor {
         this.plankConfig = plankConfig;
     }
 
-    public void run(HashMap<String, String> map) {
+    public void run(HashMap<String, String> map) throws InterruptedException {
         Integer count = dailyRecordMapper.selectCount(new QueryWrapper<DailyRecord>().ge("date", checkDailyRecord()));
         if (count > 0) {
             log.warn("股票交易数据已更新到最新交易日！");
@@ -43,6 +43,7 @@ public class DailyRecordProcessor {
         for (Map.Entry<String, String> entry : map.entrySet()) {
             Barbarossa.executorService.submit(() -> run(entry.getKey(), entry.getValue()));
         }
+        Thread.sleep(10 * 60 * 1000);
         log.warn("更新股票每日成交数据完成！");
     }
 

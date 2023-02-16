@@ -123,7 +123,6 @@ public class Barbarossa implements CommandLineRunner {
         try {
             // 15点后读取当日交易数据
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP_ALL);
-            Thread.sleep(10 * 60 * 1000);
             // 更新每只股票收盘价，当日成交量，MA5 MA10 MA20
             executorService.submit(stockProcessor::run);
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
