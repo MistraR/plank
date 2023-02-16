@@ -17,11 +17,9 @@ spring:
       maximum-pool-size: 50
       minimum-idle: 5
       pool-name: HikariPool
-    #    password: 123456
-    password: 1rsD8xDrG8q0KsbJ
+      password: 123456
     type: com.zaxxer.hikari.HikariDataSource
-    #    url: jdbc:mysql://localhost:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
-    url: jdbc:mysql://122.51.126.37:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
+    url: jdbc:mysql://localhost:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
     username: root
 
 mybatis-plus:

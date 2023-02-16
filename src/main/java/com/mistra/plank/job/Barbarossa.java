@@ -241,12 +241,12 @@ public class Barbarossa implements CommandLineRunner {
                         Barbarossa.log.warn(convertLog(realTimePrice));
                     }
                 }
-                log.error("---------------------------- 打板排单 ----------------------------");
+                log.error("---------------------------- 今日排单 ----------------------------");
                 List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
                 log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
-                log.error("---------------------------- 打板监测 ----------------------------");
+                log.error("--------------------------- 自动交易监测 --------------------------");
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {
                     log.warn("{}", collectionToString(AutomaticTrading.runningMap.values().stream()
                             .map(Stock::getName).collect(Collectors.toList())));
