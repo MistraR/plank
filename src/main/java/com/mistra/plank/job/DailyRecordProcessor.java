@@ -72,7 +72,7 @@ public class DailyRecordProcessor {
                     dailyRecord.setIncreaseRate(BigDecimal.valueOf(array.getDoubleValue(7)));
                     dailyRecord.setAmount(array.getLongValue(9) / 10000);
                     dailyRecordMapper.insert(dailyRecord);
-                    log.info("更新[ {} ]近日成交数据完成！", name);
+//                    log.info("更新[ {} ]近日成交数据完成！", name);
                 }
             }
         } catch (Exception e) {

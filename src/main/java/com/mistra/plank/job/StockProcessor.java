@@ -82,7 +82,7 @@ public class StockProcessor {
                                     .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
                 }
                 stockMapper.updateById(exist);
-                log.info("更新[ {} ]成交额、均线完成", exist.getName());
+//                log.info("更新[ {} ]成交额、均线完成", exist.getName());
             } catch (Exception e) {
             }
         }

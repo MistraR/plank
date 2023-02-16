@@ -124,7 +124,7 @@ public class Barbarossa implements CommandLineRunner {
      * 更新股票每日成交数据
      * 更新每只股票收盘价，当日成交量，MA5 MA10 MA20
      */
-    @Scheduled(cron = "0 57 17 * * ?")
+    @Scheduled(cron = "0 1 15 * * ?")
     private void analyzeData() {
         try {
             CountDownLatch countDownLatchD = new CountDownLatch(Barbarossa.STOCK_MAP_ALL.size());

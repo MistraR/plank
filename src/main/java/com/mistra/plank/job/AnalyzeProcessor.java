@@ -141,7 +141,7 @@ public class AnalyzeProcessor {
                 this.promotion(fourToFive, todayFive, yesterdayFour, date);
                 this.promotion(fiveToSix, todaySix, yesterdayFive, date);
                 this.promotion(sixToSeven, todaySeven, yesterdaySix, date);
-                if (date.after(DateUtils.addDays(new Date(), -5))) {
+                if (date.after(DateUtils.addDays(new Date(), -2))) {
                     // 只打印最近3-5个交易日的连板数据
                     log.warn("{}日连板数据：" + "\n一板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}\n七板{}支:{}",
                             sdf.format(date), todayOne.keySet().size(), new ArrayList<>(todayOne.keySet()),
