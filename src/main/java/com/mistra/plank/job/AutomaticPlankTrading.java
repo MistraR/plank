@@ -96,7 +96,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     private void autoPlank() {
         Date date = new Date();
-        while (DateUtil.hour(date, true) < 10 && AutomaticTrading.todayCostMoney < plankConfig.getAutomaticTradingMoney()) {
+        while (DateUtil.hour(date, true) < 11 && AutomaticTrading.todayCostMoney < plankConfig.getAutomaticTradingMoney()) {
             if (AutomaticTrading.isTradeTime() && !PLANK_MONITOR.isEmpty()) {
                 for (String code : PLANK_MONITOR) {
                     StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(code);

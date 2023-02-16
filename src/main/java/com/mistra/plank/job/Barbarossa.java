@@ -15,6 +15,7 @@ import com.mistra.plank.dao.*;
 import com.mistra.plank.model.dto.StockMainFundSample;
 import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.DailyRecord;
+import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.service.Plank;
 import com.mistra.plank.service.impl.ScreeningStocks;
@@ -236,10 +237,10 @@ public class Barbarossa implements CommandLineRunner {
                     }
                 }
                 log.error("---------------------------- 打板排单 ----------------------------");
-                List<Stock> buyStocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().ge(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))
-                        .le(Stock::getBuyTime, DateUtil.endOfDay(new Date())));
-                for (Stock buyStock : buyStocks) {
-                    log.warn("{} 数量:{}", buyStock.getName(), buyStock.getBuyAmount());
+                List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>().ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
+                        .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
+                for (HoldShares buyStock : buyStocks) {
+                    log.warn("{} 数量:{}", buyStock.getName(), buyStock.getBuyNumber());
                 }
                 log.error("---------------------------- 打板监测 ----------------------------");
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {
