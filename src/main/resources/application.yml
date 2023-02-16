@@ -48,6 +48,7 @@ plank:
   automaticPlankTrading: true
   automaticPlankTradingTimeLimit: 11
   singleTransactionLimitAmount: 5000
+  stockTurnoverFilter: 300000000
   enableMonitor: true
   buyPlankRatioLimit: 0.07
   buyStrategyEnum: DRAGON_LIST

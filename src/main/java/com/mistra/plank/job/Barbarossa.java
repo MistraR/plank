@@ -121,7 +121,7 @@ public class Barbarossa implements CommandLineRunner {
         stocks.forEach(e -> {
             if ((e.getShareholding() || e.getTrack())) {
                 STOCK_MAP_TRACK.put(e.getName(), e);
-            } else if (e.getTransactionAmount().intValue() > SystemConstant.TRANSACTION_AMOUNT_FILTER
+            } else if (e.getTransactionAmount().intValue() > plankConfig.getStockTurnoverFilter()
                     && (Objects.isNull(e.getPlankNumber()) || e.getPlankNumber() <= 3)
                     && (Objects.isNull(e.getBuyTime()) || !DateUtils.isSameDay(new Date(), e.getBuyTime()))) {
                 // 过滤掉昨日连板以及成交额小于3亿的股票

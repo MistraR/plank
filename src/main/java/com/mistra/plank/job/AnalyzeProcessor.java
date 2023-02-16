@@ -3,7 +3,6 @@ package com.mistra.plank.job;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mistra.plank.common.config.PlankConfig;
-import com.mistra.plank.config.SystemConstant;
 import com.mistra.plank.dao.DailyRecordMapper;
 import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockMainFundSample;
@@ -49,8 +48,8 @@ public class AnalyzeProcessor {
 
     public void analyzeMainFund() {
         log.warn("3|5|10日主力净流入>3亿:" + collectionToString(Barbarossa.mainFundDataAll.parallelStream()
-                .filter(e -> e.getF267() > SystemConstant.TRANSACTION_AMOUNT_FILTER || e.getF164() > SystemConstant.TRANSACTION_AMOUNT_FILTER
-                        || e.getF174() > SystemConstant.TRANSACTION_AMOUNT_FILTER)
+                .filter(e -> e.getF267() > plankConfig.getStockTurnoverFilter() || e.getF164() > plankConfig.getStockTurnoverFilter()
+                        || e.getF174() > plankConfig.getStockTurnoverFilter())
                 .map(plankConfig.getPrintName() ? StockMainFundSample::getF14 : StockMainFundSample::getF12)
                 .collect(Collectors.toSet())));
     }

@@ -24,7 +24,7 @@ import java.util.Objects;
  * @author rui.wang
  * @ Version: 1.0
  * @ Time: 2023/2/15 13:17
- * @ Description: 自动打板交易，开启的话会监控成交额大于3亿的全市场股票，发现上板则会自动下单排队
+ * @ Description: 自动打板交易，开启的话会监控成交额大于3亿(PlankConfig.stockTurnoverFilter)的全市场股票，发现上板则会自动下单排队
  * 只打首板，反包板。即昨日没有上板的股票
  * 昨日连板的股票我想的是自己过滤之后再选择打哪个，就通过AutomaticTrading提前配置来打板
  */

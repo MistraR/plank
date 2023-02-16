@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.StringUtil;
-import com.mistra.plank.config.SystemConstant;
 import com.mistra.plank.dao.DailyRecordMapper;
 import com.mistra.plank.dao.DragonListMapper;
 import com.mistra.plank.dao.StockMapper;
@@ -57,7 +56,7 @@ public class ScreeningStocks {
      */
     public void movingAverageRise() {
         List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>()
-                .ge(Stock::getMa5, 0).ge(Stock::getTransactionAmount, SystemConstant.TRANSACTION_AMOUNT_FILTER));
+                .ge(Stock::getMa5, 0).ge(Stock::getTransactionAmount, plankConfig.getStockTurnoverFilter()));
         List<String> list = stocks.stream().filter(stock -> stock.getMa5().compareTo(stock.getMa10()) > 0
                         && stock.getMa10().compareTo(stock.getMa20()) > 0).map(stock -> StringUtils.substring(stock.getCode(), 2, 8))
                 .collect(Collectors.toList());
@@ -189,7 +188,7 @@ public class ScreeningStocks {
         List<String> failed = new ArrayList<>();
         for (Map.Entry<String, String> entry : Barbarossa.STOCK_MAP_ALL.entrySet()) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, entry.getKey()));
-            if (stock.getTrack() || stock.getTransactionAmount().doubleValue() < SystemConstant.TRANSACTION_AMOUNT_FILTER) {
+            if (stock.getTrack() || stock.getTransactionAmount().doubleValue() < plankConfig.getStockTurnoverFilter()) {
                 continue;
             }
             List<DailyRecord> dailyRecords = dailyRecordMapper
