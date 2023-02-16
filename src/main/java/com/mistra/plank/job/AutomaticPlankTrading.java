@@ -113,13 +113,14 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                 Barbarossa.STOCK_MAP_GE_3E.remove(code);
                                 PLANK_MONITOR.remove(code);
                                 // 上板，下单排队
-                                int sum = 0, amount = 0;
-                                for (amount = 100; sum <= plankConfig.getSingleTransactionLimitAmount(); amount += 100) {
-                                    sum = (int) (amount * stockRealTimePriceByCode.getCurrentPrice());
+                                int sum = 0, amount = 1;
+                                while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
+                                    sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
                                 }
-                                amount -= 100;
-                                if (amount > 100) {
-                                    automaticTrading.buy(stock, amount, stockRealTimePriceByCode.getLimitUp(), AutomaticTradingEnum.AUTO_PLANK);
+                                amount -= 2;
+                                if (amount >= 1) {
+                                    automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
+                                            AutomaticTradingEnum.AUTO_PLANK);
                                 }
                             }
                         } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {
