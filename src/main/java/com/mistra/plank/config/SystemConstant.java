@@ -16,6 +16,6 @@ public class SystemConstant {
     /**
      * 成交额 过滤金额 >3亿
      */
-    public static final Integer TRANSACTION_AMOUNT_FILTER = 300000000;
+    public static final Integer TRANSACTION_AMOUNT_FILTER = 500000000;
 
 }
