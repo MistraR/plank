@@ -67,6 +67,21 @@ public class StockRealTimePrice implements Comparable<StockRealTimePrice> {
      */
     private Double limitUp;
 
+    /**
+     * 市值
+     */
+    private BigDecimal market;
+
+    /**
+     * 成交量
+     */
+    private Long volume;
+
+    /**
+     * 成交额
+     */
+    private BigDecimal transactionAmount;
+
     @Override
     public int compareTo(StockRealTimePrice o) {
         return (int) ((o.increaseRate * 100) - (this.increaseRate * 100));

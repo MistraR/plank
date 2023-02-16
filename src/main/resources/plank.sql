@@ -5454,7 +5454,7 @@ CREATE TABLE `stock`  (
   `code` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '证券代码',
   `name` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '证券名称',
   `market_value` bigint(0) NOT NULL COMMENT '市值',
-  `transaction_amount` decimal(14, 2) NOT NULL COMMENT '当日成交额',
+  `transaction_amount` decimal(20, 2) NOT NULL COMMENT '当日成交额',
   `current_price` decimal(14, 2) NOT NULL COMMENT '当前价格',
   `purchase_price` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '预计建仓价格',
   `modify_time` datetime(0) NOT NULL COMMENT '最近更新日期',
