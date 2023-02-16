@@ -16,6 +16,8 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 22:09 @ Description: 更新股票每日成交数据 @ Copyright (c) Mistra,All Rights
@@ -33,21 +35,21 @@ public class DailyRecordProcessor {
         this.plankConfig = plankConfig;
     }
 
-    public void run(HashMap<String, String> map) throws InterruptedException {
+    public void run(HashMap<String, String> map, CountDownLatch countDownLatch) {
         Integer count = dailyRecordMapper.selectCount(new QueryWrapper<DailyRecord>().ge("date", checkDailyRecord()));
         if (count > 0) {
             log.warn("股票交易数据已更新到最新交易日！");
+            for (long i = 0; i < countDownLatch.getCount(); i++) {
+                countDownLatch.countDown();
+            }
             return;
         }
-        log.warn("开始更新股票每日成交数据！");
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            Barbarossa.executorService.submit(() -> run(entry.getKey(), entry.getValue()));
+            Barbarossa.executorService.submit(() -> run(entry.getKey(), entry.getValue(), countDownLatch));
         }
-        Thread.sleep(10 * 60 * 1000);
-        log.warn("更新股票每日成交数据完成！");
     }
 
-    public void run(String code, String name) {
+    public void run(String code, String name, CountDownLatch countDownLatch) {
         try {
             String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", code)
                     .replace("{time}", String.valueOf(System.currentTimeMillis()))
@@ -73,8 +75,11 @@ public class DailyRecordProcessor {
                     log.info("更新[ {} ]近日成交数据完成！", name);
                 }
             }
-            Thread.sleep(3000);
         } catch (Exception e) {
+        } finally {
+            if (Objects.nonNull(countDownLatch)) {
+                countDownLatch.countDown();
+            }
         }
     }
 

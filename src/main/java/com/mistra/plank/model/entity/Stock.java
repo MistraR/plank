@@ -103,12 +103,6 @@ public class Stock implements Comparable<Stock> {
     private Boolean shareholding;
 
     /**
-     * 重点关注
-     */
-    @TableField(value = "focus")
-    private Boolean focus;
-
-    /**
      * 所属板块
      */
     @TableField(value = "classification")

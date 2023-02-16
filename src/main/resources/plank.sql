@@ -5416,7 +5416,6 @@ CREATE TABLE `stock`  (
   `purchase_price` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '预计建仓价格',
   `modify_time` datetime(0) NOT NULL COMMENT '最近更新日期',
   `track` tinyint(1) UNSIGNED ZEROFILL NOT NULL COMMENT '是否开启建仓点监控',
-  `focus` tinyint(1) UNSIGNED ZEROFILL NOT NULL COMMENT '重点关注',
   `shareholding` tinyint(1) UNSIGNED ZEROFILL NOT NULL COMMENT '是否持仓',
   `classification` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '所属板块',
   `ma5` decimal(10, 2) NULL DEFAULT NULL COMMENT '5日均线',

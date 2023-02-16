@@ -8,6 +8,7 @@ import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
 import com.mistra.plank.config.SystemConstant;
@@ -118,13 +119,25 @@ public class Barbarossa implements CommandLineRunner {
         STOCK_NAME_SET_ALL.addAll(STOCK_MAP_ALL.keySet());
     }
 
-    @Scheduled(cron = "0 1 15 * * ?")
+    /**
+     * 15点后读取当日交易数据
+     * 更新股票每日成交数据
+     * 更新每只股票收盘价，当日成交量，MA5 MA10 MA20
+     */
+    @Scheduled(cron = "0 57 17 * * ?")
     private void analyzeData() {
         try {
-            // 15点后读取当日交易数据
-            dailyRecordProcessor.run(Barbarossa.STOCK_MAP_ALL);
-            // 更新每只股票收盘价，当日成交量，MA5 MA10 MA20
-            executorService.submit(stockProcessor::run);
+            CountDownLatch countDownLatchD = new CountDownLatch(Barbarossa.STOCK_MAP_ALL.size());
+            dailyRecordProcessor.run(Barbarossa.STOCK_MAP_ALL, countDownLatchD);
+            countDownLatchD.await();
+            log.warn("更新股票每日成交数据完成");
+            List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_MAP_ALL.keySet()), 300);
+            CountDownLatch countDownLatchT = new CountDownLatch(partition.size());
+            for (List<String> list : partition) {
+                executorService.submit(() -> stockProcessor.run(list, countDownLatchT));
+            }
+            countDownLatchT.await();
+            log.warn("股票每日成交额、MA5、MA10、MA20更新完成");
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
             executorService.submit(stockProcessor::updateForeignFundShareholding);
             executorService.submit(() -> {
