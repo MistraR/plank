@@ -153,5 +153,9 @@ public class PlankConfig {
      */
     private Boolean enableMonitor;
 
+    /**
+     * 自动打板时间限制，一般只打早盘强势快速封板的 比如只打10点前封板的票
+     */
+    private Integer automaticPlankTradingTimeLimit;
 
 }

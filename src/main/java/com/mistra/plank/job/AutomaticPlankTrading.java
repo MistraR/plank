@@ -144,7 +144,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      * @return boolean
      */
     private boolean openAutoPlank() {
-        return DateUtil.hour(new Date(), true) < 11 &&
+        return DateUtil.hour(new Date(), true) < plankConfig.getAutomaticPlankTradingTimeLimit() &&
                 AutomaticTrading.todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoney();
     }
 }
