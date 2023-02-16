@@ -20,8 +20,12 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 22:09 @ Description: 更新股票每日成交数据 @ Copyright (c) Mistra,All Rights
- * Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
+ * @author Mistra @ Version: 1.0
+ * @ Time: 2021/11/18 22:09
+ * @ Description: 更新股票每日成交数据
+ * @ Copyright (c) Mistra,All Rights Reserved
+ * @ Github: https://github.com/MistraR
+ * @ CSDN: https://blog.csdn.net/axela30w
  */
 @Slf4j
 @Component

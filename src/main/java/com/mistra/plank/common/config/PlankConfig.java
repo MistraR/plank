@@ -8,8 +8,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * @author Mistra @ Version: 1.0 @ Time: 2021/11/18 21:44 @ Description: 配置文件 @ Copyright (c) Mistra,All Rights
- * Reserved. @ Github: https://github.com/MistraR @ CSDN: https://blog.csdn.net/axela30w
+ * @author Mistra @ Version: 1.0
+ * @ Time: 2021/11/18 22:09
+ * @ Description: 配置文件
+ * @ Copyright (c) Mistra,All Rights Reserved
+ * @ Github: https://github.com/MistraR
+ * @ CSDN: https://blog.csdn.net/axela30w
  */
 @Data
 @Builder
