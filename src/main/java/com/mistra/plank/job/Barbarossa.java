@@ -118,18 +118,19 @@ public class Barbarossa implements CommandLineRunner {
                 .notLike("name", "%ST%").notLike("code", "%688%")
                 .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
-        log.warn("一共加载[{}]支股票", stocks.size());
         stocks.forEach(e -> {
             if ((e.getShareholding() || e.getTrack())) {
                 STOCK_MAP_TRACK.put(e.getName(), e);
             } else if (e.getTransactionAmount().intValue() > SystemConstant.TRANSACTION_AMOUNT_FILTER
-                    && (Objects.isNull(e.getPlankNumber()) || e.getPlankNumber() == 0)
+                    && (Objects.isNull(e.getPlankNumber()) || e.getPlankNumber() <= 3)
                     && (Objects.isNull(e.getBuyTime()) || !DateUtils.isSameDay(new Date(), e.getBuyTime()))) {
                 // 过滤掉昨日连板以及成交额小于3亿的股票
                 STOCK_MAP_GE_3E.put(e.getCode(), e);
             }
             STOCK_MAP_ALL.put(e.getCode(), e.getName());
         });
+        log.warn("一共加载[{}]支股票", stocks.size());
+        log.warn("一共加载[{}]支自动打板监测股票", STOCK_MAP_GE_3E.size());
         STOCK_NAME_SET_ALL.addAll(STOCK_MAP_ALL.keySet());
     }
 

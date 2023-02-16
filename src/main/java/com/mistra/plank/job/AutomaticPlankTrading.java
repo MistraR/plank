@@ -2,7 +2,7 @@ package com.mistra.plank.job;
 
 import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.date.DateUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.dao.StockMapper;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author rui.wang
@@ -62,6 +63,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                 Barbarossa.executorService.submit(() -> filterStock(list));
             }
         }
+        log.warn("当前打板监测股票:{}", PLANK_MONITOR);
     }
 
     /**
@@ -76,6 +78,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                     (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 8)) {
                 if (stockRealTimePriceByCode.getCurrentPrice() * 100 <= plankConfig.getSingleTransactionLimitAmount() && !PLANK_MONITOR.contains(e)) {
                     PLANK_MONITOR.add(e);
+                    log.warn("{} 新加入打板监测,当前共监测:{}支股票", e, PLANK_MONITOR.size());
                 }
             }
         });
@@ -96,35 +99,39 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     private void autoPlank() {
         Date date = new Date();
-        while (DateUtil.hour(date, true) < 11 && AutomaticTrading.todayCostMoney < plankConfig.getAutomaticTradingMoney()) {
-            if (AutomaticTrading.isTradeTime() && !PLANK_MONITOR.isEmpty()) {
-                for (String code : PLANK_MONITOR) {
-                    StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(code);
-                    if (stockRealTimePriceByCode.isPlank()) {
-                        Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getName, stockRealTimePriceByCode.getName()));
-                        if (!DateUtils.isSameDay(new Date(), stock.getBuyTime())) {
-                            Barbarossa.STOCK_MAP_GE_3E.remove(code);
-                            PLANK_MONITOR.remove(code);
-                            // 上板，下单排队
-                            int sum = 0;
-                            int amount = 0;
-                            for (amount = 100; sum <= plankConfig.getSingleTransactionLimitAmount(); amount = amount + 100) {
-                                sum = (int) (amount * stockRealTimePriceByCode.getCurrentPrice());
+        while (DateUtil.hour(date, true) < 12 && AutomaticTrading.todayCostMoney < plankConfig.getAutomaticTradingMoney()) {
+            try {
+                if (AutomaticTrading.isTradeTime() && !PLANK_MONITOR.isEmpty()) {
+                    for (String code : PLANK_MONITOR) {
+                        StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(code);
+                        if (stockRealTimePriceByCode.isPlank()) {
+                            Stock stock = stockMapper.selectOne(new QueryWrapper<Stock>().eq("code", stockRealTimePriceByCode.getCode()));
+                            if (Objects.isNull(stock.getBuyTime()) || !DateUtils.isSameDay(new Date(), stock.getBuyTime())) {
+                                Barbarossa.STOCK_MAP_GE_3E.remove(code);
+                                PLANK_MONITOR.remove(code);
+                                // 上板，下单排队
+                                int sum = 0;
+                                int amount = 0;
+                                for (amount = 100; sum <= plankConfig.getSingleTransactionLimitAmount(); amount = amount + 100) {
+                                    sum = (int) (amount * stockRealTimePriceByCode.getCurrentPrice());
+                                }
+                                amount = amount - 100;
+                                if (amount > 100) {
+                                    automaticTrading.buy(Barbarossa.STOCK_MAP_GE_3E.get(code), amount, stockRealTimePriceByCode.getLimitUp(),
+                                            AutomaticTradingEnum.AUTO_PLANK);
+                                }
                             }
-                            automaticTrading.buy(Barbarossa.STOCK_MAP_GE_3E.get(code), amount, stockRealTimePriceByCode.getLimitUp(),
-                                    AutomaticTradingEnum.AUTO_PLANK);
+                        } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {
+                            PLANK_MONITOR.remove(code);
                         }
-                    } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {
-                        PLANK_MONITOR.remove(code);
                     }
-                }
-            } else {
-                try {
+                } else {
                     Thread.sleep(2 * 1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
+        log.warn("------------------------ 终止打板监测 ------------------------");
     }
 }
