@@ -54,48 +54,53 @@ public class StockProcessor {
 
     public void run() {
         try {
-            String body =
-                    HttpUtil.getHttpGetResponseString(plankConfig.getXueQiuAllStockUrl(), plankConfig.getXueQiuCookie());
-            JSONObject data = JSON.parseObject(body).getJSONObject("data");
-            JSONArray list = data.getJSONArray("list");
-            Date today = new Date();
-            BigDecimal zero = new BigDecimal(0);
-            for (Object o : list) {
-                data = (JSONObject) o;
-                // volume 值不准确忽略
-                BigDecimal current = data.getBigDecimal("current");
-                BigDecimal volume = data.getBigDecimal("volume");
-                if (Objects.nonNull(current) && Objects.nonNull(volume)) {
-                    Stock exist = stockMapper.selectById(data.getString("symbol"));
-                    if (Objects.nonNull(exist)) {
-                        List<DailyRecord> dailyRecords = dailyRecordMapper.selectPage(new Page<>(1, 20),
-                                new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, data.getString("symbol"))
-                                        .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -40))
-                                        .orderByDesc(DailyRecord::getDate)).getRecords();
-                        exist.setModifyTime(today);
-                        exist.setCurrentPrice(current);
-                        exist.setPlankNumber(0);
-                        exist.setTransactionAmount(current.multiply(volume));
-                        exist.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
-                        if (dailyRecords.size() >= 20) {
-                            exist.setMa5(BigDecimal
-                                    .valueOf(dailyRecords.subList(0, 5).stream().map(DailyRecord::getClosePrice)
-                                            .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
-                            exist.setMa10(BigDecimal
-                                    .valueOf(dailyRecords.subList(0, 10).stream().map(DailyRecord::getClosePrice)
-                                            .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
-                            exist.setMa20(BigDecimal
-                                    .valueOf(dailyRecords.subList(0, 20).stream().map(DailyRecord::getClosePrice)
-                                            .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
+            for (int i = 1; i < 25; i++) {
+                String url = plankConfig.getXueQiuAllStockUrl().replace("{page}", i + "");
+                String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
+                JSONObject data = JSON.parseObject(body).getJSONObject("data");
+                JSONArray list = data.getJSONArray("list");
+                Date today = new Date();
+                BigDecimal zero = new BigDecimal(0);
+                for (Object o : list) {
+                    data = (JSONObject) o;
+                    // volume 值不准确忽略
+                    BigDecimal current = data.getBigDecimal("current");
+                    BigDecimal volume = data.getBigDecimal("volume");
+                    if (Objects.nonNull(current) && Objects.nonNull(volume)) {
+                        Stock exist = stockMapper.selectById(data.getString("symbol"));
+                        if (Objects.nonNull(exist)) {
+                            List<DailyRecord> dailyRecords = dailyRecordMapper.selectPage(new Page<>(1, 20),
+                                    new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, data.getString("symbol"))
+                                            .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -40))
+                                            .orderByDesc(DailyRecord::getDate)).getRecords();
+                            exist.setModifyTime(today);
+                            exist.setCurrentPrice(current);
+                            exist.setPlankNumber(0);
+                            exist.setTransactionAmount(current.multiply(volume));
+                            exist.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
+                            if (dailyRecords.size() >= 20) {
+                                exist.setMa5(BigDecimal
+                                        .valueOf(dailyRecords.subList(0, 5).stream().map(DailyRecord::getClosePrice)
+                                                .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
+                                exist.setMa10(BigDecimal
+                                        .valueOf(dailyRecords.subList(0, 10).stream().map(DailyRecord::getClosePrice)
+                                                .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
+                                exist.setMa20(BigDecimal
+                                        .valueOf(dailyRecords.subList(0, 20).stream().map(DailyRecord::getClosePrice)
+                                                .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
+                            }
+                            stockMapper.updateById(exist);
+                        } else {
+                            stockMapper.insert(Stock.builder().code(data.getString("symbol"))
+                                    .name(data.getString("name")).marketValue(data.getLongValue("mc")).currentPrice(current)
+                                    .ma5(zero).ma10(zero).ma20(zero)
+                                    .transactionAmount(current.multiply(volume)).modifyTime(today).track(false)
+                                    .shareholding(false).focus(false).classification("").build());
                         }
-                        stockMapper.updateById(exist);
-                    } else {
-                        stockMapper.insert(Stock.builder().code(data.getString("symbol"))
-                                .name(data.getString("name")).marketValue(data.getLongValue("mc")).currentPrice(current)
-                                .ma5(zero).ma10(zero).ma20(zero)
-                                .transactionAmount(current.multiply(volume)).modifyTime(today).track(false)
-                                .shareholding(false).focus(false).classification("").build());
                     }
+                }
+                if (list.size() < 200) {
+                    break;
                 }
             }
             log.warn("股票每日成交量、MA5、MA10、MA20更新完成！");
