@@ -244,10 +244,10 @@ public class Barbarossa implements CommandLineRunner {
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
                 log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
-                log.warn("今日自动交易花费金额:{}", AutomaticTrading.todayCostMoney.intValue());
+                log.warn("今日自动交易花费金额:{}", AutomaticTrading.TODAY_COST_MONEY.intValue());
                 log.error("--------------------------- 自动交易监测 --------------------------");
-                if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {
-                    log.warn("{}", collectionToString(AutomaticTrading.runningMap.values().stream()
+                if (CollectionUtils.isNotEmpty(AutomaticTrading.UNDER_MONITORING.values())) {
+                    log.warn("{}", collectionToString(AutomaticTrading.UNDER_MONITORING.values().stream()
                             .map(Stock::getName).collect(Collectors.toList())));
                 }
                 realTimePrices.clear();

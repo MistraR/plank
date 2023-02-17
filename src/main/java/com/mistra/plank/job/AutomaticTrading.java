@@ -66,17 +66,17 @@ public class AutomaticTrading implements CommandLineRunner {
     /**
      * 监控中的股票
      */
-    public static final ConcurrentHashMap<String, Stock> runningMap = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<String, Stock> UNDER_MONITORING = new ConcurrentHashMap<>();
 
     /**
      * 当日已经成功挂单的股票
      */
-    public static final HashSet<String> pendingOrderSet = new HashSet<>();
+    public static final HashSet<String> TODAY_BOUGHT_SUCCESS = new HashSet<>();
 
     /**
      * 今日自动交易花费金额
      */
-    public static AtomicInteger todayCostMoney = new AtomicInteger(0);
+    public static AtomicInteger TODAY_COST_MONEY = new AtomicInteger(0);
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -90,7 +90,7 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     /**
-     * 每3秒更新一次需要打板的股票
+     * 每3秒更新一次需要打板或低吸的股票
      */
     @Scheduled(cron = "*/3 * * * * ?")
     private void plank() {
@@ -101,11 +101,11 @@ public class AutomaticTrading implements CommandLineRunner {
             try {
                 map.clear();
                 for (Stock stock : stocks) {
-                    if (!pendingOrderSet.contains(stock.getCode())) {
+                    if (!TODAY_BOUGHT_SUCCESS.contains(stock.getCode())) {
                         map.put(stock.getCode(), stock);
-                        if (!runningMap.containsKey(stock.getCode())) {
+                        if (!UNDER_MONITORING.containsKey(stock.getCode())) {
                             Barbarossa.executorService.submit(new BuyTask(stock));
-                            runningMap.put(stock.getCode(), stock);
+                            UNDER_MONITORING.put(stock.getCode(), stock);
                         }
                     }
                 }
@@ -159,8 +159,8 @@ public class AutomaticTrading implements CommandLineRunner {
         List<HoldShares> shares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                 .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date())));
         for (HoldShares share : shares) {
-            todayCostMoney.set((int) (todayCostMoney.intValue() + share.getBuyPrice().doubleValue() * share.getNumber()));
-            pendingOrderSet.add(share.getCode());
+            TODAY_COST_MONEY.set((int) (TODAY_COST_MONEY.intValue() + share.getBuyPrice().doubleValue() * share.getNumber()));
+            TODAY_BOUGHT_SUCCESS.add(share.getCode());
         }
         // 自动买入
         plank();
@@ -277,13 +277,13 @@ public class AutomaticTrading implements CommandLineRunner {
 
         @Override
         public void run() {
-            while (!buy.get() && isTradeTime() && todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp()) {
+            while (!buy.get() && isTradeTime() && TODAY_COST_MONEY.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp()) {
                 try {
                     automaticTrading(stock, buy);
                     Thread.sleep(100);
                     if (!lock.isLocked()) {
                         if (!map.containsKey(stock.getCode())) {
-                            runningMap.remove(stock.getCode());
+                            UNDER_MONITORING.remove(stock.getCode());
                             break;
                         }
                     }
@@ -316,9 +316,9 @@ public class AutomaticTrading implements CommandLineRunner {
      * @param price 买入价格
      */
     private void buy(Stock stock, AtomicBoolean buy, double price) {
-        if (!pendingOrderSet.contains(stock.getCode()) && buy(stock, stock.getBuyAmount(), price)) {
-            pendingOrderSet.add(stock.getCode());
-            runningMap.remove(stock.getCode());
+        if (!TODAY_BOUGHT_SUCCESS.contains(stock.getCode()) && buy(stock, stock.getBuyAmount(), price)) {
+            TODAY_BOUGHT_SUCCESS.add(stock.getCode());
+            UNDER_MONITORING.remove(stock.getCode());
             map.remove(stock.getCode());
             buy.set(true);
             // 已经挂单，就修改为不监控该股票了
@@ -340,8 +340,8 @@ public class AutomaticTrading implements CommandLineRunner {
      * @param automaticTradingType 自动交易类型枚举
      */
     public void buy(Stock stock, int amount, double price, AutomaticTradingEnum automaticTradingType) {
-        if (!pendingOrderSet.contains(stock.getCode()) && buy(stock, amount, price)) {
-            pendingOrderSet.add(stock.getCode());
+        if (!TODAY_BOUGHT_SUCCESS.contains(stock.getCode()) && buy(stock, amount, price)) {
+            TODAY_BOUGHT_SUCCESS.add(stock.getCode());
             stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
             stock.setBuyTime(new Date());
             stock.setShareholding(true);

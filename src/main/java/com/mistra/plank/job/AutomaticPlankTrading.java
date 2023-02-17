@@ -80,10 +80,10 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                     (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 7)) {
                 double v = stockRealTimePriceByCode.getCurrentPrice() * 100;
                 if (v <= plankConfig.getSingleTransactionLimitAmount() &&
-                        AutomaticTrading.todayCostMoney.intValue() + v < plankConfig.getAutomaticTradingMoneyLimitUp()
+                        AutomaticTrading.TODAY_COST_MONEY.intValue() + v < plankConfig.getAutomaticTradingMoneyLimitUp()
                         && !PLANK_MONITOR.contains(e)) {
                     PLANK_MONITOR.add(e);
-                    if (AutomaticTrading.pendingOrderSet.contains(e)) {
+                    if (AutomaticTrading.TODAY_BOUGHT_SUCCESS.contains(e)) {
                         PLANK_MONITOR.remove(e);
                     }
                     log.warn("{} 新加入打板监测,当前共监测:{}支股票", e, PLANK_MONITOR.size());
@@ -151,6 +151,6 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     private boolean openAutoPlank() {
         return AutomaticTrading.isTradeTime() &&
                 DateUtil.hour(new Date(), true) < plankConfig.getAutomaticPlankTradingTimeLimit() &&
-                AutomaticTrading.todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp();
+                AutomaticTrading.TODAY_COST_MONEY.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp();
     }
 }
