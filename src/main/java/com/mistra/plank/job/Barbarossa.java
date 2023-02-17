@@ -11,8 +11,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
-import com.mistra.plank.config.SystemConstant;
-import com.mistra.plank.dao.*;
+import com.mistra.plank.dao.DailyRecordMapper;
+import com.mistra.plank.dao.HoldSharesMapper;
+import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockMainFundSample;
 import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.DailyRecord;
@@ -34,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.mistra.plank.common.util.StringUtil.collectionToString;
+import static com.mistra.plank.config.SystemConstant.W;
 
 /**
  * 涨停先锋
@@ -99,7 +101,7 @@ public class Barbarossa implements CommandLineRunner {
     @Override
     public void run(String... args) {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
-                // 默认过滤掉了北交所，科创板，ST
+                // 默认过滤掉了北交所,科创板,ST
                 .notLike("name", "%ST%").notLike("code", "%688%")
                 .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
@@ -115,15 +117,13 @@ public class Barbarossa implements CommandLineRunner {
             }
             STOCK_ALL_MAP.put(e.getCode(), e.getName());
         });
-        log.warn("实时加载[{}]支股票", stocks.size());
-        log.warn("实时加载[{}]支自动打板监测股票", STOCK_FILTER_MAP.size());
+        log.warn("实时加载[{}]支股票,其中成交额大于{}亿的[{}]支", stocks.size(),
+                plankConfig.getStockTurnoverFilter() / W / W, STOCK_FILTER_MAP.size());
         STOCK_NAME_SET_ALL.addAll(STOCK_ALL_MAP.values());
     }
 
     /**
      * 15点后读取当日交易数据
-     * 更新股票每日成交数据
-     * 更新每只股票收盘价，当日成交量，MA5 MA10 MA20
      */
     @Scheduled(cron = "0 1 15 * * ?")
     private void analyzeData() {
@@ -162,6 +162,7 @@ public class Barbarossa implements CommandLineRunner {
                 executorService.submit(() -> stockProcessor.run(list, countDownLatchT));
             }
             countDownLatchT.await();
+            run();
         }
     }
 
@@ -213,7 +214,7 @@ public class Barbarossa implements CommandLineRunner {
                     double purchaseRate = (double) Math.round(((maPrice.doubleValue() - v) / v) * 100) / 100;
                     stockRealTimePrice.setName(stock.getName());
                     stockRealTimePrice.setMainFund(mainFundDataMap.containsKey(stock.getName())
-                            ? mainFundDataMap.get(stock.getName()).getF62() / SystemConstant.W : 0);
+                            ? mainFundDataMap.get(stock.getName()).getF62() / W : 0);
                     stockRealTimePrice.setPurchasePrice(maPrice);
                     stockRealTimePrice.setPurchaseRate((int) (purchaseRate * 100));
                     realTimePrices.add(stockRealTimePrice);
@@ -226,7 +227,7 @@ public class Barbarossa implements CommandLineRunner {
                     topTen.add(mainFundDataAll.get(i));
                 }
                 log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + "[" + e.getF62() /
-                        SystemConstant.W / SystemConstant.W + "亿]" + e.getF3() + "%").collect(Collectors.toList())));
+                        W / W + "亿]" + e.getF3() + "%").collect(Collectors.toList())));
                 log.error("------------------------------ 持仓 -----------------------------");
                 realTimePrices.stream().filter(e -> STOCK_TRACK_MAP.get(e.getName()).getShareholding()).forEach(e -> {
                     if (e.getIncreaseRate() > 0) {
