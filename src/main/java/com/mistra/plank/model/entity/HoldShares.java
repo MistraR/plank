@@ -68,12 +68,6 @@ public class HoldShares {
     private Integer availableVolume;
 
     /**
-     * 盈亏比率
-     */
-    @TableField(value = "rate")
-    private BigDecimal rate;
-
-    /**
      * 建仓成本价
      */
     @TableField(value = "buy_price")

@@ -5359,7 +5359,6 @@ CREATE TABLE `hold_shares` (
   `code` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
   `number` int NOT NULL COMMENT '持股数量',
   `available_volume` int NOT NULL COMMENT '可卖数量',
-  `rate` decimal(10,2) DEFAULT NULL COMMENT '盈亏比率',
   `buy_price` decimal(10,2) NOT NULL COMMENT '建仓价',
   `buy_time` datetime NOT NULL COMMENT '建仓日期',
   `profit` decimal(10,2) DEFAULT NULL COMMENT '利润',
@@ -5369,7 +5368,7 @@ CREATE TABLE `hold_shares` (
   `today_plank` tinyint(1) DEFAULT NULL COMMENT '今日是否触板',
   `clearance` tinyint(1) unsigned zerofill DEFAULT '0' COMMENT '是否清仓',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11667 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for holiday_calendar

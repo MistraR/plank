@@ -333,8 +333,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     .stopLossPrice(BigDecimal.valueOf(currentPrice * 0.96).setScale(2, RoundingMode.HALF_UP))
                     // 设置触发止盈价
                     .takeProfitPrice(BigDecimal.valueOf(currentPrice * 1.05).setScale(2, RoundingMode.HALF_UP))
-                    .rate(new BigDecimal(0)).automaticTradingType(stock.getAutomaticTradingType())
-                    .buyPrice(BigDecimal.valueOf(currentPrice)).build();
+                    .automaticTradingType(stock.getAutomaticTradingType()).buyPrice(BigDecimal.valueOf(currentPrice)).build();
             holdSharesMapper.insert(holdShare);
             // 已经挂单，就修改为不监控该股票了
             stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
@@ -381,8 +380,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     .stopLossPrice(BigDecimal.valueOf(price * 0.96).setScale(2, RoundingMode.HALF_UP))
                     // 设置触发止盈价
                     .takeProfitPrice(BigDecimal.valueOf(price * 1.05).setScale(2, RoundingMode.HALF_UP))
-                    .rate(new BigDecimal(0)).automaticTradingType(automaticTradingType.name())
-                    .buyPrice(BigDecimal.valueOf(price)).build();
+                    .automaticTradingType(automaticTradingType.name()).buyPrice(BigDecimal.valueOf(price)).build();
             holdSharesMapper.insert(holdShare);
             log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), amount, price);
         } else {
