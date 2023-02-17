@@ -92,6 +92,11 @@ public class HoldShares {
     private Boolean todayPlank;
 
     /**
+     * 是否清仓
+     */
+    private Boolean clearance;
+
+    /**
      * 建仓日期
      */
     @TableField(value = "buy_time")

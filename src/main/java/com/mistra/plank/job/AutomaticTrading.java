@@ -167,7 +167,7 @@ public class AutomaticTrading implements CommandLineRunner {
         plank();
         // 监控持仓，止盈止损
         List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
-                .gt(HoldShares::getAvailableVolume, 0));
+                .gt(HoldShares::getAvailableVolume, 0).eq(HoldShares::getClearance, false));
         if (CollectionUtils.isNotEmpty(holdShares)) {
             for (HoldShares holdShare : holdShares) {
                 Barbarossa.executorService.submit(new SaleTask(holdShare));
@@ -247,6 +247,7 @@ public class AutomaticTrading implements CommandLineRunner {
         request.setMarket(StockUtil.getStockMarket(request.getStockCode()));
         TradeResultVo<SubmitResponse> response = tradeApiService.submit(request);
         holdShare.setAvailableVolume(0);
+        holdShare.setClearance(true);
         holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
                 * holdShare.getNumber()));
         holdSharesMapper.updateById(holdShare);
@@ -326,7 +327,7 @@ public class AutomaticTrading implements CommandLineRunner {
             map.remove(stock.getCode());
             pendingOrderSet.add(stock.getCode());
             buy.set(true);
-            HoldShares holdShare = HoldShares.builder().buyTime(new Date())
+            HoldShares holdShare = HoldShares.builder().buyTime(new Date()).clearance(false)
                     .code(stock.getCode()).name(stock.getName()).availableVolume(0)
                     .number(stock.getBuyAmount()).profit(new BigDecimal(0))
                     // 设置触发止损价
@@ -374,7 +375,7 @@ public class AutomaticTrading implements CommandLineRunner {
             stock.setBuyTime(new Date());
             stock.setShareholding(true);
             stockMapper.updateById(stock);
-            HoldShares holdShare = HoldShares.builder().buyTime(new Date())
+            HoldShares holdShare = HoldShares.builder().buyTime(new Date()).clearance(false)
                     .code(stock.getCode()).name(stock.getName()).availableVolume(0)
                     .number(amount).profit(new BigDecimal(0))
                     // 设置触发止损价

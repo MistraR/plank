@@ -5353,22 +5353,23 @@ INSERT INTO `foreign_fund_holdings_tracking` VALUES (1563, 'SH688301', '奕瑞�
 -- Table structure for hold_shares
 -- ----------------------------
 DROP TABLE IF EXISTS `hold_shares`;
-CREATE TABLE `hold_shares`  (
-  `id` bigint(0) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `hold_shares` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
   `name` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '名称',
   `code` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
-  `number` int(0) NOT NULL COMMENT '持股数量',
-  `available_volume` int(0) NOT NULL COMMENT '可卖数量',
-  `rate` decimal(10, 2) NULL DEFAULT NULL COMMENT '盈亏比率',
-  `buy_price` decimal(10, 2) NOT NULL COMMENT '建仓价',
-  `buy_time` datetime(0) NOT NULL COMMENT '建仓日期',
-  `profit` decimal(10, 2) NULL DEFAULT NULL COMMENT '利润',
-  `take_profit_price` decimal(10, 2) NULL DEFAULT NULL COMMENT '触发止盈价格',
-  `stop_loss_price` decimal(10, 2) NULL DEFAULT NULL COMMENT '触发止损价格',
-  `automatic_trading_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '自动交易类型',
-  `today_plank` tinyint(1) NULL DEFAULT NULL COMMENT '今日是否触板',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 11663 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+  `number` int NOT NULL COMMENT '持股数量',
+  `available_volume` int NOT NULL COMMENT '可卖数量',
+  `rate` decimal(10,2) DEFAULT NULL COMMENT '盈亏比率',
+  `buy_price` decimal(10,2) NOT NULL COMMENT '建仓价',
+  `buy_time` datetime NOT NULL COMMENT '建仓日期',
+  `profit` decimal(10,2) DEFAULT NULL COMMENT '利润',
+  `take_profit_price` decimal(10,2) DEFAULT NULL COMMENT '触发止盈价格',
+  `stop_loss_price` decimal(10,2) DEFAULT NULL COMMENT '触发止损价格',
+  `automatic_trading_type` varchar(32) DEFAULT NULL COMMENT '自动交易类型',
+  `today_plank` tinyint(1) DEFAULT NULL COMMENT '今日是否触板',
+  `clearance` tinyint(1) unsigned zerofill DEFAULT '0' COMMENT '是否清仓',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11667 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for holiday_calendar
