@@ -116,7 +116,7 @@ public class Barbarossa implements CommandLineRunner {
         });
         log.warn("一共加载[{}]支股票", stocks.size());
         log.warn("一共加载[{}]支自动打板监测股票", STOCK_MAP_GE_3E.size());
-        STOCK_NAME_SET_ALL.addAll(STOCK_MAP_ALL.keySet());
+        STOCK_NAME_SET_ALL.addAll(STOCK_MAP_ALL.values());
     }
 
     /**
