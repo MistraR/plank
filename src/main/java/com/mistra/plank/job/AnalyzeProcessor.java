@@ -109,8 +109,7 @@ public class AnalyzeProcessor {
                     double v = dailyRecord.getIncreaseRate().doubleValue();
                     String name = dailyRecord.getName();
                     String code = dailyRecord.getCode();
-                    if ((!code.contains("SZ30") && v > 9.4 && v < 11)
-                            || (code.contains("SZ30") && v > 19.4 && v < 21)) {
+                    if ((!code.contains("SZ30") && v > 9.6) || (code.contains("SZ30") && v > 19.6)) {
                         if (yesterdaySix.containsKey(name)) {
                             // 昨日的六板，今天继续板，进阶7板
                             todaySeven.put(dailyRecord.getName(), v);
@@ -142,7 +141,7 @@ public class AnalyzeProcessor {
                 this.promotion(fiveToSix, todaySix, yesterdayFive, date);
                 this.promotion(sixToSeven, todaySeven, yesterdaySix, date);
                 if (date.after(DateUtils.addDays(new Date(), -2))) {
-                    // 只打印最近3-5个交易日的连板数据
+                    // 只打印最近2个交易日的连板数据
                     log.warn("{}日连板数据：" + "\n一板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}\n七板{}支:{}",
                             sdf.format(date), todayOne.keySet().size(), new ArrayList<>(todayOne.keySet()),
                             todayTwo.keySet().size(), new ArrayList<>(todayTwo.keySet()), todayThree.keySet().size(),
@@ -160,21 +159,6 @@ public class AnalyzeProcessor {
                         updateStock(todaySix.keySet(), 6);
                         updateStock(todaySeven.keySet(), 7);
                     }
-                    List<String> tmp = new ArrayList<>();
-                    tmp.addAll(todayTwo.keySet());
-                    tmp.addAll(todayThree.keySet());
-                    tmp.addAll(todayFour.keySet());
-                    tmp.addAll(todayFive.keySet());
-                    tmp.addAll(todaySix.keySet());
-                    tmp.addAll(todaySeven.keySet());
-                    if (CollectionUtils.isNotEmpty(tmp)) {
-                        List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getName, tmp));
-                        tmp.clear();
-                        for (Stock stock : stocks) {
-                            tmp.add(stock.getCode().substring(2, 8));
-                        }
-                        log.warn("二板+:{}", collectionToString(tmp));
-                    }
                 }
                 yesterdayOne.clear();
                 yesterdayOne.putAll(todayOne);
@@ -191,30 +175,18 @@ public class AnalyzeProcessor {
             }
             date = DateUtils.addDays(date, 1);
         } while (date.getTime() < System.currentTimeMillis());
-        log.error("一板>一进二平均胜率：{}",
-                (double) Math
-                        .round(oneToTwo.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
-                        / 100);
-        log.error("二板>二进三平均胜率：{}",
-                (double) Math
-                        .round(twoToThree.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
-                        / 100);
-        log.error("三板>三进四平均胜率：{}",
-                (double) Math
-                        .round(threeToFour.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
-                        / 100);
-        log.error("四板>四进五平均胜率：{}",
-                (double) Math
-                        .round(fourToFive.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
-                        / 100);
-        log.error("五板>五进六平均胜率：{}",
-                (double) Math
-                        .round(fiveToSix.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
-                        / 100);
-        log.error("六板>六进七平均胜率：{}",
-                (double) Math
-                        .round(sixToSeven.values().stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100)
-                        / 100);
+        log.error("一板>一进二平均胜率：{}", (double) Math.round(oneToTwo.values().stream()
+                .collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
+        log.error("二板>二进三平均胜率：{}", (double) Math.round(twoToThree.values().stream()
+                .collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
+        log.error("三板>三进四平均胜率：{}", (double) Math.round(threeToFour.values().stream()
+                .collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
+        log.error("四板>四进五平均胜率：{}", (double) Math.round(fourToFive.values().stream()
+                .collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
+        log.error("五板>五进六平均胜率：{}", (double) Math.round(fiveToSix.values().stream()
+                .collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
+        log.error("六板>六进七平均胜率：{}", (double) Math.round(sixToSeven.values().stream()
+                .collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
     }
 
     private void updateStock(Set<String> names, int plankNumber) {
@@ -224,6 +196,9 @@ public class AnalyzeProcessor {
         }
     }
 
+    /**
+     * 计算晋级率
+     */
     private void promotion(HashMap<String, BigDecimal> promotion, HashMap<String, Double> today,
                            HashMap<String, Double> yesterday, Date date) {
         if (yesterday.size() > 0) {
@@ -232,10 +207,7 @@ public class AnalyzeProcessor {
     }
 
     private BigDecimal divide(double x, int y) {
-        if (y <= 0) {
-            return new BigDecimal(0);
-        }
-        return new BigDecimal(x).divide(new BigDecimal(y), 2, RoundingMode.HALF_UP);
+        return y <= 0 ? new BigDecimal(0) : new BigDecimal(x).divide(new BigDecimal(y), 2, RoundingMode.HALF_UP);
     }
 
 }

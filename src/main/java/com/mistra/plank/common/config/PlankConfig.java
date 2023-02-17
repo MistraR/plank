@@ -70,6 +70,16 @@ public class PlankConfig {
     private Boolean automaticTrading;
 
     /**
+     * 自动交易止损比率
+     */
+    private Double stopLossRate;
+
+    /**
+     * 自动交易止盈比率
+     */
+    private Double takeProfitRate;
+
+    /**
      * 每日自动交易买入金额上限
      */
     private Double automaticTradingMoneyLimitUp;

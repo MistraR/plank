@@ -44,6 +44,8 @@ ocr:
         user: ''
 plank:
   automaticTrading: true
+  stopLossRate: 0.97
+  takeProfitRate: 1.06
   automaticTradingMoneyLimitUp: 20000
   automaticPlankTrading: true
   automaticPlankTradingTimeLimit: 10

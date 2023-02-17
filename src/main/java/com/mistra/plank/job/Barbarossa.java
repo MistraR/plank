@@ -192,10 +192,10 @@ public class Barbarossa implements CommandLineRunner {
                     // 默认把MA10作为建仓基准价格
                     int purchaseType = Objects.isNull(stock.getPurchaseType()) || stock.getPurchaseType() == 0 ? 10
                             : stock.getPurchaseType();
-                    List<DailyRecord> dailyRecords =
-                            dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, stock.getCode())
-                                    .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -purchaseType * 3))
-                                    .orderByDesc(DailyRecord::getDate));
+                    List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
+                            .eq(DailyRecord::getCode, stock.getCode())
+                            .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -purchaseType * 3))
+                            .orderByDesc(DailyRecord::getDate));
                     if (dailyRecords.size() < purchaseType) {
                         log.error("{}的交易数据不完整，不够{}个交易日数据！请先爬取交易数据！", stock.getCode(), stock.getPurchaseType());
                         continue;
@@ -226,26 +226,19 @@ public class Barbarossa implements CommandLineRunner {
                 for (int i = 0; i < Math.min(mainFundDataAll.size(), 10); i++) {
                     topTen.add(mainFundDataAll.get(i));
                 }
-                log.warn(collectionToString(
-                        topTen.stream().map(e -> e.getF14() + "[" + e.getF62() / SystemConstant.W / SystemConstant.W + "亿]" + e.getF3() + "%")
-                                .collect(Collectors.toList())));
+                log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + "[" + e.getF62() /
+                        SystemConstant.W / SystemConstant.W + "亿]" + e.getF3() + "%").collect(Collectors.toList())));
                 log.error("------------------------------ 持仓 -----------------------------");
-                for (StockRealTimePrice realTimePrice : realTimePrices) {
-                    if (STOCK_TRACK_MAP.get(realTimePrice.getName()).getShareholding()) {
-                        if (realTimePrice.getIncreaseRate() > 0) {
-                            Barbarossa.log.error(convertLog(realTimePrice));
-                        } else {
-                            Barbarossa.log.warn(convertLog(realTimePrice));
-                        }
+                realTimePrices.stream().filter(e -> STOCK_TRACK_MAP.get(e.getName()).getShareholding()).forEach(e -> {
+                    if (e.getIncreaseRate() > 0) {
+                        Barbarossa.log.error(convertLog(e));
+                    } else {
+                        Barbarossa.log.warn(convertLog(e));
                     }
-                }
+                });
                 realTimePrices.removeIf(e -> STOCK_TRACK_MAP.get(e.getName()).getShareholding());
                 log.error("------------------------------ 建仓 -----------------------------");
-                for (StockRealTimePrice realTimePrice : realTimePrices) {
-                    if (realTimePrice.getPurchaseRate() >= -2) {
-                        Barbarossa.log.warn(convertLog(realTimePrice));
-                    }
-                }
+                realTimePrices.stream().filter(e -> e.getIncreaseRate() >= -2).forEach(e -> Barbarossa.log.warn(convertLog(e)));
                 log.error("---------------------------- 今日排单 ----------------------------");
                 List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
@@ -295,8 +288,7 @@ public class Barbarossa implements CommandLineRunner {
                 mainFundDataAll.clear();
                 mainFundDataAll.addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
                 mainFundData.clear();
-                mainFundData.addAll(
-                        result.stream().filter(e -> STOCK_TRACK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
+                mainFundData.addAll(result.stream().filter(e -> STOCK_TRACK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
                 Thread.sleep(3000);
             } catch (Exception e) {
                 e.printStackTrace();
