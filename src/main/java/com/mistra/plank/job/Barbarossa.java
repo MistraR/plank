@@ -162,7 +162,6 @@ public class Barbarossa implements CommandLineRunner {
                 executorService.submit(() -> stockProcessor.run(list, countDownLatchT));
             }
             countDownLatchT.await();
-            run();
         }
     }
 

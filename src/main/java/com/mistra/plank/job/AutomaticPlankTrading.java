@@ -54,13 +54,13 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     }
 
     /**
-     * 每30秒过滤主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，放入PLANK_MONITOR
+     * 每5秒过滤主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，放入PLANK_MONITOR
      */
     @Scheduled(cron = "*/5 * * * * ?")
     private void filterStock() {
         if (openAutoPlank()) {
             List<List<String>> lists = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_FILTER_MAP.keySet()),
-                    Barbarossa.executorService.getMaximumPoolSize());
+                    Barbarossa.executorService.getMaximumPoolSize() / 2);
             for (List<String> list : lists) {
                 Barbarossa.executorService.submit(() -> filterStock(list));
             }
@@ -93,10 +93,10 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     }
 
     /**
-     * 一直监控涨幅大于7个点股票
+     * 一直监控主板涨幅大于7个点股票，创业板涨幅大于18个点的股票,即PLANK_MONITOR中的股票
      */
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         filterStock();
         Barbarossa.executorService.submit(this::autoPlank);
     }
@@ -108,7 +108,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     private void autoPlank() {
         while (openAutoPlank()) {
             try {
-                if (AutomaticTrading.isTradeTime() && !PLANK_MONITOR.isEmpty()) {
+                if (!PLANK_MONITOR.isEmpty()) {
                     for (String code : PLANK_MONITOR) {
                         StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(code);
                         if (stockRealTimePriceByCode.isPlank()) {
@@ -133,7 +133,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                     }
                     Thread.sleep(200);
                 } else {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -150,7 +150,8 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      * @return boolean
      */
     private boolean openAutoPlank() {
-        return DateUtil.hour(new Date(), true) < plankConfig.getAutomaticPlankTradingTimeLimit() &&
+        return AutomaticTrading.isTradeTime() &&
+                DateUtil.hour(new Date(), true) < plankConfig.getAutomaticPlankTradingTimeLimit() &&
                 AutomaticTrading.todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp();
     }
 }
