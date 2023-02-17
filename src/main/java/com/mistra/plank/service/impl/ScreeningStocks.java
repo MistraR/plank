@@ -168,7 +168,7 @@ public class ScreeningStocks {
 //            log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
         }
         Collections.sort(samples);
-        log.warn("新发现的上升趋势的股票一共[{}]支:{}", samples.size(),
+        log.warn("上升趋势的股票一共[{}]支:{}", samples.size(),
                 collectionToString(samples.stream()
                         .map(plankConfig.getPrintName() ? UpwardTrendSample::getName : UpwardTrendSample::getCode)
                         .collect(Collectors.toSet())));

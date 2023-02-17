@@ -115,8 +115,8 @@ public class Barbarossa implements CommandLineRunner {
             }
             STOCK_ALL_MAP.put(e.getCode(), e.getName());
         });
-        log.warn("一共加载[{}]支股票", stocks.size());
-        log.warn("一共加载[{}]支自动打板监测股票", STOCK_FILTER_MAP.size());
+        log.warn("实时加载[{}]支股票", stocks.size());
+        log.warn("实时加载[{}]支自动打板监测股票", STOCK_FILTER_MAP.size());
         STOCK_NAME_SET_ALL.addAll(STOCK_ALL_MAP.values());
     }
 
@@ -131,9 +131,9 @@ public class Barbarossa implements CommandLineRunner {
             CountDownLatch countDownLatchD = new CountDownLatch(Barbarossa.STOCK_ALL_MAP.size());
             dailyRecordProcessor.run(Barbarossa.STOCK_ALL_MAP, countDownLatchD);
             countDownLatchD.await();
-            log.warn("更新股票每日成交数据完成");
+            log.warn("每日涨跌明细更新完成");
             updateStock();
-            log.warn("股票每日成交额、MA5、MA10、MA20更新完成");
+            log.warn("每日成交额、MA5、MA10、MA20更新完成");
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
             executorService.submit(stockProcessor::updateForeignFundShareholding);
             executorService.submit(() -> {
@@ -155,13 +155,15 @@ public class Barbarossa implements CommandLineRunner {
 
     @Scheduled(cron = "0 */3 * * * ?")
     private void updateStock() throws InterruptedException {
-        List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_ALL_MAP.keySet()), 300);
-        CountDownLatch countDownLatchT = new CountDownLatch(partition.size());
-        for (List<String> list : partition) {
-            executorService.submit(() -> stockProcessor.run(list, countDownLatchT));
+        if (AutomaticTrading.isTradeTime()) {
+            List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_ALL_MAP.keySet()), 300);
+            CountDownLatch countDownLatchT = new CountDownLatch(partition.size());
+            for (List<String> list : partition) {
+                executorService.submit(() -> stockProcessor.run(list, countDownLatchT));
+            }
+            countDownLatchT.await();
+            run();
         }
-        countDownLatchT.await();
-        run();
     }
 
     /**

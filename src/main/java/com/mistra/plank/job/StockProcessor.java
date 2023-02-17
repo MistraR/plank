@@ -149,7 +149,7 @@ public class StockProcessor {
                 e.printStackTrace();
             }
         }
-        log.warn("股票最新外资持仓市值更新完成");
+        log.warn("最新外资持仓市值更新完成");
     }
 
     /**
