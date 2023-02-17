@@ -5414,7 +5414,6 @@ CREATE TABLE `stock`  (
   `transaction_amount` decimal(20, 2) NOT NULL COMMENT '当日成交额',
   `current_price` decimal(14, 2) NOT NULL COMMENT '当前价格',
   `purchase_price` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '预计建仓价格',
-  `modify_time` datetime(0) NOT NULL COMMENT '最近更新日期',
   `track` tinyint(1) UNSIGNED ZEROFILL NOT NULL COMMENT '是否开启建仓点监控',
   `shareholding` tinyint(1) UNSIGNED ZEROFILL NOT NULL COMMENT '是否持仓',
   `classification` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '所属板块',
@@ -5425,7 +5424,7 @@ CREATE TABLE `stock`  (
   `automatic_trading_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '自动交易类型',
   `buy_amount` int(0) NULL DEFAULT NULL COMMENT '买入数量',
   `buy_time` datetime(0) NULL DEFAULT NULL COMMENT '最近一次自动买进时间',
-  `suck_trigger_price` decimal(10, 2) NULL DEFAULT NULL COMMENT '触发低吸买入的价格',
+  `suck_trigger_price` decimal(10, 2) NULL DEFAULT NULL COMMENT '触发自动低吸买入的价格',
   `abbreviation` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '缩写',
   `plank_num` int(0) NULL DEFAULT NULL COMMENT '当前连板数',
   PRIMARY KEY (`code`) USING BTREE
