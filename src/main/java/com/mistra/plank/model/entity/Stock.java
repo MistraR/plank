@@ -55,16 +55,16 @@ public class Stock implements Comparable<Stock> {
     private BigDecimal transactionAmount;
 
     /**
-     * 5日均线
-     */
-    @TableField(value = "ma5")
-    private BigDecimal ma5;
-
-    /**
      * 买点类型 5-MA5 10-MA10 20-MA20
      */
     @TableField(value = "purchase_type")
     private Integer purchaseType;
+
+    /**
+     * 5日均线
+     */
+    @TableField(value = "ma5")
+    private BigDecimal ma5;
 
     /**
      * 10日均线
@@ -83,12 +83,6 @@ public class Stock implements Comparable<Stock> {
      */
     @TableField(value = "abbreviation")
     private String abbreviation;
-
-    /**
-     * 最近更新日期
-     */
-    @TableField(value = "modify_time")
-    private Date modifyTime;
 
     /**
      * 是否关注
@@ -121,13 +115,13 @@ public class Stock implements Comparable<Stock> {
     private Integer buyAmount;
 
     /**
-     * 触发自动买入的价格
+     * 触发自动低吸买入的价格
      */
     @TableField(value = "suck_trigger_price")
     private BigDecimal suckTriggerPrice;
 
     /**
-     * 最近一次自动下单打板时间
+     * 最近一次自动下单买入时间
      */
     @TableField(value = "buy_time")
     private Date buyTime;
