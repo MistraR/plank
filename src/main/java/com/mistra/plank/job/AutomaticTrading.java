@@ -139,7 +139,6 @@ public class AutomaticTrading implements CommandLineRunner {
 
     /**
      * 当前时间是否是交易时间
-     * <p>
      * 只判定了时分秒，没有判定非交易日（周末及法定节假日），因为我一般只交易日才会启动项目
      *
      * @return boolean

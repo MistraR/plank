@@ -66,7 +66,7 @@ public class Barbarossa implements CommandLineRunner {
      */
     public static final HashMap<String, Stock> STOCK_MAP_TRACK = new HashMap<>(32);
     /**
-     * 昨日成交额大于3亿的股票
+     * 成交额大于3亿的股票
      */
     public static final HashMap<String, Stock> STOCK_MAP_GE_3E = new HashMap<>(2048);
     /**
@@ -131,12 +131,7 @@ public class Barbarossa implements CommandLineRunner {
             dailyRecordProcessor.run(Barbarossa.STOCK_MAP_ALL, countDownLatchD);
             countDownLatchD.await();
             log.warn("更新股票每日成交数据完成");
-            List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_MAP_ALL.keySet()), 300);
-            CountDownLatch countDownLatchT = new CountDownLatch(partition.size());
-            for (List<String> list : partition) {
-                executorService.submit(() -> stockProcessor.run(list, countDownLatchT));
-            }
-            countDownLatchT.await();
+            updateStock();
             log.warn("股票每日成交额、MA5、MA10、MA20更新完成");
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
             executorService.submit(stockProcessor::updateForeignFundShareholding);
@@ -155,6 +150,17 @@ public class Barbarossa implements CommandLineRunner {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Scheduled(cron = "0 */3 * * * ?")
+    private void updateStock() throws InterruptedException {
+        List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_MAP_ALL.keySet()), 300);
+        CountDownLatch countDownLatchT = new CountDownLatch(partition.size());
+        for (List<String> list : partition) {
+            executorService.submit(() -> stockProcessor.run(list, countDownLatchT));
+        }
+        countDownLatchT.await();
+        run();
     }
 
     /**
@@ -242,6 +248,7 @@ public class Barbarossa implements CommandLineRunner {
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
                 log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
+                log.warn("今日自动交易花费金额:{}", AutomaticTrading.todayCostMoney.intValue());
                 log.error("--------------------------- 自动交易监测 --------------------------");
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.runningMap.values())) {
                     log.warn("{}", collectionToString(AutomaticTrading.runningMap.values().stream()

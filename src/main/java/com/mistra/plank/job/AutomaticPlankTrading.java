@@ -137,6 +137,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
             }
         }
         log.warn("------------------------ 终止打板监测 ------------------------");
+        log.warn("今日自动交易花费金额:{}", AutomaticTrading.todayCostMoney.intValue());
     }
 
     /**
