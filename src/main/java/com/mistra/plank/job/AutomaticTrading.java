@@ -2,6 +2,7 @@ package com.mistra.plank.job;
 
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.StockUtil;
@@ -239,7 +240,7 @@ public class AutomaticTrading implements CommandLineRunner {
     private void sale(HoldShares holdShare, StockRealTimePrice stockRealTimePrice) {
         SubmitRequest request = new SubmitRequest(1);
         request.setAmount(holdShare.getAvailableVolume());
-        request.setPrice(stockRealTimePrice.getLimitUp());
+        request.setPrice(stockRealTimePrice.getLimitDown());
         request.setStockCode(holdShare.getCode().substring(2, 8));
         request.setZqmc(holdShare.getName());
         request.setTradeType(SubmitRequest.S);
@@ -249,6 +250,9 @@ public class AutomaticTrading implements CommandLineRunner {
         holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
                 * holdShare.getNumber()));
         holdSharesMapper.updateById(holdShare);
+        Stock stock = stockMapper.selectOne(new QueryWrapper<Stock>().eq("name", holdShare.getName()));
+        stock.setShareholding(false);
+        stockMapper.updateById(stock);
         if (response.success()) {
             log.warn("触发{}止盈、止损，交易成功!", holdShare.getName());
             holdShare = null;
@@ -335,6 +339,7 @@ public class AutomaticTrading implements CommandLineRunner {
             // 已经挂单，就修改为不监控该股票了
             stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
             stock.setBuyTime(new Date());
+            stock.setShareholding(true);
             stockMapper.updateById(stock);
             // 打板排队有可能只是排单，并没有成交
             log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), stock.getBuyAmount(), currentPrice);
@@ -367,6 +372,7 @@ public class AutomaticTrading implements CommandLineRunner {
             // 已经挂单，就修改为不监控该股票了
             stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
             stock.setBuyTime(new Date());
+            stock.setShareholding(true);
             stockMapper.updateById(stock);
             HoldShares holdShare = HoldShares.builder().buyTime(new Date())
                     .code(stock.getCode()).name(stock.getName()).availableVolume(0)

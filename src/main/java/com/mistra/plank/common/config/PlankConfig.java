@@ -92,6 +92,6 @@ public class PlankConfig {
     /**
      * 股票成交额过滤阈值，小成交额的不参与
      */
-    private Integer stockTurnoverFilter;
+    private Double stockTurnoverFilter;
 
 }
