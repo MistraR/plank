@@ -80,8 +80,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                     (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 7)) {
                 double v = stockRealTimePriceByCode.getCurrentPrice() * 100;
                 if (v <= plankConfig.getSingleTransactionLimitAmount() &&
-                        AutomaticTrading.TODAY_COST_MONEY.intValue() + v < plankConfig.getAutomaticTradingMoneyLimitUp()
-                        && !PLANK_MONITOR.contains(e)) {
+                        AutomaticTrading.TODAY_COST_MONEY.intValue() + v < plankConfig.getAutomaticTradingMoneyLimitUp()) {
                     PLANK_MONITOR.add(e);
                     if (AutomaticTrading.TODAY_BOUGHT_SUCCESS.contains(e)) {
                         PLANK_MONITOR.remove(e);
@@ -124,7 +123,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                 amount -= 2;
                                 if (amount >= 1) {
                                     automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
-                                            AutomaticTradingEnum.AUTO_PLANK);
+                                            AutomaticTradingEnum.AUTO_PLANK.name());
                                 }
                             }
                         } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {

@@ -26,9 +26,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 /**
  * @author rui.wang
@@ -59,11 +58,6 @@ public class AutomaticTrading implements CommandLineRunner {
     private final HoldSharesMapper holdSharesMapper;
 
     /**
-     * 需要监控的股票
-     */
-    private static final ConcurrentHashMap<String, Stock> map = new ConcurrentHashMap<>();
-
-    /**
      * 监控中的股票
      */
     public static final ConcurrentHashMap<String, Stock> UNDER_MONITORING = new ConcurrentHashMap<>();
@@ -78,8 +72,6 @@ public class AutomaticTrading implements CommandLineRunner {
      */
     public static AtomicInteger TODAY_COST_MONEY = new AtomicInteger(0);
 
-    private final ReentrantLock lock = new ReentrantLock();
-
     public AutomaticTrading(StockMapper stockMapper, TradeApiService tradeApiService, PlankConfig plankConfig,
                             StockProcessor stockProcessor, HoldSharesMapper holdSharesMapper) {
         this.stockMapper = stockMapper;
@@ -93,26 +85,25 @@ public class AutomaticTrading implements CommandLineRunner {
      * 每3秒更新一次需要打板或低吸的股票
      */
     @Scheduled(cron = "*/3 * * * * ?")
-    private void plank() {
+    private void autoBuy() {
         if (plankConfig.getAutomaticTrading() && isTradeTime()) {
             List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getAutomaticTradingType,
                     AutomaticTradingEnum.PLANK.name(), AutomaticTradingEnum.SUCK.name()));
-            lock.lock();
-            try {
-                map.clear();
-                for (Stock stock : stocks) {
-                    if (!TODAY_BOUGHT_SUCCESS.contains(stock.getCode())) {
-                        map.put(stock.getCode(), stock);
-                        if (!UNDER_MONITORING.containsKey(stock.getCode())) {
-                            Barbarossa.executorService.submit(new BuyTask(stock));
-                            UNDER_MONITORING.put(stock.getCode(), stock);
-                        }
+            if (CollectionUtils.isNotEmpty(stocks)) {
+                List<String> codes = stocks.stream().map(Stock::getCode).collect(Collectors.toList());
+                for (Map.Entry<String, Stock> entry : UNDER_MONITORING.entrySet()) {
+                    if (!codes.contains(entry.getKey())) {
+                        UNDER_MONITORING.remove(entry.getKey());
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                lock.unlock();
+                for (Stock stock : stocks) {
+                    if (!TODAY_BOUGHT_SUCCESS.contains(stock.getCode()) && !UNDER_MONITORING.containsKey(stock.getCode())) {
+                        Barbarossa.executorService.submit(new BuyTask(stock));
+                        UNDER_MONITORING.put(stock.getCode(), stock);
+                    }
+                }
+            } else {
+                UNDER_MONITORING.clear();
             }
         }
     }
@@ -163,7 +154,7 @@ public class AutomaticTrading implements CommandLineRunner {
             TODAY_BOUGHT_SUCCESS.add(share.getCode());
         }
         // 自动买入
-        plank();
+        autoBuy();
         // 监控持仓，止盈止损
         List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                 .gt(HoldShares::getAvailableVolume, 0).eq(HoldShares::getClearance, false));
@@ -269,24 +260,18 @@ public class AutomaticTrading implements CommandLineRunner {
 
         private final Stock stock;
 
-        private final AtomicBoolean buy = new AtomicBoolean(false);
-
         public BuyTask(Stock stock) {
             this.stock = stock;
         }
 
         @Override
         public void run() {
-            while (!buy.get() && isTradeTime() && TODAY_COST_MONEY.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp()) {
+            while (!TODAY_BOUGHT_SUCCESS.contains(stock.getCode()) && isTradeTime() &&
+                    UNDER_MONITORING.containsKey(stock.getCode()) &&
+                    TODAY_COST_MONEY.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp()) {
                 try {
-                    automaticTrading(stock, buy);
+                    automaticTrading(stock);
                     Thread.sleep(100);
-                    if (!lock.isLocked()) {
-                        if (!map.containsKey(stock.getCode())) {
-                            UNDER_MONITORING.remove(stock.getCode());
-                            break;
-                        }
-                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -294,16 +279,16 @@ public class AutomaticTrading implements CommandLineRunner {
         }
     }
 
-    private void automaticTrading(Stock stock, AtomicBoolean buy) {
+    private void automaticTrading(Stock stock) {
         StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
         if (Objects.nonNull(stockRealTimePrice)) {
             if (stock.getAutomaticTradingType().equals(AutomaticTradingEnum.PLANK.name()) && stockRealTimePrice.isPlank()) {
                 // 触发打板下单条件，挂单
-                buy(stock, buy, stockRealTimePrice.getLimitUp());
+                buy(stock, stock.getBuyAmount(), stockRealTimePrice.getLimitUp(), stock.getAutomaticTradingType());
             } else if (stock.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name()) &&
                     stockRealTimePrice.getCurrentPrice() <= stock.getSuckTriggerPrice().doubleValue()) {
                 // 触发低吸下单条件，挂单
-                buy(stock, buy, stockRealTimePrice.getLimitDown());
+                buy(stock, stock.getBuyAmount(), stockRealTimePrice.getLimitUp(), stock.getAutomaticTradingType());
             }
         }
     }
@@ -311,64 +296,29 @@ public class AutomaticTrading implements CommandLineRunner {
     /**
      * 挂单
      *
-     * @param stock Stock
-     * @param buy   AtomicBoolean
-     * @param price 买入价格
-     */
-    private void buy(Stock stock, AtomicBoolean buy, double price) {
-        if (!TODAY_BOUGHT_SUCCESS.contains(stock.getCode()) && buy(stock, stock.getBuyAmount(), price)) {
-            TODAY_BOUGHT_SUCCESS.add(stock.getCode());
-            UNDER_MONITORING.remove(stock.getCode());
-            map.remove(stock.getCode());
-            buy.set(true);
-            // 已经挂单，就修改为不监控该股票了
-            stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
-            stock.setBuyTime(new Date());
-            stock.setShareholding(true);
-            stockMapper.updateById(stock);
-            //
-            insertHoldShare(stock, stock.getBuyAmount(), price, stock.getAutomaticTradingType());
-        }
-    }
-
-    /**
-     * 挂单
-     *
-     * @param stock                Stock
-     * @param amount               买入数量
-     * @param price                买入价格
-     * @param automaticTradingType 自动交易类型枚举
-     */
-    public void buy(Stock stock, int amount, double price, AutomaticTradingEnum automaticTradingType) {
-        if (!TODAY_BOUGHT_SUCCESS.contains(stock.getCode()) && buy(stock, amount, price)) {
-            TODAY_BOUGHT_SUCCESS.add(stock.getCode());
-            stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
-            stock.setBuyTime(new Date());
-            stock.setShareholding(true);
-            stockMapper.updateById(stock);
-            // 打板单有可能截止收盘都未成交，该持仓数据需要手动删除作废
-            insertHoldShare(stock, amount, price, automaticTradingType.name());
-        }
-    }
-
-    /**
-     * 新增持仓数据
-     * 打板单有可能截止收盘都未成交，该持仓数据需要手动删除作废
-     *
      * @param stock                Stock
      * @param amount               买入数量
      * @param price                买入价格
      * @param automaticTradingType 自动交易类型
      */
-    private void insertHoldShare(Stock stock, int amount, double price, String automaticTradingType) {
-        HoldShares holdShare = HoldShares.builder().buyTime(new Date()).clearance(false).code(stock.getCode())
-                .name(stock.getName()).availableVolume(0).number(amount).profit(new BigDecimal(0))
-                // 设置触发止损价
-                .stopLossPrice(BigDecimal.valueOf(price * plankConfig.getStopLossRate()).setScale(2, RoundingMode.HALF_UP))
-                // 设置触发止盈价
-                .takeProfitPrice(BigDecimal.valueOf(price * plankConfig.getTakeProfitRate()).setScale(2, RoundingMode.HALF_UP))
-                .automaticTradingType(automaticTradingType).buyPrice(BigDecimal.valueOf(price)).build();
-        holdSharesMapper.insert(holdShare);
+    public void buy(Stock stock, int amount, double price, String automaticTradingType) {
+        if (!TODAY_BOUGHT_SUCCESS.contains(stock.getCode()) && this.buy(stock, amount, price)) {
+            TODAY_BOUGHT_SUCCESS.add(stock.getCode());
+            UNDER_MONITORING.remove(stock.getCode());
+            stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
+            stock.setBuyTime(new Date());
+            stock.setShareholding(true);
+            stockMapper.updateById(stock);
+            // 新增持仓数据,打板单有可能截止收盘都未成交,该持仓数据需要手动删除作废
+            HoldShares holdShare = HoldShares.builder().buyTime(new Date()).clearance(false).code(stock.getCode())
+                    .name(stock.getName()).availableVolume(0).number(amount).profit(new BigDecimal(0))
+                    // 设置触发止损价
+                    .stopLossPrice(BigDecimal.valueOf(price * plankConfig.getStopLossRate()).setScale(2, RoundingMode.HALF_UP))
+                    // 设置触发止盈价
+                    .takeProfitPrice(BigDecimal.valueOf(price * plankConfig.getTakeProfitRate()).setScale(2, RoundingMode.HALF_UP))
+                    .automaticTradingType(automaticTradingType).buyPrice(BigDecimal.valueOf(price)).build();
+            holdSharesMapper.insert(holdShare);
+        }
     }
 
     /**
