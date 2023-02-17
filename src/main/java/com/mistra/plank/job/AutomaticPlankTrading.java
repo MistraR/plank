@@ -40,6 +40,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
 
     private final StockMapper stockMapper;
     /**
+     * 自动打板股票，二级过滤map
      * 主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，上板则下单排队
      */
     private static final ConcurrentHashSet<String> PLANK_MONITOR = new ConcurrentHashSet<>();
@@ -58,7 +59,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     @Scheduled(cron = "*/5 * * * * ?")
     private void filterStock() {
         if (openAutoPlank()) {
-            List<List<String>> lists = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_MAP_GE_3E.keySet()),
+            List<List<String>> lists = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_FILTER_MAP.keySet()),
                     Barbarossa.executorService.getMaximumPoolSize());
             for (List<String> list : lists) {
                 Barbarossa.executorService.submit(() -> filterStock(list));
@@ -113,7 +114,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                         if (stockRealTimePriceByCode.isPlank()) {
                             Stock stock = stockMapper.selectOne(new QueryWrapper<Stock>().eq("code", stockRealTimePriceByCode.getCode()));
                             if (Objects.isNull(stock.getBuyTime()) || !DateUtils.isSameDay(new Date(), stock.getBuyTime())) {
-                                Barbarossa.STOCK_MAP_GE_3E.remove(code);
+                                Barbarossa.STOCK_FILTER_MAP.remove(code);
                                 PLANK_MONITOR.remove(code);
                                 // 上板，下单排队
                                 int sum = 0, amount = 1;

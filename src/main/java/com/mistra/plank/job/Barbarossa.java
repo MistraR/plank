@@ -60,15 +60,15 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 所有股票 key-code value-name
      */
-    public static final HashMap<String, String> STOCK_MAP_ALL = new HashMap<>(4096);
+    public static final HashMap<String, String> STOCK_ALL_MAP = new HashMap<>(4096);
     /**
      * 需要监控关注的机构趋势票 key-name value-Stock
      */
-    public static final HashMap<String, Stock> STOCK_MAP_TRACK = new HashMap<>(32);
+    public static final HashMap<String, Stock> STOCK_TRACK_MAP = new HashMap<>(32);
     /**
-     * 成交额大于3亿的股票
+     * 自动打板股票，一级过滤map
      */
-    public static final HashMap<String, Stock> STOCK_MAP_GE_3E = new HashMap<>(2048);
+    public static final HashMap<String, Stock> STOCK_FILTER_MAP = new HashMap<>(2048);
     /**
      * 所有股票 name
      */
@@ -105,18 +105,19 @@ public class Barbarossa implements CommandLineRunner {
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
         stocks.forEach(e -> {
             if ((e.getShareholding() || e.getTrack())) {
-                STOCK_MAP_TRACK.put(e.getName(), e);
+                STOCK_TRACK_MAP.put(e.getName(), e);
             } else if (e.getTransactionAmount().doubleValue() > plankConfig.getStockTurnoverFilter()
                     && (Objects.isNull(e.getPlankNumber()) || e.getPlankNumber() <= 3)
                     && (Objects.isNull(e.getBuyTime()) || !DateUtils.isSameDay(new Date(), e.getBuyTime()))) {
-                // 过滤掉昨日连板以及成交额小于3亿的股票
-                STOCK_MAP_GE_3E.put(e.getCode(), e);
+                // 过滤掉昨日连板以及成交额小于plankConfig.getStockTurnoverFilter()的股票,
+                // 过滤掉3板以上的股票，3板+的可以自己判断是否加入自动交易，低吸或者打板，参考PlankController.tomorrowAutoTradePool接口参数配置
+                STOCK_FILTER_MAP.put(e.getCode(), e);
             }
-            STOCK_MAP_ALL.put(e.getCode(), e.getName());
+            STOCK_ALL_MAP.put(e.getCode(), e.getName());
         });
         log.warn("一共加载[{}]支股票", stocks.size());
-        log.warn("一共加载[{}]支自动打板监测股票", STOCK_MAP_GE_3E.size());
-        STOCK_NAME_SET_ALL.addAll(STOCK_MAP_ALL.values());
+        log.warn("一共加载[{}]支自动打板监测股票", STOCK_FILTER_MAP.size());
+        STOCK_NAME_SET_ALL.addAll(STOCK_ALL_MAP.values());
     }
 
     /**
@@ -127,8 +128,8 @@ public class Barbarossa implements CommandLineRunner {
     @Scheduled(cron = "0 1 15 * * ?")
     private void analyzeData() {
         try {
-            CountDownLatch countDownLatchD = new CountDownLatch(Barbarossa.STOCK_MAP_ALL.size());
-            dailyRecordProcessor.run(Barbarossa.STOCK_MAP_ALL, countDownLatchD);
+            CountDownLatch countDownLatchD = new CountDownLatch(Barbarossa.STOCK_ALL_MAP.size());
+            dailyRecordProcessor.run(Barbarossa.STOCK_ALL_MAP, countDownLatchD);
             countDownLatchD.await();
             log.warn("更新股票每日成交数据完成");
             updateStock();
@@ -154,7 +155,7 @@ public class Barbarossa implements CommandLineRunner {
 
     @Scheduled(cron = "0 */3 * * * ?")
     private void updateStock() throws InterruptedException {
-        List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_MAP_ALL.keySet()), 300);
+        List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_ALL_MAP.keySet()), 300);
         CountDownLatch countDownLatchT = new CountDownLatch(partition.size());
         for (List<String> list : partition) {
             executorService.submit(() -> stockProcessor.run(list, countDownLatchT));
@@ -184,7 +185,7 @@ public class Barbarossa implements CommandLineRunner {
             List<StockRealTimePrice> realTimePrices = new ArrayList<>();
             while (AutomaticTrading.isTradeTime()) {
                 List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>()
-                        .in(Stock::getName, STOCK_MAP_TRACK.keySet()));
+                        .in(Stock::getName, STOCK_TRACK_MAP.keySet()));
                 for (Stock stock : stocks) {
                     // 默认把MA10作为建仓基准价格
                     int purchaseType = Objects.isNull(stock.getPurchaseType()) || stock.getPurchaseType() == 0 ? 10
@@ -228,7 +229,7 @@ public class Barbarossa implements CommandLineRunner {
                                 .collect(Collectors.toList())));
                 log.error("------------------------------ 持仓 -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
-                    if (STOCK_MAP_TRACK.get(realTimePrice.getName()).getShareholding()) {
+                    if (STOCK_TRACK_MAP.get(realTimePrice.getName()).getShareholding()) {
                         if (realTimePrice.getIncreaseRate() > 0) {
                             Barbarossa.log.error(convertLog(realTimePrice));
                         } else {
@@ -236,7 +237,7 @@ public class Barbarossa implements CommandLineRunner {
                         }
                     }
                 }
-                realTimePrices.removeIf(e -> STOCK_MAP_TRACK.get(e.getName()).getShareholding());
+                realTimePrices.removeIf(e -> STOCK_TRACK_MAP.get(e.getName()).getShareholding());
                 log.error("------------------------------ 建仓 -----------------------------");
                 for (StockRealTimePrice realTimePrice : realTimePrices) {
                     if (realTimePrice.getPurchaseRate() >= -2) {
@@ -278,7 +279,7 @@ public class Barbarossa implements CommandLineRunner {
                         StockMainFundSample mainFundSample = JSONObject.parseObject(e.toString(), StockMainFundSample.class);
                         tmpList.add(mainFundSample);
                         mainFundDataAllMap.put(mainFundSample.getF14(), mainFundSample);
-                        if (STOCK_MAP_TRACK.containsKey(mainFundSample.getF14())) {
+                        if (STOCK_TRACK_MAP.containsKey(mainFundSample.getF14())) {
                             mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
                         }
                     } catch (JSONException ignored) {
@@ -293,7 +294,7 @@ public class Barbarossa implements CommandLineRunner {
                 mainFundDataAll.addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
                 mainFundData.clear();
                 mainFundData.addAll(
-                        result.stream().filter(e -> STOCK_MAP_TRACK.containsKey(e.getF14())).collect(Collectors.toList()));
+                        result.stream().filter(e -> STOCK_TRACK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
                 Thread.sleep(3000);
             } catch (Exception e) {
                 e.printStackTrace();
