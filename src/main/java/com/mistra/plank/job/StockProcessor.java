@@ -69,7 +69,6 @@ public class StockProcessor {
                                 .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -40))
                                 .orderByDesc(DailyRecord::getDate)).getRecords();
                 exist.setPlankNumber(0);
-                exist.setModifyTime(today);
                 exist.setCurrentPrice(BigDecimal.valueOf(stockRealTimePrice.getCurrentPrice()));
                 exist.setTransactionAmount(stockRealTimePrice.getTransactionAmount());
                 exist.setMarketValue(stockRealTimePrice.getMarket().longValue());
