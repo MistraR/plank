@@ -145,7 +145,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
 
     /**
      * 是否开启自动打板
-     * 只打11点前封板的票
+     * 只打plankConfig.getAutomaticPlankTradingTimeLimit()点前封板的票
      *
      * @return boolean
      */
