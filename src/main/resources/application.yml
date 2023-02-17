@@ -44,7 +44,7 @@ ocr:
         user: ''
 plank:
   automaticTrading: true
-  automaticTradingMoney: 20000
+  automaticTradingMoneyLimitUp: 20000
   automaticPlankTrading: true
   automaticPlankTradingTimeLimit: 10
   singleTransactionLimitAmount: 5000

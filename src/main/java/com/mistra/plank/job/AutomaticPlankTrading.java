@@ -76,8 +76,10 @@ public class AutomaticPlankTrading implements CommandLineRunner {
         codes.forEach(e -> {
             StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
             if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 18) ||
-                    (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 8)) {
-                if (stockRealTimePriceByCode.getCurrentPrice() * 100 <= plankConfig.getSingleTransactionLimitAmount()
+                    (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 7)) {
+                double v = stockRealTimePriceByCode.getCurrentPrice() * 100;
+                if (v <= plankConfig.getSingleTransactionLimitAmount() &&
+                        AutomaticTrading.todayCostMoney.intValue() + v < plankConfig.getAutomaticTradingMoneyLimitUp()
                         && !PLANK_MONITOR.contains(e)) {
                     PLANK_MONITOR.add(e);
                     if (AutomaticTrading.pendingOrderSet.contains(e)) {
@@ -148,6 +150,6 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     private boolean openAutoPlank() {
         return DateUtil.hour(new Date(), true) < plankConfig.getAutomaticPlankTradingTimeLimit() &&
-                AutomaticTrading.todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoney();
+                AutomaticTrading.todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp();
     }
 }

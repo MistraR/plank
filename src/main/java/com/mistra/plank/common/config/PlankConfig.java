@@ -72,7 +72,7 @@ public class PlankConfig {
     /**
      * 每日自动交易买入金额上限
      */
-    private Double automaticTradingMoney;
+    private Double automaticTradingMoneyLimitUp;
 
     /**
      * 自动打板单笔交易金额上限

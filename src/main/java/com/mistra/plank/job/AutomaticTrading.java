@@ -273,7 +273,7 @@ public class AutomaticTrading implements CommandLineRunner {
 
         @Override
         public void run() {
-            while (!buy.get() && isTradeTime() && todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoney()) {
+            while (!buy.get() && isTradeTime() && todayCostMoney.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp()) {
                 try {
                     automaticTrading(stock, buy);
                     Thread.sleep(100);
