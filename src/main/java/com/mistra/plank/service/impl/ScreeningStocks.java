@@ -58,12 +58,11 @@ public class ScreeningStocks {
 
     /**
      * 找出最近5天或10天 爆量回踩的票
-     * <p>
      * 最高成交量>MA10*1.5 最低成交量<MA10*0.7 最低成交量出现在最高成交量之后 最低成交量那天的收盘价>最高成交量那天(收盘价+开盘价)/2
-     * <p>
      * 最高成交额>10亿 最低成交额>5亿
      */
-    public List<Stock> explosiveVolumeBack(Date date) {
+    public void explosiveVolumeBack() {
+        Date date = new Date();
         List<Stock> result = new ArrayList<>();
         List<DailyRecord> dailyRecords = dailyRecordMapper
                 .selectList(new LambdaQueryWrapper<DailyRecord>().ge(DailyRecord::getDate, DateUtils.addDays(date, -30))
@@ -87,11 +86,6 @@ public class ScreeningStocks {
         Collections.sort(result);
         log.warn("{}爆量回踩股票[{}]支:{}", sdf.format(date), result.size(), StringUtil.collectionToString(result.stream()
                 .map(plankConfig.getPrintName() ? Stock::getName : Stock::getCode).collect(Collectors.toList())));
-        return result;
-    }
-
-    public void explosiveVolumeBack() {
-        explosiveVolumeBack(new Date());
     }
 
     private Stock explosiveVolumeBack(List<DailyRecord> recordList, String code) {
@@ -133,9 +127,9 @@ public class ScreeningStocks {
             if (stock.getTrack() || stock.getTransactionAmount().doubleValue() < plankConfig.getStockTurnoverFilter()) {
                 continue;
             }
-            List<DailyRecord> dailyRecords = dailyRecordMapper
-                    .selectList(new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, entry.getKey())
-                            .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -200)).orderByDesc(DailyRecord::getDate));
+            List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
+                    .eq(DailyRecord::getCode, entry.getKey())
+                    .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -200)).orderByDesc(DailyRecord::getDate));
             if (dailyRecords.size() < 100) {
                 failed.add(entry.getKey());
                 continue;
@@ -168,19 +162,8 @@ public class ScreeningStocks {
 //            log.error("{}的交易数据不完整(可能是次新股，上市不足100个交易日)", collectionToString(failed));
         }
         Collections.sort(samples);
-        log.warn("上升趋势的股票一共[{}]支:{}", samples.size(),
-                collectionToString(samples.stream()
-                        .map(plankConfig.getPrintName() ? UpwardTrendSample::getName : UpwardTrendSample::getCode)
-                        .collect(Collectors.toSet())));
-        if (CollectionUtils.isNotEmpty(samples)) {
-            // 找出来之后直接更新这些股票为监控股票
-            List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getCode,
-                    samples.stream().map(UpwardTrendSample::getCode).collect(Collectors.toSet())));
-            for (Stock stock : stocks) {
-                stock.setTrack(true);
-                // stockMapper.updateById(stock);
-            }
-        }
+        log.warn("上升趋势的股票一共[{}]支:{}", samples.size(), collectionToString(samples.stream().map(plankConfig.getPrintName() ?
+                UpwardTrendSample::getName : UpwardTrendSample::getCode).collect(Collectors.toSet())));
     }
 
     /**
