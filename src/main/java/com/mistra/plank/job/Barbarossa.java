@@ -182,6 +182,12 @@ public class Barbarossa implements CommandLineRunner {
         }
     }
 
+    /**
+     * 监控版块涨幅排行
+     */
+    private void bk() {
+    }
+
     private void monitorStock() {
         try {
             List<StockRealTimePrice> realTimePrices = new ArrayList<>();
@@ -283,7 +289,7 @@ public class Barbarossa implements CommandLineRunner {
                     }
                 });
                 List<StockMainFundSample> result = tmpList.stream().filter(e -> e != null &&
-                                STOCK_NAME_SET_ALL.contains(e.getF14()) && e.getF62() != null)
+                        STOCK_NAME_SET_ALL.contains(e.getF14()) && e.getF62() != null)
                         .sorted().collect(Collectors.toList());
                 mainFundDataAll.clear();
                 mainFundDataAll.addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
