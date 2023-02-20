@@ -181,13 +181,22 @@ public class Barbarossa implements CommandLineRunner {
             monitoring.set(true);
             executorService.submit(this::monitorStock);
             executorService.submit(this::queryMainFundData);
+            executorService.submit(this::bk);
         }
     }
 
     /**
-     * 监控版块涨幅排行
+     * 更新版块涨幅排行
      */
     private void bk() {
+        while (AutomaticTrading.isTradeTime()) {
+            try {
+                stockProcessor.updateBk();
+                Thread.sleep(3000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void monitorStock() {
@@ -236,6 +245,9 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + "[" + e.getF62() /
                         W / W + "亿]" + e.getF3() + "%").collect(Collectors.toList())));
+                log.error("------------------------- 版块涨幅Top5 --------------------------");
+                log.warn(collectionToString(stockProcessor.selectTopIncreaseRateBk().stream()
+                        .map(e -> e.getName() + ":" + e.getIncreaseRate()).collect(Collectors.toList())));
                 log.error("------------------------------ 持仓 -----------------------------");
                 realTimePrices.stream().filter(e -> STOCK_TRACK_MAP.get(e.getName()).getShareholding()).forEach(e -> {
                     if (e.getIncreaseRate() > 0) {

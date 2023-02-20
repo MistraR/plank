@@ -10,10 +10,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
 import com.mistra.plank.common.util.UploadDataListener;
+import com.mistra.plank.dao.BkMapper;
 import com.mistra.plank.dao.DailyRecordMapper;
 import com.mistra.plank.dao.FundHoldingsTrackingMapper;
 import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockRealTimePrice;
+import com.mistra.plank.model.entity.Bk;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.ForeignFundHoldingsTracking;
 import com.mistra.plank.model.entity.Stock;
@@ -46,9 +48,9 @@ public class StockProcessor {
     private final StockMapper stockMapper;
     private final DailyRecordMapper dailyRecordMapper;
     private final PlankConfig plankConfig;
-
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
     private final DailyRecordProcessor dailyRecordProcessor;
+    private final BkMapper bkMapper;
 
     /**
      * 是否重置连板数
@@ -56,12 +58,14 @@ public class StockProcessor {
     public static final AtomicBoolean RESET_PLANK_NUMBER = new AtomicBoolean(false);
 
     public StockProcessor(StockMapper stockMapper, DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig,
-                          FundHoldingsTrackingMapper fundHoldingsTrackingMapper, DailyRecordProcessor dailyRecordProcessor) {
+                          FundHoldingsTrackingMapper fundHoldingsTrackingMapper, DailyRecordProcessor dailyRecordProcessor,
+                          BkMapper bkMapper) {
         this.stockMapper = stockMapper;
         this.dailyRecordMapper = dailyRecordMapper;
         this.plankConfig = plankConfig;
         this.fundHoldingsTrackingMapper = fundHoldingsTrackingMapper;
         this.dailyRecordProcessor = dailyRecordProcessor;
+        this.bkMapper = bkMapper;
     }
 
     public void run(List<String> codes, CountDownLatch countDownLatch) {
@@ -97,6 +101,44 @@ public class StockProcessor {
             }
         }
         countDownLatch.countDown();
+    }
+
+    public void updateBk() {
+        try {
+            String body = HttpUtil.getHttpGetResponseString(plankConfig.getConceptBKUrl(), null);
+            body = body.substring(body.indexOf("(") + 1, body.indexOf(")"));
+            updateBk(JSON.parseObject(body).getJSONObject("data").getJSONArray("diff"), "CONCEPT");
+            body = HttpUtil.getHttpGetResponseString(plankConfig.getIndustryBKUrl(), null);
+            body = body.substring(body.indexOf("(") + 1, body.indexOf(")"));
+            updateBk(JSON.parseObject(body).getJSONObject("data").getJSONArray("diff"), "INDUSTRY");
+            Thread.sleep(3000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateBk(JSONArray array, String classification) {
+        for (Object o : array) {
+            JSONObject object = (JSONObject) o;
+            String bkCode = object.getString("f12");
+            Bk bk = bkMapper.selectOne(new LambdaQueryWrapper<Bk>().eq(Bk::getBk, bkCode));
+            if (Objects.nonNull(bk)) {
+                bk.setIncreaseRate(object.getBigDecimal("f3"));
+                bkMapper.updateById(bk);
+            } else {
+                bkMapper.insert(Bk.builder().increaseRate(object.getBigDecimal("f3"))
+                        .bk(bkCode).name(object.getString("f14")).classification(classification).build());
+            }
+        }
+    }
+
+    /**
+     * 查询涨幅前5的版块
+     *
+     * @return List<Bk>
+     */
+    public List<Bk> selectTopIncreaseRateBk() {
+        return bkMapper.selectList(new LambdaQueryWrapper<Bk>().orderByDesc(Bk::getIncreaseRate).last("limit 0,5"));
     }
 
     /**
