@@ -10,6 +10,7 @@ import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author rui.wang
@@ -115,14 +117,18 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                         .le(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))));
                         if (stockRealTimePriceByCode.isPlank() && Objects.nonNull(stock)) {
                             boolean buy = true;
+                            List<String> collect = StockProcessor.TOP5_BK.keySet().stream().filter(e ->
+                                    stock.getClassification().contains(e)).collect(Collectors.toList());
                             if (plankConfig.getAutomaticPlankTop5Bk()) {
-                                buy = StockProcessor.TOP5_BK.keySet().stream().anyMatch(e -> stock.getClassification().contains(e));
+                                buy = CollectionUtils.isNotEmpty(collect);
+                                if (buy) {
+                                    log.warn("准备挂单[{}],所属版块:{} {}", stock.getName(), StockProcessor.TOP5_BK.get(collect.get(0)).getName(),
+                                            StockProcessor.TOP5_BK.get(collect.get(0)).getIncreaseRate());
+                                }
                             }
                             if (buy) {
                                 Barbarossa.STOCK_FILTER_MAP.remove(code);
                                 PLANK_MONITOR.remove(code);
-                                log.warn("准备挂单[{}],所属版块:{} {}", stock.getName(), StockProcessor.TOP5_BK.get(bk).getName(),
-                                        StockProcessor.TOP5_BK.get(bk).getIncreaseRate());
                                 // 上板，下单排队
                                 int sum = 0, amount = 1;
                                 while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
