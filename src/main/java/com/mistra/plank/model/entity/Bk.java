@@ -49,7 +49,7 @@ public class Bk {
     private String classification;
 
     /**
-     * 是否忽略
+     * 是否忽略该板块
      */
     @TableField(value = "ignore_update")
     private Boolean ignoreUpdate;

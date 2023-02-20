@@ -110,7 +110,10 @@ public class StockProcessor {
         countDownLatch.countDown();
     }
 
-    public void updateStockBkUrl() {
+    /**
+     * 股票关联版块信息
+     */
+    public void updateStockBkInfo() {
         List<Bk> bks = bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false));
         for (Bk bk : bks) {
             Barbarossa.executorService.submit(() -> {
