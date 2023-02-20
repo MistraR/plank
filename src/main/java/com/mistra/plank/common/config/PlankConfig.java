@@ -114,4 +114,9 @@ public class PlankConfig {
      */
     private String conceptBKUrl;
 
+    /**
+     * 更新股票所属版块
+     */
+    private String updateStockBkUrl;
+
 }

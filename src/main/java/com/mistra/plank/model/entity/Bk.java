@@ -47,4 +47,10 @@ public class Bk {
      */
     @TableField(value = "classification")
     private String classification;
+
+    /**
+     * 是否忽略
+     */
+    @TableField(value = "ignore_update")
+    private Boolean ignoreUpdate;
 }

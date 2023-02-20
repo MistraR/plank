@@ -23,6 +23,7 @@ import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.model.param.FundHoldingsParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Component;
 
@@ -103,6 +104,38 @@ public class StockProcessor {
         countDownLatch.countDown();
     }
 
+    public void updateStockBkUrl() {
+        List<Bk> bks = bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false));
+        for (Bk bk : bks) {
+            Barbarossa.executorService.submit(() -> {
+                try {
+                    String url = plankConfig.getUpdateStockBkUrl().replace("{BK}", bk.getBk());
+                    String body = HttpUtil.getHttpGetResponseString(url, null);
+                    body = body.substring(body.indexOf("(") + 1, body.indexOf(")"));
+                    JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
+                    for (Object o : array) {
+                        JSONObject object = (JSONObject) o;
+                        String code = object.getString("f12");
+                        Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().likeLeft(Stock::getCode, code));
+                        if (Objects.nonNull(stock)) {
+                            String classification = stock.getClassification();
+                            if (StringUtils.isNotEmpty(classification) && classification.contains(bk.getBk()) &&
+                                    classification.split(",").length <= 3) {
+                                classification = classification + "," + bk.getBk();
+                            } else {
+                                classification = bk.getBk();
+                            }
+                            stock.setClassification(classification);
+                            stockMapper.updateById(stock);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
     public void updateBk() {
         try {
             String body = HttpUtil.getHttpGetResponseString(plankConfig.getConceptBKUrl(), null);
@@ -126,7 +159,7 @@ public class StockProcessor {
                 bk.setIncreaseRate(object.getBigDecimal("f3"));
                 bkMapper.updateById(bk);
             } else {
-                bkMapper.insert(Bk.builder().increaseRate(object.getBigDecimal("f3"))
+                bkMapper.insert(Bk.builder().increaseRate(object.getBigDecimal("f3")).ignoreUpdate(false)
                         .bk(bkCode).name(object.getString("f14")).classification(classification).build());
             }
         }
@@ -138,7 +171,8 @@ public class StockProcessor {
      * @return List<Bk>
      */
     public List<Bk> selectTopIncreaseRateBk() {
-        return bkMapper.selectList(new LambdaQueryWrapper<Bk>().orderByDesc(Bk::getIncreaseRate).last("limit 0,5"));
+        return bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false)
+                .orderByDesc(Bk::getIncreaseRate).last("limit 0,5"));
     }
 
     /**

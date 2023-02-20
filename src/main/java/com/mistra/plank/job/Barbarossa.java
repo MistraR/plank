@@ -135,6 +135,7 @@ public class Barbarossa implements CommandLineRunner {
             StockProcessor.RESET_PLANK_NUMBER.set(true);
             updateStock();
             log.warn("每日成交额、MA5、MA10、MA20更新完成");
+            executorService.submit(stockProcessor::updateStockBkUrl);
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
             executorService.submit(stockProcessor::updateForeignFundShareholding);
             executorService.submit(() -> {
