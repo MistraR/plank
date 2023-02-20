@@ -43,11 +43,11 @@ ocr:
         softid: 0
         user: ''
 plank:
-  automaticTrading: true
+  automaticTrading: false
   stopLossRate: 0.97
   takeProfitRate: 1.06
   automaticTradingMoneyLimitUp: 20000
-  automaticPlankTrading: true
+  automaticPlankTrading: false
   automaticPlankTradingTimeLimit: 10
   singleTransactionLimitAmount: 5000
   stockTurnoverFilter: 500000000

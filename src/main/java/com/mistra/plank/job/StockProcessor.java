@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +50,11 @@ public class StockProcessor {
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
     private final DailyRecordProcessor dailyRecordProcessor;
 
+    /**
+     * 是否重置连板数
+     */
+    public static final AtomicBoolean RESET_PLANK_NUMBER = new AtomicBoolean(false);
+
     public StockProcessor(StockMapper stockMapper, DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig,
                           FundHoldingsTrackingMapper fundHoldingsTrackingMapper, DailyRecordProcessor dailyRecordProcessor) {
         this.stockMapper = stockMapper;
@@ -59,7 +65,6 @@ public class StockProcessor {
     }
 
     public void run(List<String> codes, CountDownLatch countDownLatch) {
-        Date today = new Date();
         for (String code : codes) {
             try {
                 StockRealTimePrice stockRealTimePrice = getStockRealTimePriceByCode(code);
@@ -68,11 +73,13 @@ public class StockProcessor {
                         new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, code)
                                 .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -40))
                                 .orderByDesc(DailyRecord::getDate)).getRecords();
-                exist.setPlankNumber(0);
                 exist.setCurrentPrice(BigDecimal.valueOf(stockRealTimePrice.getCurrentPrice()));
                 exist.setTransactionAmount(stockRealTimePrice.getTransactionAmount());
                 exist.setMarketValue(stockRealTimePrice.getMarket().longValue());
-                exist.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
+                if (RESET_PLANK_NUMBER.get()) {
+                    exist.setPlankNumber(0);
+                    exist.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
+                }
                 if (dailyRecords.size() >= 20) {
                     exist.setMa5(BigDecimal
                             .valueOf(dailyRecords.subList(0, 5).stream().map(DailyRecord::getClosePrice)

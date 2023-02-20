@@ -132,6 +132,7 @@ public class Barbarossa implements CommandLineRunner {
             dailyRecordProcessor.run(Barbarossa.STOCK_ALL_MAP, countDownLatchD);
             countDownLatchD.await();
             log.warn("每日涨跌明细更新完成");
+            StockProcessor.RESET_PLANK_NUMBER.set(true);
             updateStock();
             log.warn("每日成交额、MA5、MA10、MA20更新完成");
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
@@ -156,6 +157,7 @@ public class Barbarossa implements CommandLineRunner {
     @Scheduled(cron = "0 */3 * * * ?")
     private void updateStock() throws InterruptedException {
         if (AutomaticTrading.isTradeTime()) {
+            StockProcessor.RESET_PLANK_NUMBER.set(false);
             List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_ALL_MAP.keySet()), 300);
             CountDownLatch countDownLatchT = new CountDownLatch(partition.size());
             for (List<String> list : partition) {
@@ -289,7 +291,7 @@ public class Barbarossa implements CommandLineRunner {
                     }
                 });
                 List<StockMainFundSample> result = tmpList.stream().filter(e -> e != null &&
-                        STOCK_NAME_SET_ALL.contains(e.getF14()) && e.getF62() != null)
+                                STOCK_NAME_SET_ALL.contains(e.getF14()) && e.getF62() != null)
                         .sorted().collect(Collectors.toList());
                 mainFundDataAll.clear();
                 mainFundDataAll.addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
