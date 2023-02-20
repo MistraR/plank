@@ -95,10 +95,8 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     @Override
     public void run(String... args) {
-        if (plankConfig.getAutomaticPlankTrading()) {
-            filterStock();
-            Barbarossa.executorService.submit(this::autoPlank);
-        }
+        filterStock();
+        Barbarossa.executorService.submit(this::autoPlank);
     }
 
     /**
