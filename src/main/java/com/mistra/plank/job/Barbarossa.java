@@ -131,10 +131,8 @@ public class Barbarossa implements CommandLineRunner {
             CountDownLatch countDownLatchD = new CountDownLatch(Barbarossa.STOCK_ALL_MAP.size());
             dailyRecordProcessor.run(Barbarossa.STOCK_ALL_MAP, countDownLatchD);
             countDownLatchD.await();
-            log.warn("每日涨跌明细更新完成");
+            log.warn("每日涨跌明细、成交额、MA5、MA10、MA20更新完成");
             StockProcessor.RESET_PLANK_NUMBER.set(true);
-            updateStock();
-            log.warn("每日成交额、MA5、MA10、MA20更新完成");
             executorService.submit(stockProcessor::updateStockBkInfo);
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
             executorService.submit(stockProcessor::updateForeignFundShareholding);
@@ -160,12 +158,12 @@ public class Barbarossa implements CommandLineRunner {
         if (AutomaticTrading.isTradeTime()) {
             StockProcessor.RESET_PLANK_NUMBER.set(false);
             List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_ALL_MAP.keySet()), 300);
-            CountDownLatch countDownLatchT = new CountDownLatch(partition.size());
+            CountDownLatch countDownLatch = new CountDownLatch(partition.size());
             for (List<String> list : partition) {
-                executorService.submit(() -> stockProcessor.run(list, countDownLatchT));
+                executorService.submit(() -> stockProcessor.run(list, countDownLatch));
             }
-            stockProcessor.updateTopIncreaseRateBk();
-            countDownLatchT.await();
+            stockProcessor.updateTop5IncreaseRateBk();
+            countDownLatch.await();
             run();
         }
     }

@@ -103,8 +103,8 @@ public class StockProcessor {
                                     .collect(Collectors.averagingDouble(BigDecimal::doubleValue))));
                 }
                 stockMapper.updateById(exist);
-//                log.info("更新[ {} ]成交额、均线完成", exist.getName());
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         countDownLatch.countDown();
@@ -145,6 +145,9 @@ public class StockProcessor {
         }
     }
 
+    /**
+     * 实时更新版块涨幅信息
+     */
     public void updateBk() {
         try {
             String body = HttpUtil.getHttpGetResponseString(plankConfig.getConceptBKUrl(), null);
@@ -177,7 +180,7 @@ public class StockProcessor {
     /**
      * 查询涨幅前5的版块
      */
-    public void updateTopIncreaseRateBk() {
+    public void updateTop5IncreaseRateBk() {
         List<Bk> bks = bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false)
                 .orderByDesc(Bk::getIncreaseRate).last("limit 0,5"));
         bks.forEach(e -> TOP5_BK.put(e.getBk(), e));
