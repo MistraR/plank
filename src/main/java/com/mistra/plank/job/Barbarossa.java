@@ -16,6 +16,7 @@ import com.mistra.plank.dao.HoldSharesMapper;
 import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockMainFundSample;
 import com.mistra.plank.model.dto.StockRealTimePrice;
+import com.mistra.plank.model.entity.Bk;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
@@ -153,7 +154,7 @@ public class Barbarossa implements CommandLineRunner {
         }
     }
 
-    @Scheduled(cron = "0 */3 * * * ?")
+    @Scheduled(cron = "0 */2 * * * ?")
     private void updateStock() throws InterruptedException {
         if (AutomaticTrading.isTradeTime()) {
             StockProcessor.RESET_PLANK_NUMBER.set(false);
@@ -162,9 +163,24 @@ public class Barbarossa implements CommandLineRunner {
             for (List<String> list : partition) {
                 executorService.submit(() -> stockProcessor.run(list, countDownLatch));
             }
-            stockProcessor.updateTop5IncreaseRateBk();
             countDownLatch.await();
             run();
+        }
+    }
+
+    /**
+     * 开盘初始化
+     */
+    @Scheduled(cron = "0 30 9 * * ?")
+    private void open() {
+        stockProcessor.updateTop5IncreaseRateBk();
+        executorService.submit(this::bk);
+    }
+
+    @Scheduled(cron = "*/5 * * * * ?")
+    private void init() {
+        if (AutomaticTrading.isTradeTime()) {
+            open();
         }
     }
 
@@ -181,7 +197,6 @@ public class Barbarossa implements CommandLineRunner {
             monitoring.set(true);
             executorService.submit(this::monitorStock);
             executorService.submit(this::queryMainFundData);
-            executorService.submit(this::bk);
         }
     }
 
@@ -246,8 +261,9 @@ public class Barbarossa implements CommandLineRunner {
                 log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + "[" + e.getF62() /
                         W / W + "亿]" + e.getF3() + "%").collect(Collectors.toList())));
                 log.error("------------------------- 版块涨幅Top5 --------------------------");
-                log.warn(collectionToString(StockProcessor.TOP5_BK.values().stream()
-                        .map(e -> e.getName() + ":" + e.getIncreaseRate()).collect(Collectors.toList())));
+                ArrayList<Bk> bks = Lists.newArrayList(StockProcessor.TOP5_BK.values());
+                Collections.sort(bks);
+                log.warn(collectionToString(bks.stream().map(e -> e.getName() + ":" + e.getIncreaseRate()).collect(Collectors.toList())));
                 List<StockRealTimePrice> shareholding = realTimePrices.stream().filter(e ->
                         STOCK_TRACK_MAP.get(e.getName()).getShareholding()).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(shareholding)) {

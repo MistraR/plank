@@ -141,7 +141,7 @@ public class AutomaticTrading implements CommandLineRunner {
             return false;
         }
         int hour = DateUtil.hour(new Date(), true);
-        return (hour == 9 && DateUtil.minute(new Date()) > 30) || (hour == 11 && DateUtil.minute(new Date()) <= 29)
+        return (hour == 9 && DateUtil.minute(new Date()) >= 30) || (hour == 11 && DateUtil.minute(new Date()) <= 29)
                 || hour == 10 || hour == 13 || hour == 14;
     }
 

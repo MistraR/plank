@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName(value = "bk", autoResultMap = true)
-public class Bk {
+public class Bk implements Comparable<Bk> {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -53,4 +53,9 @@ public class Bk {
      */
     @TableField(value = "ignore_update")
     private Boolean ignoreUpdate;
+
+    @Override
+    public int compareTo(Bk o) {
+        return (int) ((o.increaseRate.doubleValue() * 100) - (this.increaseRate.doubleValue() * 100));
+    }
 }
