@@ -95,8 +95,10 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     @Override
     public void run(String... args) {
-        filterStock();
-        Barbarossa.executorService.submit(this::autoPlank);
+        if (plankConfig.getAutomaticPlankTrading()) {
+            filterStock();
+            Barbarossa.executorService.submit(this::autoPlank);
+        }
     }
 
     /**
@@ -114,23 +116,24 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                 .and(wrapper -> wrapper.isNull(Stock::getBuyTime).or()
                                         .le(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))));
                         if (stockRealTimePriceByCode.isPlank() && Objects.nonNull(stock)) {
-                            for (String bk : StockProcessor.TOP5_BK.keySet()) {
-                                if (stock.getClassification().contains(bk)) {
-                                    Barbarossa.STOCK_FILTER_MAP.remove(code);
-                                    PLANK_MONITOR.remove(code);
-                                    log.warn("准备挂单[{}],所属版块:{} {}", stock.getName(), StockProcessor.TOP5_BK.get(bk).getName(),
-                                            StockProcessor.TOP5_BK.get(bk).getIncreaseRate());
-                                    // 上板，下单排队
-                                    int sum = 0, amount = 1;
-                                    while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
-                                        sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
-                                    }
-                                    amount -= 2;
-                                    if (amount >= 1) {
-                                        automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
-                                                AutomaticTradingEnum.AUTO_PLANK.name());
-                                    }
-                                    break;
+                            boolean buy = true;
+                            if (plankConfig.getAutomaticPlankTop5Bk()) {
+                                buy = StockProcessor.TOP5_BK.keySet().stream().anyMatch(e -> stock.getClassification().contains(e));
+                            }
+                            if (buy) {
+                                Barbarossa.STOCK_FILTER_MAP.remove(code);
+                                PLANK_MONITOR.remove(code);
+                                log.warn("准备挂单[{}],所属版块:{} {}", stock.getName(), StockProcessor.TOP5_BK.get(bk).getName(),
+                                        StockProcessor.TOP5_BK.get(bk).getIncreaseRate());
+                                // 上板，下单排队
+                                int sum = 0, amount = 1;
+                                while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
+                                    sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
+                                }
+                                amount -= 2;
+                                if (amount >= 1) {
+                                    automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
+                                            AutomaticTradingEnum.AUTO_PLANK.name());
                                 }
                             }
                         } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {
