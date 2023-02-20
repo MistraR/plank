@@ -111,7 +111,8 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                         Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>()
                                 .eq(Stock::getCode, stockRealTimePriceByCode.getCode())
                                 .ne(Stock::getClassification, "")
-                                .and(wrapper -> wrapper.isNull(Stock::getBuyTime).or().le(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))));
+                                .and(wrapper -> wrapper.isNull(Stock::getBuyTime).or()
+                                        .le(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))));
                         if (stockRealTimePriceByCode.isPlank() && Objects.nonNull(stock)) {
                             for (String bk : StockProcessor.TOP5_BK.keySet()) {
                                 if (stock.getClassification().contains(bk)) {

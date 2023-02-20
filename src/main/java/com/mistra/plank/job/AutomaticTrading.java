@@ -133,16 +133,16 @@ public class AutomaticTrading implements CommandLineRunner {
      * 当前时间是否是交易时间
      * 只判定了时分秒，没有判定非交易日（周末及法定节假日），因为我一般只交易日才会启动项目
      *
-     * @return boolean
+     * @return 是否是交易时间
      */
     public static boolean isTradeTime() {
         int week = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1;
         if (week == 6 || week == 0) {
-            //0代表周日，6代表周六
+            //0-周日,6-周六
             return false;
         }
         int hour = DateUtil.hour(new Date(), true);
-        return (hour == 9 && DateUtil.minute(new Date()) >= 30) || (hour == 11 && DateUtil.minute(new Date()) <= 29)
+        return (hour == 9 && DateUtil.minute(new Date()) >= 30) || (hour == 11 && DateUtil.minute(new Date()) < 30)
                 || hour == 10 || hour == 13 || hour == 14;
     }
 
