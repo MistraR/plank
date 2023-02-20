@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -57,6 +58,11 @@ public class StockProcessor {
      * 是否重置连板数
      */
     public static final AtomicBoolean RESET_PLANK_NUMBER = new AtomicBoolean(false);
+
+    /**
+     * 当日涨幅top5版块
+     */
+    public static final ConcurrentHashMap<String, Bk> TOP5_BK = new ConcurrentHashMap<>(8);
 
     public StockProcessor(StockMapper stockMapper, DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig,
                           FundHoldingsTrackingMapper fundHoldingsTrackingMapper, DailyRecordProcessor dailyRecordProcessor,
@@ -119,10 +125,10 @@ public class StockProcessor {
                         Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().likeLeft(Stock::getCode, code));
                         if (Objects.nonNull(stock)) {
                             String classification = stock.getClassification();
-                            if (StringUtils.isNotEmpty(classification) && classification.contains(bk.getBk()) &&
+                            if (StringUtils.isNotEmpty(classification) && !classification.contains(bk.getBk()) &&
                                     classification.split(",").length <= 3) {
                                 classification = classification + "," + bk.getBk();
-                            } else {
+                            } else if (StringUtils.isEmpty(classification)) {
                                 classification = bk.getBk();
                             }
                             stock.setClassification(classification);
@@ -167,12 +173,11 @@ public class StockProcessor {
 
     /**
      * 查询涨幅前5的版块
-     *
-     * @return List<Bk>
      */
-    public List<Bk> selectTopIncreaseRateBk() {
-        return bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false)
+    public void updateTopIncreaseRateBk() {
+        List<Bk> bks = bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false)
                 .orderByDesc(Bk::getIncreaseRate).last("limit 0,5"));
+        bks.forEach(e -> TOP5_BK.put(e.getBk(), e));
     }
 
     /**

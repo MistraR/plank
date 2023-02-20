@@ -2,7 +2,7 @@ package com.mistra.plank.job;
 
 import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.date.DateUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.dao.StockMapper;
@@ -10,7 +10,6 @@ import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -101,8 +100,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     }
 
     /**
-     * 只打上午的板 DateUtil.isAM(new Date());
-     * 或者10点以前涨停的板
+     * 只打当日涨幅Top5的版块的成分股，并且10点(plankConfig.getAutomaticPlankTradingTimeLimit())以前涨停的股票
      */
     private void autoPlank() {
         while (openAutoPlank()) {
@@ -110,20 +108,28 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                 if (!PLANK_MONITOR.isEmpty()) {
                     for (String code : PLANK_MONITOR) {
                         StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(code);
-                        if (stockRealTimePriceByCode.isPlank()) {
-                            Stock stock = stockMapper.selectOne(new QueryWrapper<Stock>().eq("code", stockRealTimePriceByCode.getCode()));
-                            if (Objects.isNull(stock.getBuyTime()) || !DateUtils.isSameDay(new Date(), stock.getBuyTime())) {
-                                Barbarossa.STOCK_FILTER_MAP.remove(code);
-                                PLANK_MONITOR.remove(code);
-                                // 上板，下单排队
-                                int sum = 0, amount = 1;
-                                while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
-                                    sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
-                                }
-                                amount -= 2;
-                                if (amount >= 1) {
-                                    automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
-                                            AutomaticTradingEnum.AUTO_PLANK.name());
+                        Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>()
+                                .eq(Stock::getCode, stockRealTimePriceByCode.getCode())
+                                .ne(Stock::getClassification, "")
+                                .and(wrapper -> wrapper.isNull(Stock::getBuyTime).or().le(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))));
+                        if (stockRealTimePriceByCode.isPlank() && Objects.nonNull(stock)) {
+                            for (String bk : StockProcessor.TOP5_BK.keySet()) {
+                                if (stock.getClassification().contains(bk)) {
+                                    Barbarossa.STOCK_FILTER_MAP.remove(code);
+                                    PLANK_MONITOR.remove(code);
+                                    log.warn("准备挂单[{}],所属版块:{} {}", stock.getName(), StockProcessor.TOP5_BK.get(bk).getName(),
+                                            StockProcessor.TOP5_BK.get(bk).getIncreaseRate());
+                                    // 上板，下单排队
+                                    int sum = 0, amount = 1;
+                                    while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
+                                        sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
+                                    }
+                                    amount -= 2;
+                                    if (amount >= 1) {
+                                        automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
+                                                AutomaticTradingEnum.AUTO_PLANK.name());
+                                    }
+                                    break;
                                 }
                             }
                         } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {

@@ -164,6 +164,7 @@ public class Barbarossa implements CommandLineRunner {
             for (List<String> list : partition) {
                 executorService.submit(() -> stockProcessor.run(list, countDownLatchT));
             }
+            stockProcessor.updateTopIncreaseRateBk();
             countDownLatchT.await();
             run();
         }
@@ -247,27 +248,37 @@ public class Barbarossa implements CommandLineRunner {
                 log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + "[" + e.getF62() /
                         W / W + "亿]" + e.getF3() + "%").collect(Collectors.toList())));
                 log.error("------------------------- 版块涨幅Top5 --------------------------");
-                log.warn(collectionToString(stockProcessor.selectTopIncreaseRateBk().stream()
+                log.warn(collectionToString(StockProcessor.TOP5_BK.values().stream()
                         .map(e -> e.getName() + ":" + e.getIncreaseRate()).collect(Collectors.toList())));
-                log.error("------------------------------ 持仓 -----------------------------");
-                realTimePrices.stream().filter(e -> STOCK_TRACK_MAP.get(e.getName()).getShareholding()).forEach(e -> {
-                    if (e.getIncreaseRate() > 0) {
-                        Barbarossa.log.error(convertLog(e));
-                    } else {
-                        Barbarossa.log.warn(convertLog(e));
-                    }
-                });
+                List<StockRealTimePrice> shareholding = realTimePrices.stream().filter(e ->
+                        STOCK_TRACK_MAP.get(e.getName()).getShareholding()).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(shareholding)) {
+                    log.error("------------------------------ 持仓 -----------------------------");
+                    shareholding.forEach(e -> {
+                        if (e.getIncreaseRate() > 0) {
+                            Barbarossa.log.error(convertLog(e));
+                        } else {
+                            Barbarossa.log.warn(convertLog(e));
+                        }
+                    });
+                }
                 realTimePrices.removeIf(e -> STOCK_TRACK_MAP.get(e.getName()).getShareholding());
-                log.error("------------------------------ 建仓 -----------------------------");
-                realTimePrices.stream().filter(e -> e.getPurchaseRate() >= -2).forEach(e -> Barbarossa.log.warn(convertLog(e)));
-                log.error("---------------------------- 今日排单 ----------------------------");
+                List<StockRealTimePrice> stockRealTimePrices = realTimePrices.stream().filter(e ->
+                        e.getPurchaseRate() >= -2).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(stockRealTimePrices)) {
+                    log.error("------------------------------ Track -----------------------------");
+                    stockRealTimePrices.forEach(e -> Barbarossa.log.warn(convertLog(e)));
+                }
                 List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
-                log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
-                log.warn("今日自动交易花费金额:{}", AutomaticTrading.TODAY_COST_MONEY.intValue());
-                log.error("--------------------------- 自动交易监测 --------------------------");
+                if (CollectionUtils.isNotEmpty(buyStocks)) {
+                    log.error("---------------------------- 今日排单 ----------------------------");
+                    log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
+                    log.warn("今日自动交易花费金额:{}", AutomaticTrading.TODAY_COST_MONEY.intValue());
+                }
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.UNDER_MONITORING.values())) {
+                    log.error("--------------------------- 自动交易监测 --------------------------");
                     log.warn("{}", collectionToString(AutomaticTrading.UNDER_MONITORING.values().stream()
                             .map(Stock::getName).collect(Collectors.toList())));
                 }
