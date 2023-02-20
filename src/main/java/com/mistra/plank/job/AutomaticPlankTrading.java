@@ -53,7 +53,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     }
 
     /**
-     * 每5秒过滤主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，放入PLANK_MONITOR
+     * 每2秒过滤主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，放入PLANK_MONITOR
      */
     @Scheduled(cron = "*/2 * * * * ?")
     private void filterStock() {
@@ -68,14 +68,14 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     }
 
     /**
-     * 过滤涨幅大于7个点股票
+     * 过滤主板涨幅大于7个点的股票，创业板大于17个点的股票
      *
      * @param codes codes
      */
     private void filterStock(List<String> codes) {
         codes.forEach(e -> {
             StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
-            if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 18) ||
+            if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 17) ||
                     (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 7)) {
                 double v = stockRealTimePriceByCode.getCurrentPrice() * 100;
                 if (v <= plankConfig.getSingleTransactionLimitAmount() &&

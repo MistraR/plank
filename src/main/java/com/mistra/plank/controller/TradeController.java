@@ -178,17 +178,17 @@ public class TradeController extends BaseController {
         String message = response.getMessage();
         if (response.success()) {
             message = response.getData().get(0).getWtbh();
-        }
-        Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getName, stockName));
-        if (Objects.nonNull(stock)) {
-            HoldShares holdShare = HoldShares.builder().buyTime(new Date()).clearance(false).code(stock.getCode())
-                    .name(stock.getName()).availableVolume(0).number(amount).profit(new BigDecimal(0))
-                    // 设置触发止损价
-                    .stopLossPrice(BigDecimal.valueOf(price * plankConfig.getStopLossRate()).setScale(2, RoundingMode.HALF_UP))
-                    // 设置触发止盈价
-                    .takeProfitPrice(BigDecimal.valueOf(price * plankConfig.getTakeProfitRate()).setScale(2, RoundingMode.HALF_UP))
-                    .automaticTradingType(AutomaticTradingEnum.MANUAL.name()).buyPrice(BigDecimal.valueOf(price)).build();
-            holdSharesMapper.insert(holdShare);
+            Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getName, stockName));
+            if (Objects.nonNull(stock)) {
+                HoldShares holdShare = HoldShares.builder().buyTime(new Date()).clearance(false).code(stock.getCode())
+                        .name(stock.getName()).availableVolume(0).number(amount).profit(new BigDecimal(0))
+                        // 设置触发止损价
+                        .stopLossPrice(BigDecimal.valueOf(price * plankConfig.getStopLossRate()).setScale(2, RoundingMode.HALF_UP))
+                        // 设置触发止盈价
+                        .takeProfitPrice(BigDecimal.valueOf(price * plankConfig.getTakeProfitRate()).setScale(2, RoundingMode.HALF_UP))
+                        .automaticTradingType(AutomaticTradingEnum.MANUAL.name()).buyPrice(BigDecimal.valueOf(price)).build();
+                holdSharesMapper.insert(holdShare);
+            }
         }
         return CommonResponse.buildResponse(message);
     }

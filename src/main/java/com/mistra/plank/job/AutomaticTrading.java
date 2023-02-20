@@ -154,8 +154,6 @@ public class AutomaticTrading implements CommandLineRunner {
             TODAY_COST_MONEY.set((int) (TODAY_COST_MONEY.intValue() + share.getBuyPrice().doubleValue() * share.getNumber()));
             TODAY_BOUGHT_SUCCESS.add(share.getCode());
         }
-        // 自动买入
-        autoBuy();
         // 监控持仓，止盈止损
         List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                 .gt(HoldShares::getAvailableVolume, 0).eq(HoldShares::getClearance, false));

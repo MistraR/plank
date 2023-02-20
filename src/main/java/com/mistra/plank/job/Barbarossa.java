@@ -101,6 +101,13 @@ public class Barbarossa implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+    }
+
+    /**
+     * 集合竞价结束，初始化股票基本数据
+     */
+    @Scheduled(cron = "0 25 9 * * ?")
+    private void updateStockCache() {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
                 // 默认过滤掉了北交所,科创板,ST
                 .notLike("name", "%ST%").notLike("code", "%688%")
@@ -124,43 +131,43 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     /**
-     * 15点后读取当日交易数据
+     * 开盘，初始化版块基本数据
      */
-    @Scheduled(cron = "0 1 15 * * ?")
-    private void analyzeData() {
-        try {
-            CountDownLatch countDownLatchD = new CountDownLatch(Barbarossa.STOCK_ALL_MAP.size());
-            dailyRecordProcessor.run(Barbarossa.STOCK_ALL_MAP, countDownLatchD);
-            countDownLatchD.await();
-            log.warn("每日涨跌明细、成交额、MA5、MA10、MA20更新完成");
-            StockProcessor.RESET_PLANK_NUMBER.set(true);
-            executorService.submit(stockProcessor::updateStockBkInfo);
-            // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
-            executorService.submit(stockProcessor::updateForeignFundShareholding);
-            executorService.submit(() -> {
-                // 分析连板数据
-                analyzePlank.analyzePlank();
-                // 分析主力流入数据
-                analyzePlank.analyzeMainFund();
-                // 分析日k均线多头排列的股票
-                //screeningStocks.movingAverageRise();
-                // 分析上升趋势的股票，周k均线多头排列
-                screeningStocks.upwardTrend();
-                // 分析爆量回踩
-                screeningStocks.explosiveVolumeBack();
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
+    @Scheduled(cron = "0 30 9 * * ?")
+    private void opening() throws InterruptedException {
+        // 更新行业版块，概念版块涨幅信息
+        stockProcessor.updateBk();
+        Thread.sleep(1000);
+        stockProcessor.updateTop5IncreaseRateBk();
+    }
+
+    /**
+     * 每3秒更新一次版块涨跌幅
+     */
+    @Scheduled(cron = "*/3 * * * * ?")
+    private void updateBkCache() {
+        while (AutomaticTrading.isTradeTime()) {
+            try {
+                // 更新行业版块，概念版块涨幅信息
+                stockProcessor.updateBk();
+                Thread.sleep(1000);
+                stockProcessor.updateTop5IncreaseRateBk();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
     /**
-     * 每2分钟更新每支股票的成交额
+     * 每2分钟更新每支股票的成交额,开盘6分钟内不更新,开盘快速封板的票当日成交额可能比较少
      * 成交额满足阈值的会放入 STOCK_FILTER_MAP 去检测涨幅
      */
     @Scheduled(cron = "0 */2 * * * ?")
     private void updateStock() throws InterruptedException {
-        if (AutomaticTrading.isTradeTime()) {
+        Date openingTime = new Date();
+        DateUtils.setHours(openingTime, 9);
+        DateUtils.setMinutes(openingTime, 30);
+        if (AutomaticTrading.isTradeTime() && DateUtils.addMinutes(new Date(), -6).getTime() > openingTime.getTime()) {
             StockProcessor.RESET_PLANK_NUMBER.set(false);
             List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_ALL_MAP.keySet()), 300);
             CountDownLatch countDownLatch = new CountDownLatch(partition.size());
@@ -168,25 +175,7 @@ public class Barbarossa implements CommandLineRunner {
                 executorService.submit(() -> stockProcessor.run(list, countDownLatch));
             }
             countDownLatch.await();
-            run();
-        }
-    }
-
-    /**
-     * 开盘初始化基本数据
-     */
-    @Scheduled(cron = "0 30 9 * * ?")
-    private void initBkCache() {
-        while (AutomaticTrading.isTradeTime()) {
-            try {
-                // 更新行业版块，概念版块涨幅信息
-                stockProcessor.updateBk();
-                Thread.sleep(1000);
-                stockProcessor.updateTop5IncreaseRateBk();
-                Thread.sleep(1000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            this.updateStockCache();
         }
     }
 
@@ -333,6 +322,37 @@ public class Barbarossa implements CommandLineRunner {
             }
         }
         monitoring.set(false);
+    }
+
+    /**
+     * 15点后读取当日交易数据
+     */
+    @Scheduled(cron = "0 1 15 * * ?")
+    private void analyzeData() {
+        try {
+            CountDownLatch countDownLatchD = new CountDownLatch(Barbarossa.STOCK_ALL_MAP.size());
+            dailyRecordProcessor.run(Barbarossa.STOCK_ALL_MAP, countDownLatchD);
+            countDownLatchD.await();
+            log.warn("每日涨跌明细、成交额、MA5、MA10、MA20更新完成");
+            StockProcessor.RESET_PLANK_NUMBER.set(true);
+            executorService.submit(stockProcessor::updateStockBkInfo);
+            // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
+            executorService.submit(stockProcessor::updateForeignFundShareholding);
+            executorService.submit(() -> {
+                // 分析连板数据
+                analyzePlank.analyzePlank();
+                // 分析主力流入数据
+                analyzePlank.analyzeMainFund();
+                // 分析日k均线多头排列的股票
+                //screeningStocks.movingAverageRise();
+                // 分析上升趋势的股票，周k均线多头排列
+                screeningStocks.upwardTrend();
+                // 分析爆量回踩
+                screeningStocks.explosiveVolumeBack();
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private String convertLog(StockRealTimePrice realTimePrice) {
