@@ -104,4 +104,14 @@ public class PlankConfig {
      */
     private Double stockTurnoverFilter;
 
+    /**
+     * 当日行业版块涨幅排行
+     */
+    private String industryBKUrl;
+
+    /**
+     * 当日概念版块涨幅排行
+     */
+    private String conceptBKUrl;
+
 }
