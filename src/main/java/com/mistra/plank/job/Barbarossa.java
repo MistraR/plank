@@ -238,7 +238,7 @@ public class Barbarossa implements CommandLineRunner {
                 });
                 realTimePrices.removeIf(e -> STOCK_TRACK_MAP.get(e.getName()).getShareholding());
                 log.error("------------------------------ 建仓 -----------------------------");
-                realTimePrices.stream().filter(e -> e.getIncreaseRate() >= -2).forEach(e -> Barbarossa.log.warn(convertLog(e)));
+                realTimePrices.stream().filter(e -> e.getPurchaseRate() >= -2).forEach(e -> Barbarossa.log.warn(convertLog(e)));
                 log.error("---------------------------- 今日排单 ----------------------------");
                 List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))

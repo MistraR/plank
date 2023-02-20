@@ -194,8 +194,8 @@ public class AutomaticTrading implements CommandLineRunner {
                     // 当前盈利
                     holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
                             * holdShare.getNumber()));
-                    if (stockRealTimePrice.isPlank()) {
-                        // 当日触板
+                    if (stockRealTimePrice.isPlank() && !holdShare.getTodayPlank()) {
+                        // 当日首次触板
                         log.error("{} 封板", holdShare.getName());
                         holdShare.setTodayPlank(true);
                     }
