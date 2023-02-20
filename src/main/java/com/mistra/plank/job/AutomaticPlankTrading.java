@@ -55,7 +55,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     /**
      * 每5秒过滤主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，放入PLANK_MONITOR
      */
-    @Scheduled(cron = "*/5 * * * * ?")
+    @Scheduled(cron = "*/2 * * * * ?")
     private void filterStock() {
         if (openAutoPlank()) {
             List<List<String>> lists = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_FILTER_MAP.keySet()),

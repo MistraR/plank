@@ -1,13 +1,14 @@
 package com.mistra.plank.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.exception.FieldInputException;
 import com.mistra.plank.common.util.StockUtil;
 import com.mistra.plank.dao.HoldSharesMapper;
-import com.mistra.plank.model.entity.HoldShares;
-import com.mistra.plank.model.entity.StockSelected;
-import com.mistra.plank.model.entity.TradeMethod;
-import com.mistra.plank.model.entity.TradeUser;
+import com.mistra.plank.dao.StockMapper;
+import com.mistra.plank.model.entity.*;
+import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.model.vo.AccountVo;
 import com.mistra.plank.model.vo.CommonResponse;
 import com.mistra.plank.model.vo.PageParam;
@@ -30,10 +31,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.math.RoundingMode;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -51,6 +50,12 @@ public class TradeController extends BaseController {
 
     @Autowired
     private HoldSharesMapper holdSharesMapper;
+
+    @Autowired
+    private StockMapper stockMapper;
+
+    @Autowired
+    private PlankConfig plankConfig;
 
     @RequestMapping("queryVerifyCodeUrl")
     public CommonResponse queryVerifyCodeUrl() {
@@ -174,7 +179,17 @@ public class TradeController extends BaseController {
         if (response.success()) {
             message = response.getData().get(0).getWtbh();
         }
-
+        Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getName, stockName));
+        if (Objects.nonNull(stock)) {
+            HoldShares holdShare = HoldShares.builder().buyTime(new Date()).clearance(false).code(stock.getCode())
+                    .name(stock.getName()).availableVolume(0).number(amount).profit(new BigDecimal(0))
+                    // 设置触发止损价
+                    .stopLossPrice(BigDecimal.valueOf(price * plankConfig.getStopLossRate()).setScale(2, RoundingMode.HALF_UP))
+                    // 设置触发止盈价
+                    .takeProfitPrice(BigDecimal.valueOf(price * plankConfig.getTakeProfitRate()).setScale(2, RoundingMode.HALF_UP))
+                    .automaticTradingType(AutomaticTradingEnum.MANUAL.name()).buyPrice(BigDecimal.valueOf(price)).build();
+            holdSharesMapper.insert(holdShare);
+        }
         return CommonResponse.buildResponse(message);
     }
 

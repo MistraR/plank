@@ -124,7 +124,8 @@ public class AutomaticTrading implements CommandLineRunner {
             }
         }
         LambdaUpdateWrapper<Stock> wrapper = new LambdaUpdateWrapper<Stock>()
-                .in(Stock::getAutomaticTradingType, AutomaticTradingEnum.PLANK.name(), AutomaticTradingEnum.SUCK.name());
+                .in(Stock::getAutomaticTradingType, AutomaticTradingEnum.PLANK.name(),
+                        AutomaticTradingEnum.MANUAL.name(), AutomaticTradingEnum.SUCK.name());
         stockMapper.update(Stock.builder().automaticTradingType(AutomaticTradingEnum.CANCEL.name()).build(), wrapper);
     }
 

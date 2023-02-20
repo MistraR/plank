@@ -156,7 +156,6 @@ public class StockProcessor {
             body = HttpUtil.getHttpGetResponseString(plankConfig.getIndustryBKUrl(), null);
             body = body.substring(body.indexOf("(") + 1, body.indexOf(")"));
             updateBk(JSON.parseObject(body).getJSONObject("data").getJSONArray("diff"), "INDUSTRY");
-            Thread.sleep(3000);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -143,7 +143,7 @@ public class Barbarossa implements CommandLineRunner {
                 // 分析主力流入数据
                 analyzePlank.analyzeMainFund();
                 // 分析日k均线多头排列的股票
-                screeningStocks.movingAverageRise();
+                //screeningStocks.movingAverageRise();
                 // 分析上升趋势的股票，周k均线多头排列
                 screeningStocks.upwardTrend();
                 // 分析爆量回踩
@@ -154,6 +154,10 @@ public class Barbarossa implements CommandLineRunner {
         }
     }
 
+    /**
+     * 每2分钟更新每支股票的成交额
+     * 成交额满足阈值的会放入 STOCK_FILTER_MAP 去检测涨幅
+     */
     @Scheduled(cron = "0 */2 * * * ?")
     private void updateStock() throws InterruptedException {
         if (AutomaticTrading.isTradeTime()) {
@@ -169,18 +173,20 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     /**
-     * 开盘初始化
+     * 开盘初始化基本数据
      */
     @Scheduled(cron = "0 30 9 * * ?")
-    private void open() {
-        stockProcessor.updateTop5IncreaseRateBk();
-        executorService.submit(this::bk);
-    }
-
-    @Scheduled(cron = "*/5 * * * * ?")
-    private void init() {
-        if (AutomaticTrading.isTradeTime()) {
-            open();
+    private void initBkCache() {
+        while (AutomaticTrading.isTradeTime()) {
+            try {
+                // 更新行业版块，概念版块涨幅信息
+                stockProcessor.updateBk();
+                Thread.sleep(1000);
+                stockProcessor.updateTop5IncreaseRateBk();
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -197,20 +203,6 @@ public class Barbarossa implements CommandLineRunner {
             monitoring.set(true);
             executorService.submit(this::monitorStock);
             executorService.submit(this::queryMainFundData);
-        }
-    }
-
-    /**
-     * 更新行业版块，概念版块涨幅信息
-     */
-    private void bk() {
-        while (AutomaticTrading.isTradeTime()) {
-            try {
-                stockProcessor.updateBk();
-                Thread.sleep(3000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
     }
 
