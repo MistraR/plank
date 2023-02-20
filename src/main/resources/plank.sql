@@ -5667,12 +5667,6 @@ CREATE TABLE `hold_shares`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 11667 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of hold_shares
--- ----------------------------
-INSERT INTO `hold_shares` VALUES (11662, '中科软', 'SH603927', 200, 0, 35.72, '2023-02-16 13:03:54', -522.00, 38.22, 34.29, 'AUTO_PLANK', NULL, 1);
-INSERT INTO `hold_shares` VALUES (11665, '拓维信息', 'SZ002261', 500, 0, 9.94, '2023-02-17 09:55:33', 210.00, 10.44, 9.54, 'AUTO_PLANK', 1, 1);
-
--- ----------------------------
 -- Table structure for holiday_calendar
 -- ----------------------------
 DROP TABLE IF EXISTS `holiday_calendar`;

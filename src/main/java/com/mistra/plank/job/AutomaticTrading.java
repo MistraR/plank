@@ -207,6 +207,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     }
                     if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.PLANK.name()) ||
                             holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name())) {
+                        // 自定义打板，低吸买入的股票
                         if (holdShare.getTakeProfitPrice().doubleValue() <= stockRealTimePrice.getCurrentPrice()) {
                             sale(holdShare, stockRealTimePrice);
                             log.error("{} 触发止盈,挂跌停价卖出", holdShare.getName());
@@ -214,6 +215,7 @@ public class AutomaticTrading implements CommandLineRunner {
                         }
                     }
                     if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.AUTO_PLANK.name())) {
+                        // 自动打板买入的股票
                         if (DateUtil.hour(new Date(), true) > 11 && !stockRealTimePrice.isPlank()) {
                             // 11点前还未涨停,挂跌停价卖出
                             log.error("{} 11点前还未涨停,挂跌停价卖出", holdShare.getName());
