@@ -1,17 +1,16 @@
 package com.mistra.plank.model.entity;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * 描述
@@ -79,5 +78,11 @@ public class DailyRecord {
      */
     @TableField(value = "date")
     private Date date;
+
+    /**
+     * 当日是否涨停收盘
+     */
+    @TableField(value = "plank")
+    private Boolean plank;
 
 }

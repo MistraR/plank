@@ -7,9 +7,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
 import com.mistra.plank.dao.DailyRecordMapper;
+import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.DailyRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -32,6 +36,9 @@ import java.util.concurrent.CountDownLatch;
 public class DailyRecordProcessor {
 
     private final DailyRecordMapper dailyRecordMapper;
+    @Lazy
+    @Autowired
+    private StockProcessor stockProcessor;
     private final PlankConfig plankConfig;
 
     public DailyRecordProcessor(DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig) {
@@ -66,7 +73,8 @@ public class DailyRecordProcessor {
                 for (Object o : list) {
                     array = (JSONArray) o;
                     DailyRecord dailyRecord = new DailyRecord();
-                    dailyRecord.setDate(new Date(array.getLongValue(0)));
+                    Date date = new Date(array.getLongValue(0));
+                    dailyRecord.setDate(date);
                     dailyRecord.setCode(code);
                     dailyRecord.setName(name);
                     dailyRecord.setOpenPrice(BigDecimal.valueOf(array.getDoubleValue(2)));
@@ -75,8 +83,11 @@ public class DailyRecordProcessor {
                     dailyRecord.setClosePrice(BigDecimal.valueOf(array.getDoubleValue(5)));
                     dailyRecord.setIncreaseRate(BigDecimal.valueOf(array.getDoubleValue(7)));
                     dailyRecord.setAmount(array.getLongValue(9) / 10000);
+                    if (DateUtils.isSameDay(date, new Date())) {
+                        StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(code);
+                        dailyRecord.setPlank(stockRealTimePriceByCode.isPlank());
+                    }
                     dailyRecordMapper.insert(dailyRecord);
-//                    log.info("更新[ {} ]近日成交数据完成！", name);
                 }
             }
         } catch (Exception e) {

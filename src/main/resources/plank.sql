@@ -5110,21 +5110,21 @@ INSERT INTO `daily_index` VALUES (4786, 'bj839680', '2022-10-31', 12.02, 12.30, 
 -- Table structure for daily_record
 -- ----------------------------
 DROP TABLE IF EXISTS `daily_record`;
-CREATE TABLE `daily_record`  (
-  `id` bigint(0) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `daily_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
   `name` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '名称',
   `code` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
-  `open_price` decimal(10, 2) NOT NULL COMMENT '开盘价',
-  `close_price` decimal(10, 2) NOT NULL COMMENT '收盘价',
-  `date` datetime(0) NOT NULL COMMENT '日期',
-  `increase_rate` decimal(10, 2) NOT NULL COMMENT '涨跌比率',
-  `highest` decimal(10, 2) NOT NULL COMMENT '最高价',
-  `lowest` decimal(10, 2) NOT NULL COMMENT '最低价',
-  `amount` bigint(0) NOT NULL COMMENT '成交额',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `unique`(`code`, `date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9259784 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
-
+  `open_price` decimal(10,2) NOT NULL COMMENT '开盘价',
+  `close_price` decimal(10,2) NOT NULL COMMENT '收盘价',
+  `date` datetime NOT NULL COMMENT '日期',
+  `increase_rate` decimal(10,2) NOT NULL COMMENT '涨跌比率',
+  `highest` decimal(10,2) NOT NULL COMMENT '最高价',
+  `lowest` decimal(10,2) NOT NULL COMMENT '最低价',
+  `amount` bigint NOT NULL COMMENT '成交额',
+  `plank` tinyint(1) unsigned zerofill NOT NULL DEFAULT '0' COMMENT '当日是否涨停收盘',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique` (`code`,`date`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=9263933 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- ----------------------------
 -- Table structure for dragon_list
 -- ----------------------------

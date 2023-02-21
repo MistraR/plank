@@ -289,7 +289,7 @@ public class StockProcessor {
                     List<DailyRecord> dailyRecordList = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()
                             .eq(DailyRecord::getName, fundHoldingsTracking.getName()).ge(DailyRecord::getDate, beginTime)
                             .le(DailyRecord::getDate, endTime));
-                    if (org.apache.commons.collections4.CollectionUtils.isEmpty(dailyRecordList)) {
+                    if (CollectionUtils.isEmpty(dailyRecordList)) {
                         HashMap<String, String> stockMap = new HashMap<>();
                         stockMap.put(stock.getCode(), stock.getName());
                         dailyRecordProcessor.run(stockMap, null);
