@@ -49,7 +49,7 @@ public class ScreeningStocks {
      */
     public void movingAverageRise() {
         List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>()
-                .ge(Stock::getMa5, 0).ge(Stock::getTransactionAmount, plankConfig.getStockTurnoverFilter()));
+                .ge(Stock::getMa5, 0).ge(Stock::getTransactionAmount, plankConfig.getStockTurnoverThreshold()));
         List<String> list = stocks.stream().filter(stock -> stock.getMa5().compareTo(stock.getMa10()) > 0
                         && stock.getMa10().compareTo(stock.getMa20()) > 0).map(stock -> StringUtils.substring(stock.getCode(), 2, 8))
                 .collect(Collectors.toList());
@@ -124,7 +124,7 @@ public class ScreeningStocks {
         List<String> failed = new ArrayList<>();
         for (Map.Entry<String, String> entry : Barbarossa.STOCK_ALL_MAP.entrySet()) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, entry.getKey()));
-            if (stock.getTrack() || stock.getTransactionAmount().doubleValue() < plankConfig.getStockTurnoverFilter()) {
+            if (stock.getTrack() || stock.getTransactionAmount().doubleValue() < plankConfig.getStockTurnoverThreshold()) {
                 continue;
             }
             List<DailyRecord> dailyRecords = dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>()

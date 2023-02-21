@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,8 +38,14 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     private final StockMapper stockMapper;
 
     /**
-     * 自动打板股票，二级过滤map
+     * 自动打板股票,一级过滤map
+     */
+    public static final HashMap<String, Stock> STOCK_AUTO_PLANK_FILTER_MAP = new HashMap<>(512);
+
+    /**
+     * 自动打板股票,二级过滤map
      * 主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，上板则下单排队
+     * 涨幅小于6个点或16个点会被移除
      * 想打板哪个股票，放入这个map就会自动监控，上板就会下单
      */
     public static final ConcurrentHashMap<String, Stock> PLANK_MONITOR = new ConcurrentHashMap<>();
@@ -57,7 +64,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     @Scheduled(cron = "*/4 * * * * ?")
     private void filterStock() {
         if (openAutoPlank() && Barbarossa.executorService.getQueue().size() < 32) {
-            List<List<String>> lists = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_AUTO_PLANK_FILTER_MAP.keySet()),
+            List<List<String>> lists = Lists.partition(Lists.newArrayList(STOCK_AUTO_PLANK_FILTER_MAP.keySet()),
                     Barbarossa.executorService.getMaximumPoolSize() / 2);
             for (List<String> list : lists) {
                 Barbarossa.executorService.submit(() -> filterStock(list));
@@ -79,7 +86,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                 if (v <= plankConfig.getSingleTransactionLimitAmount() &&
                         AutomaticTrading.TODAY_COST_MONEY.intValue() + v < plankConfig.getAutomaticTradingMoneyLimitUp() &&
                         !PLANK_MONITOR.containsKey(e)) {
-                    PLANK_MONITOR.put(e, Barbarossa.STOCK_AUTO_PLANK_FILTER_MAP.get(e));
+                    PLANK_MONITOR.put(e, STOCK_AUTO_PLANK_FILTER_MAP.get(e));
                     log.warn("{} 新加入打板监测", e);
                 }
                 if (AutomaticTrading.TODAY_BOUGHT_SUCCESS.contains(e)) {
@@ -120,7 +127,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                         StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
                         if (stockRealTimePriceByCode.isPlank()) {
                             // 上板,下单排队
-                            Barbarossa.STOCK_AUTO_PLANK_FILTER_MAP.remove(stock.getCode());
+                            STOCK_AUTO_PLANK_FILTER_MAP.remove(stock.getCode());
                             PLANK_MONITOR.remove(stock.getCode());
                             int sum = 0, amount = 1;
                             while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
@@ -131,7 +138,8 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                 automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
                                         AutomaticTradingEnum.AUTO_PLANK.name());
                             }
-                        } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {
+                        } else if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 16) ||
+                                (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 6)) {
                             PLANK_MONITOR.remove(stock.getCode());
                         }
                     }

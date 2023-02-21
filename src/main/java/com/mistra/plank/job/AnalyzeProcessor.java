@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.mistra.plank.common.util.StringUtil.collectionToString;
+import static com.mistra.plank.config.SystemConstant.W;
 
 /**
  * @author rui.wang
@@ -47,11 +48,12 @@ public class AnalyzeProcessor {
     }
 
     public void analyzeMainFund() {
-        log.warn("3|5|10日主力净流入>3亿:" + collectionToString(Barbarossa.mainFundDataAll.parallelStream()
-                .filter(e -> e.getF267() > plankConfig.getStockTurnoverFilter() || e.getF164() > plankConfig.getStockTurnoverFilter()
-                        || e.getF174() > plankConfig.getStockTurnoverFilter())
-                .map(plankConfig.getPrintName() ? StockMainFundSample::getF14 : StockMainFundSample::getF12)
-                .collect(Collectors.toSet())));
+        log.warn("3|5|10日主力流入大于{}亿:{}", plankConfig.getMainFundThreshold() / W / W,
+                collectionToString(Barbarossa.MAIN_FUND_DATA.parallelStream()
+                        .filter(e -> e.getF267() > plankConfig.getMainFundThreshold() || e.getF164() > plankConfig.getMainFundThreshold()
+                                || e.getF174() > plankConfig.getMainFundThreshold())
+                        .map(plankConfig.getPrintName() ? StockMainFundSample::getF14 : StockMainFundSample::getF12)
+                        .collect(Collectors.toSet())));
     }
 
     /**
