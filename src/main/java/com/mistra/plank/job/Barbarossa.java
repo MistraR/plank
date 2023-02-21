@@ -105,8 +105,10 @@ public class Barbarossa implements CommandLineRunner {
 
     @Scheduled(cron = "0 */2 * * * ?")
     private void executorStatus() {
-        log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
-                Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
+        if (AutomaticTrading.isTradeTime()) {
+            log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
+                    Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
+        }
     }
 
     /**
