@@ -57,6 +57,7 @@ public class Barbarossa implements CommandLineRunner {
     private final ScreeningStocks screeningStocks;
     private final DailyRecordProcessor dailyRecordProcessor;
     private final AnalyzeProcessor analyzePlank;
+    private final AutomaticPlankTrading automaticPlankTrading;
     public static final ThreadPoolExecutor executorService = new ThreadPoolExecutor(availableProcessors,
             availableProcessors * 2, 100L, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(5000), new NamedThreadFactory("T", false));
@@ -88,7 +89,8 @@ public class Barbarossa implements CommandLineRunner {
 
     public Barbarossa(StockMapper stockMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
                       HoldSharesMapper holdSharesMapper, PlankConfig plankConfig, ScreeningStocks screeningStocks,
-                      DailyRecordProcessor dailyRecordProcessor, AnalyzeProcessor analyzePlank) {
+                      DailyRecordProcessor dailyRecordProcessor, AnalyzeProcessor analyzePlank,
+                      AutomaticPlankTrading automaticPlankTrading) {
         this.stockMapper = stockMapper;
         this.stockProcessor = stockProcessor;
         this.dailyRecordMapper = dailyRecordMapper;
@@ -97,6 +99,7 @@ public class Barbarossa implements CommandLineRunner {
         this.screeningStocks = screeningStocks;
         this.dailyRecordProcessor = dailyRecordProcessor;
         this.analyzePlank = analyzePlank;
+        this.automaticPlankTrading = automaticPlankTrading;
     }
 
     @Override
@@ -273,6 +276,10 @@ public class Barbarossa implements CommandLineRunner {
                     log.error("---------------------------- 今日排单 ----------------------------");
                     log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
                     log.warn("今日自动交易花费金额:{}", AutomaticTrading.TODAY_COST_MONEY.intValue());
+                    if (plankConfig.getAutomaticPlankTrading() && automaticPlankTrading.openAutoPlank()) {
+                        log.warn("当前打板监测股票:{}", AutomaticPlankTrading.PLANK_MONITOR.values().stream()
+                                .map(Stock::getName).collect(Collectors.toList()));
+                    }
                 }
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.UNDER_MONITORING.values())) {
                     log.error("--------------------------- 自动交易监测 --------------------------");

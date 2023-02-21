@@ -149,7 +149,8 @@ public class AutomaticTrading implements CommandLineRunner {
     @Override
     public void run(String... args) {
         List<HoldShares> shares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
-                .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date())));
+                .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
+                .ne(HoldShares::getAutomaticTradingType, AutomaticTradingEnum.MANUAL.name()));
         for (HoldShares share : shares) {
             TODAY_COST_MONEY.set((int) (TODAY_COST_MONEY.intValue() + share.getBuyPrice().doubleValue() * share.getNumber()));
             TODAY_BOUGHT_SUCCESS.add(share.getCode());
