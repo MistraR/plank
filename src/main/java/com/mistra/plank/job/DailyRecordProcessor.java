@@ -42,10 +42,10 @@ public class DailyRecordProcessor {
     public void run(HashMap<String, String> map, CountDownLatch countDownLatch) {
         Integer count = dailyRecordMapper.selectCount(new QueryWrapper<DailyRecord>().ge("date", checkDailyRecord()));
         if (count > 0) {
-            log.warn("股票交易数据已更新到最新交易日！");
-            for (long i = 0; i < countDownLatch.getCount(); i++) {
+            while (countDownLatch.getCount() > 0) {
                 countDownLatch.countDown();
             }
+            log.warn("股票交易数据已更新到最新交易日");
             return;
         }
         for (Map.Entry<String, String> entry : map.entrySet()) {

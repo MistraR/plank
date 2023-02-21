@@ -8,6 +8,7 @@ import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
@@ -20,6 +21,7 @@ import com.mistra.plank.model.entity.Bk;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
+import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.service.impl.ScreeningStocks;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -102,7 +104,7 @@ public class Barbarossa implements CommandLineRunner {
         updateStockCache();
     }
 
-    //@Scheduled(cron = "*/2 * * * * ?")
+    @Scheduled(cron = "0 */2 * * * ?")
     private void executorStatus() {
         log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
                 Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
@@ -177,10 +179,9 @@ public class Barbarossa implements CommandLineRunner {
     @Scheduled(cron = "0 */2 * * * ?")
     private void updateStockRealTimeData() throws InterruptedException {
         Date openingTime = new Date();
-        DateUtils.setHours(openingTime, 9);
-        DateUtils.setMinutes(openingTime, 30);
+        openingTime = DateUtils.setHours(openingTime, 9);
+        openingTime = DateUtils.setMinutes(openingTime, 30);
         if (AutomaticTrading.isTradeTime() && DateUtils.addMinutes(new Date(), -6).getTime() > openingTime.getTime()) {
-            StockProcessor.RESET_PLANK_NUMBER.set(false);
             List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_ALL_MAP.keySet()), 300);
             CountDownLatch countDownLatch = new CountDownLatch(partition.size());
             for (List<String> list : partition) {
@@ -253,8 +254,8 @@ public class Barbarossa implements CommandLineRunner {
                     topTen.add(mainFundDataAll.get(i));
                 }
                 log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + "[" + e.getF62() /
-                        W / W + "亿]" + e.getF3() + "%").collect(Collectors.toList())));
-                log.error("------------------------- 版块涨幅Top5 --------------------------");
+                        W / W + "亿]" + e.getF3()).collect(Collectors.toList())));
+                log.error("------------------------- 板块涨幅Top5 --------------------------");
                 ArrayList<Bk> bks = Lists.newArrayList(StockProcessor.TOP5_BK.values());
                 Collections.sort(bks);
                 log.warn(collectionToString(bks.stream().map(e -> e.getName() + ":" + e.getIncreaseRate()).collect(Collectors.toList())));
@@ -281,9 +282,9 @@ public class Barbarossa implements CommandLineRunner {
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
                 if (CollectionUtils.isNotEmpty(buyStocks)) {
-                    log.error("----------------------------- 打板排单 ----------------------------");
+                    log.error("---------------------- 打板排单,排单金额:{} ---------------------",
+                            AutomaticTrading.TODAY_COST_MONEY.intValue());
                     log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
-                    log.warn("排单金额:{}", AutomaticTrading.TODAY_COST_MONEY.intValue());
                     if (plankConfig.getAutomaticPlankTrading() && automaticPlankTrading.openAutoPlank()) {
                         log.warn("打板监测:{}", AutomaticPlankTrading.PLANK_MONITOR.values().stream()
                                 .map(Stock::getName).collect(Collectors.toList()));
@@ -340,9 +341,9 @@ public class Barbarossa implements CommandLineRunner {
         try {
             CountDownLatch countDownLatch = new CountDownLatch(Barbarossa.STOCK_ALL_MAP.size());
             dailyRecordProcessor.run(Barbarossa.STOCK_ALL_MAP, countDownLatch);
+            this.resetStockData();
             countDownLatch.await();
             log.warn("每日涨跌明细、成交额、MA5、MA10、MA20更新完成");
-            StockProcessor.RESET_PLANK_NUMBER.set(true);
             executorService.submit(stockProcessor::updateStockBkInfo);
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
             executorService.submit(stockProcessor::updateForeignFundShareholding);
@@ -361,6 +362,16 @@ public class Barbarossa implements CommandLineRunner {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 重置stock表,持仓表数据
+     */
+    private void resetStockData() {
+        stockMapper.update(Stock.builder().plankNumber(0).automaticTradingType(AutomaticTradingEnum.CANCEL.name())
+                .suckTriggerPrice(new BigDecimal(0)).buyAmount(0).build(), new LambdaUpdateWrapper<>());
+        holdSharesMapper.update(HoldShares.builder().todayPlank(false).build(), new LambdaUpdateWrapper<HoldShares>()
+                .eq(HoldShares::getClearance, false));
     }
 
     private String convertLog(StockRealTimePrice realTimePrice) {

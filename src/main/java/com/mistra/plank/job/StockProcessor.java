@@ -20,7 +20,6 @@ import com.mistra.plank.model.entity.Bk;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.ForeignFundHoldingsTracking;
 import com.mistra.plank.model.entity.Stock;
-import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.model.param.FundHoldingsParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -34,7 +33,6 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -55,11 +53,6 @@ public class StockProcessor {
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
     private final DailyRecordProcessor dailyRecordProcessor;
     private final BkMapper bkMapper;
-
-    /**
-     * 是否重置连板数
-     */
-    public static final AtomicBoolean RESET_PLANK_NUMBER = new AtomicBoolean(false);
 
     /**
      * 当日涨幅top5版块
@@ -89,10 +82,6 @@ public class StockProcessor {
                 exist.setCurrentPrice(BigDecimal.valueOf(stockRealTimePrice.getCurrentPrice()));
                 exist.setTransactionAmount(stockRealTimePrice.getTransactionAmount());
                 exist.setMarketValue(stockRealTimePrice.getMarket().longValue());
-                if (RESET_PLANK_NUMBER.get()) {
-                    exist.setPlankNumber(0);
-                    exist.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
-                }
                 if (dailyRecords.size() >= 20) {
                     exist.setMa5(BigDecimal
                             .valueOf(dailyRecords.subList(0, 5).stream().map(DailyRecord::getClosePrice)

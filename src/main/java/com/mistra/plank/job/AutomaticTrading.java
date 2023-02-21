@@ -155,11 +155,13 @@ public class AutomaticTrading implements CommandLineRunner {
             TODAY_COST_MONEY.set((int) (TODAY_COST_MONEY.intValue() + share.getBuyPrice().doubleValue() * share.getNumber()));
             TODAY_BOUGHT_SUCCESS.add(share.getCode());
         }
-        // 监控持仓，止盈止损
-        List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
-                .gt(HoldShares::getAvailableVolume, 0).eq(HoldShares::getClearance, false));
-        for (HoldShares holdShare : holdShares) {
-            Barbarossa.executorService.submit(new SaleTask(holdShare));
+        // 监控持仓,止盈止损
+        if (isTradeTime()) {
+            List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
+                    .gt(HoldShares::getAvailableVolume, 0).eq(HoldShares::getClearance, false));
+            for (HoldShares holdShare : holdShares) {
+                Barbarossa.executorService.submit(new SaleTask(holdShare));
+            }
         }
     }
 
@@ -167,11 +169,8 @@ public class AutomaticTrading implements CommandLineRunner {
 
         private HoldShares holdShare;
 
-        private final String name;
-
         public SaleTask(HoldShares holdShare) {
             this.holdShare = holdShare;
-            this.name = holdShare.getName();
         }
 
         /**
@@ -227,7 +226,6 @@ public class AutomaticTrading implements CommandLineRunner {
                     e.printStackTrace();
                 }
             }
-            log.error("[{}]已成功挂单卖出，当前卖出线程已结束", name);
         }
     }
 
