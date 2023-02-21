@@ -341,6 +341,7 @@ public class AutomaticTrading implements CommandLineRunner {
         if (response.success()) {
             // 打板排队有可能只是排单，并没有成交
             log.error("成功下单[{}],数量:{},价格:{}", stock.getName(), amount, price);
+            TODAY_COST_MONEY.set((int) (TODAY_COST_MONEY.intValue() + price * amount));
         } else {
             log.error("下单[{}]失败,message:{}", stock.getName(), response.getMessage());
         }
