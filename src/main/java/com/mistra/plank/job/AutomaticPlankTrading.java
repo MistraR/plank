@@ -102,14 +102,14 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     @Override
     public void run(String... args) {
         filterStock();
-        yesterdayPlank();
+        yesterdayPlankAddMonitor();
         Barbarossa.executorService.submit(this::autoPlank);
     }
 
     /**
      * 昨日2板3板股票加入监测池,上板则排单
      */
-    private void yesterdayPlank() {
+    private void yesterdayPlankAddMonitor() {
         List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getPlankNumber, 2, 3));
         for (Stock stock : stocks) {
             PLANK_MONITOR.put(stock.getCode(), stock);
@@ -120,38 +120,41 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      * 只打当日涨幅Top5的版块的成分股，并且10点(plankConfig.getAutomaticPlankTradingTimeLimit())以前涨停的股票
      */
     private void autoPlank() {
-        while (openAutoPlank()) {
+        while (true) {
             try {
-                if (!PLANK_MONITOR.isEmpty()) {
-                    for (Stock stock : PLANK_MONITOR.values()) {
-                        StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
-                        if (stockRealTimePriceByCode.isPlank()) {
-                            // 上板,下单排队
-                            STOCK_AUTO_PLANK_FILTER_MAP.remove(stock.getCode());
-                            PLANK_MONITOR.remove(stock.getCode());
-                            int sum = 0, amount = 1;
-                            while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
-                                sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
+                if (openAutoPlank()) {
+                    if (!PLANK_MONITOR.isEmpty()) {
+                        for (Stock stock : PLANK_MONITOR.values()) {
+                            StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
+                            if (stockRealTimePriceByCode.isPlank()) {
+                                // 上板,下单排队
+                                STOCK_AUTO_PLANK_FILTER_MAP.remove(stock.getCode());
+                                PLANK_MONITOR.remove(stock.getCode());
+                                int sum = 0, amount = 1;
+                                while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
+                                    sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
+                                }
+                                amount -= 2;
+                                if (amount >= 1) {
+                                    automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
+                                            AutomaticTradingEnum.AUTO_PLANK.name());
+                                }
+                            } else if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 16) ||
+                                    (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 6)) {
+                                PLANK_MONITOR.remove(stock.getCode());
                             }
-                            amount -= 2;
-                            if (amount >= 1) {
-                                automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
-                                        AutomaticTradingEnum.AUTO_PLANK.name());
-                            }
-                        } else if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 16) ||
-                                (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 6)) {
-                            PLANK_MONITOR.remove(stock.getCode());
                         }
+                        Thread.sleep(200);
+                    } else {
+                        Thread.sleep(1000);
                     }
-                    Thread.sleep(200);
                 } else {
-                    Thread.sleep(1000);
+                    Thread.sleep(10000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        log.warn("------------------------ 终止打板监测 ------------------------");
     }
 
     /**

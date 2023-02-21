@@ -173,7 +173,7 @@ public class Barbarossa implements CommandLineRunner {
 
     /**
      * 每2分钟更新每支股票的成交额,开盘6分钟内不更新,开盘快速封板的票当日成交额可能比较少
-     * 成交额满足阈值的会放入 STOCK_FILTER_MAP 去检测涨幅
+     * 成交额满足阈值的会放入 STOCK_AUTO_PLANK_FILTER_MAP 去检测涨幅
      */
     @Scheduled(cron = "0 */2 * * * ?")
     private void updateStockRealTimeData() throws InterruptedException {
