@@ -74,13 +74,7 @@ public class Barbarossa implements CommandLineRunner {
      * 自动打板股票，一级过滤map
      */
     public static final HashMap<String, Stock> STOCK_AUTO_PLANK_FILTER_MAP = new HashMap<>(512);
-    /**
-     * 所有股票 name
-     */
-    public static final HashSet<String> STOCK_NAME_SET_ALL = new HashSet<>();
-    public static final CopyOnWriteArrayList<StockMainFundSample> mainFundData = new CopyOnWriteArrayList<>();
     public static final CopyOnWriteArrayList<StockMainFundSample> mainFundDataAll = new CopyOnWriteArrayList<>();
-    public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataMap = new ConcurrentHashMap<>(64);
     public static final ConcurrentHashMap<String, StockMainFundSample> mainFundDataAllMap =
             new ConcurrentHashMap<>(4096);
     /**
@@ -109,7 +103,7 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     //@Scheduled(cron = "*/2 * * * * ?")
-    private void executorService() {
+    private void executorStatus() {
         log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
                 Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
     }
@@ -146,7 +140,6 @@ public class Barbarossa implements CommandLineRunner {
         });
         log.warn("实时加载[{}]支股票,添加到自动打板一级缓存[{}]支,是否只打涨幅Top5板块的成分股:{}",
                 stocks.size(), STOCK_AUTO_PLANK_FILTER_MAP.size(), plankConfig.getAutomaticPlankTop5Bk());
-        STOCK_NAME_SET_ALL.addAll(STOCK_ALL_MAP.values());
     }
 
     /**
@@ -246,8 +239,8 @@ public class Barbarossa implements CommandLineRunner {
                     BigDecimal maPrice = new BigDecimal(ma).setScale(2, RoundingMode.HALF_UP);
                     double purchaseRate = (double) Math.round(((maPrice.doubleValue() - v) / v) * 100) / 100;
                     stockRealTimePrice.setName(stock.getName());
-                    stockRealTimePrice.setMainFund(mainFundDataMap.containsKey(stock.getName())
-                            ? mainFundDataMap.get(stock.getName()).getF62() / W : 0);
+                    stockRealTimePrice.setMainFund(mainFundDataAllMap.containsKey(stock.getName())
+                            ? mainFundDataAllMap.get(stock.getName()).getF62() / W : 0);
                     stockRealTimePrice.setPurchasePrice(maPrice);
                     stockRealTimePrice.setPurchaseRate((int) (purchaseRate * 100));
                     realTimePrices.add(stockRealTimePrice);
@@ -319,33 +312,24 @@ public class Barbarossa implements CommandLineRunner {
             try {
                 String body = HttpUtil.getHttpGetResponseString(plankConfig.getMainFundUrl(), null);
                 JSONArray array = JSON.parseObject(body).getJSONObject("data").getJSONArray("diff");
-                List<StockMainFundSample> tmpList = new ArrayList<>();
-                array.parallelStream().forEach(e -> {
+                ArrayList<StockMainFundSample> tmpList = new ArrayList<>();
+                array.forEach(e -> {
                     try {
                         StockMainFundSample mainFundSample = JSONObject.parseObject(e.toString(), StockMainFundSample.class);
                         tmpList.add(mainFundSample);
                         mainFundDataAllMap.put(mainFundSample.getF14(), mainFundSample);
-                        if (STOCK_TRACK_MAP.containsKey(mainFundSample.getF14())) {
-                            mainFundDataMap.put(mainFundSample.getF14(), mainFundSample);
-                        }
                     } catch (JSONException ignored) {
                     } catch (Exception exception) {
                         exception.printStackTrace();
                     }
                 });
-                List<StockMainFundSample> result = tmpList.stream().filter(e -> e != null &&
-                                STOCK_NAME_SET_ALL.contains(e.getF14()) && e.getF62() != null)
-                        .sorted().collect(Collectors.toList());
                 mainFundDataAll.clear();
-                mainFundDataAll.addAll(result.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
-                mainFundData.clear();
-                mainFundData.addAll(result.stream().filter(e -> STOCK_TRACK_MAP.containsKey(e.getF14())).collect(Collectors.toList()));
+                mainFundDataAll.addAll(tmpList.stream().filter(e -> e.getF62() > 100000000).collect(Collectors.toList()));
                 Thread.sleep(3000);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        monitoring.set(false);
     }
 
     /**
@@ -354,9 +338,9 @@ public class Barbarossa implements CommandLineRunner {
     @Scheduled(cron = "0 1 15 * * ?")
     private void analyzeData() {
         try {
-            CountDownLatch countDownLatchD = new CountDownLatch(Barbarossa.STOCK_ALL_MAP.size());
-            dailyRecordProcessor.run(Barbarossa.STOCK_ALL_MAP, countDownLatchD);
-            countDownLatchD.await();
+            CountDownLatch countDownLatch = new CountDownLatch(Barbarossa.STOCK_ALL_MAP.size());
+            dailyRecordProcessor.run(Barbarossa.STOCK_ALL_MAP, countDownLatch);
+            countDownLatch.await();
             log.warn("每日涨跌明细、成交额、MA5、MA10、MA20更新完成");
             StockProcessor.RESET_PLANK_NUMBER.set(true);
             executorService.submit(stockProcessor::updateStockBkInfo);
