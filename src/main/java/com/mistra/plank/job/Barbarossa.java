@@ -108,7 +108,7 @@ public class Barbarossa implements CommandLineRunner {
         updateStockCache();
     }
 
-    @Scheduled(cron = "*/2 * * * * ?")
+    //@Scheduled(cron = "*/2 * * * * ?")
     private void executorService() {
         log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
                 Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
