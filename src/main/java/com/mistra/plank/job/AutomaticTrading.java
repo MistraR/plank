@@ -228,7 +228,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     e.printStackTrace();
                 }
             }
-            log.warn("[{}]已成功挂单卖出，当前卖出线程已结束", name);
+            log.error("[{}]已成功挂单卖出，当前卖出线程已结束", name);
         }
     }
 
@@ -250,7 +250,7 @@ public class AutomaticTrading implements CommandLineRunner {
         stock.setShareholding(false);
         stockMapper.updateById(stock);
         if (response.success()) {
-            log.warn("触发{}止盈、止损，交易成功!", holdShare.getName());
+            log.error("触发{}止盈、止损，交易成功!", holdShare.getName());
             holdShare = null;
         } else {
             log.error("触发{}止盈、止损，交易失败!", holdShare.getName());
@@ -341,7 +341,7 @@ public class AutomaticTrading implements CommandLineRunner {
         TradeResultVo<SubmitResponse> response = tradeApiService.submit(request);
         if (response.success()) {
             // 打板排队有可能只是排单，并没有成交
-            log.info("成功下单[{}],数量:{},价格:{}", stock.getName(), amount, price);
+            log.error("成功下单[{}],数量:{},价格:{}", stock.getName(), amount, price);
         } else {
             log.error("下单[{}]失败,message:{}", stock.getName(), response.getMessage());
         }

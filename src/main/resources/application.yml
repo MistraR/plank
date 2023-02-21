@@ -4,7 +4,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 10
+        size: 20
       thread-name-prefix: Scheduling-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
