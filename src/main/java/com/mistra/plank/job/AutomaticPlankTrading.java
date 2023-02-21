@@ -1,7 +1,6 @@
 package com.mistra.plank.job;
 
 import cn.hutool.core.date.DateUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.dao.StockMapper;
@@ -9,7 +8,7 @@ import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,7 +18,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * @author rui.wang
@@ -55,9 +53,9 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     }
 
     /**
-     * 每2秒过滤主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，放入PLANK_MONITOR
+     * 每5秒过滤主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，放入PLANK_MONITOR
      */
-    @Scheduled(cron = "*/2 * * * * ?")
+    @Scheduled(cron = "*/5 * * * * ?")
     private void filterStock() {
         if (openAutoPlank()) {
             List<List<String>> lists = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_FILTER_MAP.keySet()),
@@ -66,6 +64,12 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                 Barbarossa.executorService.submit(() -> filterStock(list));
             }
         }
+    }
+
+    @Scheduled(cron = "*/2 * * * * ?")
+    private void executorService() {
+        log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
+                Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
     }
 
     /**
@@ -110,26 +114,21 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                 if (!PLANK_MONITOR.isEmpty()) {
                     for (Stock stock : PLANK_MONITOR.values()) {
                         StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
-                        Stock dbStock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>()
-                                .eq(Stock::getCode, stockRealTimePriceByCode.getCode())
-                                .ne(Stock::getClassification, "")
-                                .and(wrapper -> wrapper.isNull(Stock::getBuyTime).or()
-                                        .le(Stock::getBuyTime, DateUtil.beginOfDay(new Date()))));
-                        if (stockRealTimePriceByCode.isPlank() && Objects.nonNull(dbStock)) {
+                        if (stockRealTimePriceByCode.isPlank()) {
+                            // 上板,下单排队
                             boolean buy = true;
-                            List<String> collect = StockProcessor.TOP5_BK.keySet().stream().filter(e ->
-                                    stock.getClassification().contains(e)).collect(Collectors.toList());
                             if (plankConfig.getAutomaticPlankTop5Bk()) {
-                                buy = CollectionUtils.isNotEmpty(collect);
+                                String bk = StockProcessor.TOP5_BK.keySet().stream().filter(e -> Objects.nonNull(stock.getClassification()) &&
+                                        stock.getClassification().contains(e)).findFirst().orElse(null);
+                                buy = StringUtils.isNotEmpty(bk);
                                 if (buy) {
-                                    log.warn("准备挂单[{}],所属版块:{} {}", stock.getName(), StockProcessor.TOP5_BK.get(collect.get(0)).getName(),
-                                            StockProcessor.TOP5_BK.get(collect.get(0)).getIncreaseRate());
+                                    log.warn("准备挂单[{}],所属版块:{} {}", stock.getName(), StockProcessor.TOP5_BK.get(bk).getName(),
+                                            StockProcessor.TOP5_BK.get(bk).getIncreaseRate());
                                 }
                             }
                             if (buy) {
-                                Barbarossa.STOCK_FILTER_MAP.remove(dbStock.getCode());
-                                PLANK_MONITOR.remove(dbStock.getCode());
-                                // 上板，下单排队
+                                Barbarossa.STOCK_FILTER_MAP.remove(stock.getCode());
+                                PLANK_MONITOR.remove(stock.getCode());
                                 int sum = 0, amount = 1;
                                 while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
                                     sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
@@ -141,7 +140,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                 }
                             }
                         } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {
-                            PLANK_MONITOR.remove(dbStock.getCode());
+                            PLANK_MONITOR.remove(stock.getCode());
                         }
                     }
                     Thread.sleep(200);

@@ -104,7 +104,6 @@ public class Barbarossa implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        updateStockCache();
     }
 
     /**
@@ -135,15 +134,12 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     /**
-     * 开盘，初始化版块基本数据
+     * 开盘,初始化版块基本数据
      */
     @Scheduled(cron = "0 30 9 * * ?")
-    private void opening() throws InterruptedException {
-        log.warn("开盘,更新版块涨幅缓存");
+    private void opening() {
         // 更新行业版块，概念版块涨幅信息
-        stockProcessor.updateBk();
-        Thread.sleep(1000);
-        stockProcessor.updateTop5IncreaseRateBk();
+        this.updateBkRealTimeData();
     }
 
     /**
@@ -151,16 +147,18 @@ public class Barbarossa implements CommandLineRunner {
      */
     @Scheduled(cron = "*/3 * * * * ?")
     private void updateBkCache() {
-        while (AutomaticTrading.isTradeTime()) {
-            try {
-                // 更新行业版块，概念版块涨幅信息
-                stockProcessor.updateBk();
-                Thread.sleep(1000);
-                stockProcessor.updateTop5IncreaseRateBk();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (AutomaticTrading.isTradeTime()) {
+            // 更新行业版块，概念版块涨幅信息
+            this.updateBkRealTimeData();
         }
+    }
+
+    /**
+     * 更新版块实时数据
+     */
+    private void updateBkRealTimeData() {
+        stockProcessor.updateBk();
+        stockProcessor.updateTop5IncreaseRateBk();
     }
 
     /**
@@ -168,7 +166,7 @@ public class Barbarossa implements CommandLineRunner {
      * 成交额满足阈值的会放入 STOCK_FILTER_MAP 去检测涨幅
      */
     @Scheduled(cron = "0 */2 * * * ?")
-    private void updateStock() throws InterruptedException {
+    private void updateStockRealTimeData() throws InterruptedException {
         Date openingTime = new Date();
         DateUtils.setHours(openingTime, 9);
         DateUtils.setMinutes(openingTime, 30);
@@ -193,7 +191,8 @@ public class Barbarossa implements CommandLineRunner {
      */
     @Scheduled(cron = "0 */1 * * * ?")
     public void monitor() {
-        if (AutomaticTrading.isTradeTime() && plankConfig.getEnableMonitor() && !monitoring.get()) {
+        if (plankConfig.getEnableMonitor() && AutomaticTrading.isTradeTime() &&
+                !monitoring.get() && STOCK_TRACK_MAP.size() > 0) {
             monitoring.set(true);
             executorService.submit(this::monitorStock);
             executorService.submit(this::queryMainFundData);
@@ -273,16 +272,16 @@ public class Barbarossa implements CommandLineRunner {
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
                 if (CollectionUtils.isNotEmpty(buyStocks)) {
-                    log.error("---------------------------- 今日排单 ----------------------------");
+                    log.error("----------------------------- 打板排单 ----------------------------");
                     log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
-                    log.warn("今日自动交易花费金额:{}", AutomaticTrading.TODAY_COST_MONEY.intValue());
+                    log.warn("排单金额:{}", AutomaticTrading.TODAY_COST_MONEY.intValue());
                     if (plankConfig.getAutomaticPlankTrading() && automaticPlankTrading.openAutoPlank()) {
-                        log.warn("当前打板监测股票:{}", AutomaticPlankTrading.PLANK_MONITOR.values().stream()
+                        log.warn("打板监测:{}", AutomaticPlankTrading.PLANK_MONITOR.values().stream()
                                 .map(Stock::getName).collect(Collectors.toList()));
                     }
                 }
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.UNDER_MONITORING.values())) {
-                    log.error("--------------------------- 自动交易监测 --------------------------");
+                    log.error("--------------------------- 自定义交易监测 --------------------------");
                     log.warn("{}", collectionToString(AutomaticTrading.UNDER_MONITORING.values().stream()
                             .map(Stock::getName).collect(Collectors.toList())));
                 }

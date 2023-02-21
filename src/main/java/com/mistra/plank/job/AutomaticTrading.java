@@ -158,10 +158,8 @@ public class AutomaticTrading implements CommandLineRunner {
         // 监控持仓，止盈止损
         List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                 .gt(HoldShares::getAvailableVolume, 0).eq(HoldShares::getClearance, false));
-        if (CollectionUtils.isNotEmpty(holdShares)) {
-            for (HoldShares holdShare : holdShares) {
-                Barbarossa.executorService.submit(new SaleTask(holdShare));
-            }
+        for (HoldShares holdShare : holdShares) {
+            Barbarossa.executorService.submit(new SaleTask(holdShare));
         }
     }
 
@@ -273,7 +271,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     TODAY_COST_MONEY.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp()) {
                 try {
                     automaticTrading(stock);
-                    Thread.sleep(100);
+                    Thread.sleep(1000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
