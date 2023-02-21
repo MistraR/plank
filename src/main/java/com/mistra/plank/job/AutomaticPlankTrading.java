@@ -1,8 +1,10 @@
 package com.mistra.plank.job;
 
 import cn.hutool.core.date.DateUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
@@ -31,8 +33,8 @@ public class AutomaticPlankTrading implements CommandLineRunner {
 
     private final PlankConfig plankConfig;
     private final StockProcessor stockProcessor;
-
     private final AutomaticTrading automaticTrading;
+    private final StockMapper stockMapper;
 
     /**
      * 自动打板股票，二级过滤map
@@ -42,10 +44,11 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     public static final ConcurrentHashMap<String, Stock> PLANK_MONITOR = new ConcurrentHashMap<>();
 
     public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor,
-                                 AutomaticTrading automaticTrading) {
+                                 AutomaticTrading automaticTrading, StockMapper stockMapper) {
         this.plankConfig = plankConfig;
         this.stockProcessor = stockProcessor;
         this.automaticTrading = automaticTrading;
+        this.stockMapper = stockMapper;
     }
 
     /**
@@ -92,7 +95,18 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     @Override
     public void run(String... args) {
         filterStock();
+        yesterdayPlank();
         Barbarossa.executorService.submit(this::autoPlank);
+    }
+
+    /**
+     * 昨日2板3板股票加入监测池,上板则排单
+     */
+    private void yesterdayPlank() {
+        List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getPlankNumber, 2, 3));
+        for (Stock stock : stocks) {
+            PLANK_MONITOR.put(stock.getCode(), stock);
+        }
     }
 
     /**
