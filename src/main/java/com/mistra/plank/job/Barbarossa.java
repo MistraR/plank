@@ -101,6 +101,7 @@ public class Barbarossa implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        updateStockCache();
     }
 
     /**
@@ -135,6 +136,7 @@ public class Barbarossa implements CommandLineRunner {
      */
     @Scheduled(cron = "0 30 9 * * ?")
     private void opening() throws InterruptedException {
+        log.warn("开盘,更新版块涨幅缓存");
         // 更新行业版块，概念版块涨幅信息
         stockProcessor.updateBk();
         Thread.sleep(1000);

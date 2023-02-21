@@ -27,13 +27,13 @@ public class Bk implements Comparable<Bk> {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    @TableField
+    @TableField(value = "name")
     private String name;
 
     /**
      * 版块代码
      */
-    @TableField
+    @TableField(value = "bk")
     private String bk;
 
     /**

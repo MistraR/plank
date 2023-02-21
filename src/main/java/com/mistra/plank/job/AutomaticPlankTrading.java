@@ -54,6 +54,13 @@ public class AutomaticPlankTrading implements CommandLineRunner {
         this.stockMapper = stockMapper;
     }
 
+    @Scheduled(cron = "*/20 * * * * ?")
+    private void log() {
+        if (openAutoPlank()) {
+            log.warn("当前打板监测股票:{}", PLANK_MONITOR);
+        }
+    }
+
     /**
      * 每2秒过滤主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，放入PLANK_MONITOR
      */
@@ -65,7 +72,6 @@ public class AutomaticPlankTrading implements CommandLineRunner {
             for (List<String> list : lists) {
                 Barbarossa.executorService.submit(() -> filterStock(list));
             }
-            log.warn("当前打板监测股票:{}", PLANK_MONITOR);
         }
     }
 
@@ -81,12 +87,13 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                     (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 7)) {
                 double v = stockRealTimePriceByCode.getCurrentPrice() * 100;
                 if (v <= plankConfig.getSingleTransactionLimitAmount() &&
-                        AutomaticTrading.TODAY_COST_MONEY.intValue() + v < plankConfig.getAutomaticTradingMoneyLimitUp()) {
+                        AutomaticTrading.TODAY_COST_MONEY.intValue() + v < plankConfig.getAutomaticTradingMoneyLimitUp() &&
+                        !PLANK_MONITOR.contains(e)) {
                     PLANK_MONITOR.add(e);
-                    if (AutomaticTrading.TODAY_BOUGHT_SUCCESS.contains(e)) {
-                        PLANK_MONITOR.remove(e);
-                    }
                     log.warn("{} 新加入打板监测,当前共监测:{}支股票", e, PLANK_MONITOR.size());
+                }
+                if (AutomaticTrading.TODAY_BOUGHT_SUCCESS.contains(e)) {
+                    PLANK_MONITOR.remove(e);
                 }
             }
         });

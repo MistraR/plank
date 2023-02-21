@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
@@ -25,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -145,6 +147,11 @@ public class StockProcessor {
         }
     }
 
+    @Scheduled(cron = "0 25 9 * * ?")
+    private void updateStockCache() {
+        bkMapper.update(Bk.builder().increaseRate(new BigDecimal(0)).build(), new LambdaUpdateWrapper<Bk>());
+    }
+
     /**
      * 实时更新版块涨幅信息
      */
@@ -182,6 +189,7 @@ public class StockProcessor {
     public void updateTop5IncreaseRateBk() {
         List<Bk> bks = bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false)
                 .orderByDesc(Bk::getIncreaseRate).last("limit 0,5"));
+        TOP5_BK.clear();
         bks.forEach(e -> TOP5_BK.put(e.getBk(), e));
     }
 
