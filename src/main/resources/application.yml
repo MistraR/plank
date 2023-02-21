@@ -5,7 +5,7 @@ spring:
     scheduling:
       pool:
         size: 20
-      thread-name-prefix: Scheduling-
+      thread-name-prefix: Scheduled-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:

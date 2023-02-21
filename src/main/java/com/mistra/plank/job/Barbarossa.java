@@ -23,6 +23,7 @@ import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.service.impl.ScreeningStocks;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -58,9 +59,9 @@ public class Barbarossa implements CommandLineRunner {
     private final DailyRecordProcessor dailyRecordProcessor;
     private final AnalyzeProcessor analyzePlank;
     private final AutomaticPlankTrading automaticPlankTrading;
-    public static final ThreadPoolExecutor executorService = new ThreadPoolExecutor(availableProcessors,
+    public static final ThreadPoolExecutor executorService = new ThreadPoolExecutor(availableProcessors * 2,
             availableProcessors * 2, 100L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(5000), new NamedThreadFactory("T", false));
+            new LinkedBlockingQueue<>(5000), new NamedThreadFactory("涨停板-", false));
     /**
      * 所有股票 key-code value-name
      */
@@ -72,7 +73,7 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 自动打板股票，一级过滤map
      */
-    public static final HashMap<String, Stock> STOCK_FILTER_MAP = new HashMap<>(2048);
+    public static final HashMap<String, Stock> STOCK_AUTO_PLANK_FILTER_MAP = new HashMap<>(512);
     /**
      * 所有股票 name
      */
@@ -104,6 +105,13 @@ public class Barbarossa implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        updateStockCache();
+    }
+
+    @Scheduled(cron = "*/2 * * * * ?")
+    private void executorService() {
+        log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
+                Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
     }
 
     /**
@@ -116,20 +124,28 @@ public class Barbarossa implements CommandLineRunner {
                 .notLike("name", "%ST%").notLike("code", "%688%")
                 .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
+        STOCK_AUTO_PLANK_FILTER_MAP.clear();
+        STOCK_TRACK_MAP.clear();
         stocks.forEach(e -> {
             if ((e.getShareholding() || e.getTrack())) {
                 STOCK_TRACK_MAP.put(e.getName(), e);
             } else if (e.getTransactionAmount().doubleValue() > plankConfig.getStockTurnoverFilter()
-                    && (Objects.isNull(e.getPlankNumber()) || e.getPlankNumber() <= 3)
                     && (Objects.isNull(e.getBuyTime()) || !DateUtils.isSameDay(new Date(), e.getBuyTime()))) {
-                // 过滤掉昨日连板以及成交额小于plankConfig.getStockTurnoverFilter()的股票,
-                // 过滤掉3板以上的股票，3板+的可以自己判断是否加入自动交易，低吸或者打板，参考PlankController.tomorrowAutoTradePool接口参数配置
-                STOCK_FILTER_MAP.put(e.getCode(), e);
+                // 过滤掉成交额小于plankConfig.getStockTurnoverFilter()的股票,
+                if (plankConfig.getAutomaticPlankTop5Bk() && CollectionUtils.isNotEmpty(StockProcessor.TOP5_BK.values())) {
+                    String bk = StockProcessor.TOP5_BK.keySet().stream().filter(v -> Objects.nonNull(e.getClassification()) &&
+                            e.getClassification().contains(v)).findFirst().orElse(null);
+                    if (StringUtils.isNotEmpty(bk)) {
+                        STOCK_AUTO_PLANK_FILTER_MAP.put(e.getCode(), e);
+                    }
+                } else {
+                    STOCK_AUTO_PLANK_FILTER_MAP.put(e.getCode(), e);
+                }
             }
             STOCK_ALL_MAP.put(e.getCode(), e.getName());
         });
-        log.warn("实时加载[{}]支股票,其中成交额大于{}亿的[{}]支", stocks.size(),
-                plankConfig.getStockTurnoverFilter() / W / W, STOCK_FILTER_MAP.size());
+        log.warn("实时加载[{}]支股票,添加到自动打板一级缓存[{}]支,是否只打涨幅Top5板块的成分股:{}",
+                stocks.size(), STOCK_AUTO_PLANK_FILTER_MAP.size(), plankConfig.getAutomaticPlankTop5Bk());
         STOCK_NAME_SET_ALL.addAll(STOCK_ALL_MAP.values());
     }
 

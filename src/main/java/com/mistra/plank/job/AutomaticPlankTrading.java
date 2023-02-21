@@ -3,12 +3,10 @@ package com.mistra.plank.job;
 import cn.hutool.core.date.DateUtil;
 import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
-import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -37,39 +34,32 @@ public class AutomaticPlankTrading implements CommandLineRunner {
 
     private final AutomaticTrading automaticTrading;
 
-    private final StockMapper stockMapper;
     /**
      * 自动打板股票，二级过滤map
      * 主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，上板则下单排队
+     * 想打板哪个股票，放入这个map就会自动监控，上板就会下单
      */
     public static final ConcurrentHashMap<String, Stock> PLANK_MONITOR = new ConcurrentHashMap<>();
 
     public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor,
-                                 AutomaticTrading automaticTrading, StockMapper stockMapper) {
+                                 AutomaticTrading automaticTrading) {
         this.plankConfig = plankConfig;
         this.stockProcessor = stockProcessor;
         this.automaticTrading = automaticTrading;
-        this.stockMapper = stockMapper;
     }
 
     /**
      * 每5秒过滤主板涨幅大于7个点股票，创业板涨幅大于18个点的股票，放入PLANK_MONITOR
      */
-    @Scheduled(cron = "*/5 * * * * ?")
+    @Scheduled(cron = "*/4 * * * * ?")
     private void filterStock() {
-        if (openAutoPlank()) {
-            List<List<String>> lists = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_FILTER_MAP.keySet()),
+        if (openAutoPlank() && Barbarossa.executorService.getQueue().size() < 32) {
+            List<List<String>> lists = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_AUTO_PLANK_FILTER_MAP.keySet()),
                     Barbarossa.executorService.getMaximumPoolSize() / 2);
             for (List<String> list : lists) {
                 Barbarossa.executorService.submit(() -> filterStock(list));
             }
         }
-    }
-
-    @Scheduled(cron = "*/2 * * * * ?")
-    private void executorService() {
-        log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
-                Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
     }
 
     /**
@@ -86,7 +76,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                 if (v <= plankConfig.getSingleTransactionLimitAmount() &&
                         AutomaticTrading.TODAY_COST_MONEY.intValue() + v < plankConfig.getAutomaticTradingMoneyLimitUp() &&
                         !PLANK_MONITOR.containsKey(e)) {
-                    PLANK_MONITOR.put(e, Barbarossa.STOCK_FILTER_MAP.get(e));
+                    PLANK_MONITOR.put(e, Barbarossa.STOCK_AUTO_PLANK_FILTER_MAP.get(e));
                     log.warn("{} 新加入打板监测", e);
                 }
                 if (AutomaticTrading.TODAY_BOUGHT_SUCCESS.contains(e)) {
@@ -116,28 +106,16 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                         StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
                         if (stockRealTimePriceByCode.isPlank()) {
                             // 上板,下单排队
-                            boolean buy = true;
-                            if (plankConfig.getAutomaticPlankTop5Bk()) {
-                                String bk = StockProcessor.TOP5_BK.keySet().stream().filter(e -> Objects.nonNull(stock.getClassification()) &&
-                                        stock.getClassification().contains(e)).findFirst().orElse(null);
-                                buy = StringUtils.isNotEmpty(bk);
-                                if (buy) {
-                                    log.warn("准备挂单[{}],所属版块:{} {}", stock.getName(), StockProcessor.TOP5_BK.get(bk).getName(),
-                                            StockProcessor.TOP5_BK.get(bk).getIncreaseRate());
-                                }
+                            Barbarossa.STOCK_AUTO_PLANK_FILTER_MAP.remove(stock.getCode());
+                            PLANK_MONITOR.remove(stock.getCode());
+                            int sum = 0, amount = 1;
+                            while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
+                                sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
                             }
-                            if (buy) {
-                                Barbarossa.STOCK_FILTER_MAP.remove(stock.getCode());
-                                PLANK_MONITOR.remove(stock.getCode());
-                                int sum = 0, amount = 1;
-                                while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
-                                    sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
-                                }
-                                amount -= 2;
-                                if (amount >= 1) {
-                                    automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
-                                            AutomaticTradingEnum.AUTO_PLANK.name());
-                                }
+                            amount -= 2;
+                            if (amount >= 1) {
+                                automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
+                                        AutomaticTradingEnum.AUTO_PLANK.name());
                             }
                         } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {
                             PLANK_MONITOR.remove(stock.getCode());
