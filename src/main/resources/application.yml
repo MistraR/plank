@@ -47,7 +47,7 @@ plank:
   stopLossRate: 0.97
   takeProfitRate: 1.06
   automaticTradingMoneyLimitUp: 10000
-  automaticPlankTrading: true
+  automaticPlankTrading: false
   automaticPlankTop5Bk: true
   automaticPlankTradingTimeLimit: 10
   singleTransactionLimitAmount: 5000

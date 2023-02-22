@@ -102,5 +102,4 @@ public class HoldShares {
     @TableField(value = "sale_time")
     private Date saleTime;
 
-
 }
