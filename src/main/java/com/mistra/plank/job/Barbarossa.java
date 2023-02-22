@@ -256,7 +256,7 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 Collections.sort(realTimePrices);
                 System.out.println("\n\n\n");
-                log.error("------------------------ 主力净流入Top10 -------------------------");
+                log.error("------------------------ 主力净流入Top10 --------------------------");
                 List<StockMainFundSample> topTen = new ArrayList<>();
                 for (int i = 0; i < Math.min(MAIN_FUND_DATA.size(), 10); i++) {
                     topTen.add(MAIN_FUND_DATA.get(i));
@@ -270,7 +270,7 @@ public class Barbarossa implements CommandLineRunner {
                 List<StockRealTimePrice> shareholding = realTimePrices.stream().filter(e ->
                         STOCK_TRACK_MAP.get(e.getName()).getShareholding()).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(shareholding)) {
-                    log.error("------------------------------ 持仓 -----------------------------");
+                    log.error("------------------------------- 持仓 ------------------------------");
                     shareholding.forEach(e -> {
                         if (e.getIncreaseRate() > 0) {
                             Barbarossa.log.error(convertLog(e));
@@ -283,14 +283,14 @@ public class Barbarossa implements CommandLineRunner {
                 List<StockRealTimePrice> stockRealTimePrices = realTimePrices.stream().filter(e ->
                         e.getPurchaseRate() >= -2).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(stockRealTimePrices)) {
-                    log.error("------------------------------ Track -----------------------------");
+                    log.error("------------------------------ Track ------------------------------");
                     stockRealTimePrices.forEach(e -> Barbarossa.log.warn(convertLog(e)));
                 }
                 List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
                 if (CollectionUtils.isNotEmpty(buyStocks)) {
-                    log.error("---------------------- 自动打板,排单金额:{} ---------------------",
+                    log.error("----------------------- 自动打板,排单金额:{} -----------------------",
                             AutomaticTrading.TODAY_COST_MONEY.intValue());
                     log.warn("{}", collectionToString(buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet())));
                     if (plankConfig.getAutomaticPlankTrading() && automaticPlankTrading.openAutoPlank()) {
