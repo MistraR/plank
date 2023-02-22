@@ -104,13 +104,12 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     @Scheduled(cron = "0 */2 * * * ?")
-//    @Scheduled(cron = "*/2 * * * * ?")
     private void executorStatus() {
         if (AutomaticTrading.isTradeTime()) {
             log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
                     Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
-            log.error("打板一级缓存{}", AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.values()
-                    .stream().map(Stock::getName).collect(Collectors.toList()));
+            log.error("打板一级缓存{}", collectionToString(AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.values()
+                    .stream().map(Stock::getName).collect(Collectors.toList())));
         }
     }
 
@@ -295,8 +294,8 @@ public class Barbarossa implements CommandLineRunner {
                             AutomaticTrading.TODAY_COST_MONEY.intValue());
                     log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
                     if (plankConfig.getAutomaticPlankTrading() && automaticPlankTrading.openAutoPlank()) {
-                        log.warn("打板监测:{}", AutomaticPlankTrading.PLANK_MONITOR.values().stream()
-                                .map(Stock::getName).collect(Collectors.toList()));
+                        log.warn("打板监测:{}", collectionToString(AutomaticPlankTrading.PLANK_MONITOR.values().stream()
+                                .map(Stock::getName).collect(Collectors.toList())));
                     }
                 }
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.UNDER_MONITORING.values())) {
