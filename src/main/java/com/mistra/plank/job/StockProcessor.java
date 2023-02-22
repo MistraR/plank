@@ -33,6 +33,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +54,8 @@ public class StockProcessor {
     private final FundHoldingsTrackingMapper fundHoldingsTrackingMapper;
     private final DailyRecordProcessor dailyRecordProcessor;
     private final BkMapper bkMapper;
+
+    private final ReentrantLock bkLock = new ReentrantLock();
 
     /**
      * 当日涨幅top5版块
@@ -151,7 +154,9 @@ public class StockProcessor {
             updateBk(JSON.parseObject(body).getJSONObject("data").getJSONArray("diff"), "CONCEPT");
             body = HttpUtil.getHttpGetResponseString(plankConfig.getIndustryBKUrl(), null);
             body = body.substring(body.indexOf("(") + 1, body.indexOf(")"));
+            bkLock.lock();
             updateBk(JSON.parseObject(body).getJSONObject("data").getJSONArray("diff"), "INDUSTRY");
+            bkLock.unlock();
         } catch (Exception e) {
             e.printStackTrace();
         }

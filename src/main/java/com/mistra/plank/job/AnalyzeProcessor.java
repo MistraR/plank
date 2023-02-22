@@ -72,8 +72,6 @@ public class AnalyzeProcessor {
         HashMap<String, BigDecimal> fourToFive = new HashMap<>(16);
         // 五板五进六胜率
         HashMap<String, BigDecimal> fiveToSix = new HashMap<>(16);
-        // 六板六进七胜率
-        HashMap<String, BigDecimal> sixToSeven = new HashMap<>(16);
         List<DailyRecord> dailyRecords =
                 dailyRecordMapper.selectList(new LambdaQueryWrapper<DailyRecord>().ge(DailyRecord::getDate, date));
         Map<String, List<DailyRecord>> dateListMap =
@@ -88,8 +86,6 @@ public class AnalyzeProcessor {
         HashMap<String, Double> yesterdayFour = new HashMap<>(8);
         // 昨日五板
         HashMap<String, Double> yesterdayFive = new HashMap<>(4);
-        // 昨日六板
-        HashMap<String, Double> yesterdaySix = new HashMap<>(4);
         do {
             List<DailyRecord> records = dateListMap.get(sdf.format(date));
             if (CollectionUtils.isNotEmpty(records)) {
@@ -105,29 +101,22 @@ public class AnalyzeProcessor {
                 HashMap<String, Double> todayFive = new HashMap<>(16);
                 // 今日六板
                 HashMap<String, Double> todaySix = new HashMap<>(16);
-                // 今日七板
-                HashMap<String, Double> todaySeven = new HashMap<>(16);
                 for (DailyRecord dailyRecord : records) {
                     double v = dailyRecord.getIncreaseRate().doubleValue();
-                    String name = dailyRecord.getName();
-                    String code = dailyRecord.getCode();
-                    if ((!code.contains("SZ30") && v > 9.6) || (code.contains("SZ30") && v > 19.6)) {
-                        if (yesterdaySix.containsKey(name)) {
-                            // 昨日的六板，今天继续板，进阶7板
-                            todaySeven.put(dailyRecord.getName(), v);
-                        } else if (yesterdayFive.containsKey(name)) {
+                    if (dailyRecord.getPlank()) {
+                        if (yesterdayFive.containsKey(dailyRecord.getName())) {
                             // 昨日的五板，今天继续板，进阶6板
                             todaySix.put(dailyRecord.getName(), v);
-                        } else if (yesterdayFour.containsKey(name)) {
+                        } else if (yesterdayFour.containsKey(dailyRecord.getName())) {
                             // 昨日的四板，今天继续板，进阶5板
                             todayFive.put(dailyRecord.getName(), v);
-                        } else if (yesterdayThree.containsKey(name)) {
+                        } else if (yesterdayThree.containsKey(dailyRecord.getName())) {
                             // 昨日的三板，今天继续板，进阶4板
                             todayFour.put(dailyRecord.getName(), v);
-                        } else if (yesterdayTwo.containsKey(name)) {
+                        } else if (yesterdayTwo.containsKey(dailyRecord.getName())) {
                             // 昨日的二板，今天继续板，进阶3板
                             todayThree.put(dailyRecord.getName(), v);
-                        } else if (yesterdayOne.containsKey(name)) {
+                        } else if (yesterdayOne.containsKey(dailyRecord.getName())) {
                             // 昨日首板，今天继续板，进阶2板
                             todayTwo.put(dailyRecord.getName(), v);
                         } else {
@@ -141,17 +130,15 @@ public class AnalyzeProcessor {
                 this.promotion(threeToFour, todayFour, yesterdayThree, date);
                 this.promotion(fourToFive, todayFive, yesterdayFour, date);
                 this.promotion(fiveToSix, todaySix, yesterdayFive, date);
-                this.promotion(sixToSeven, todaySeven, yesterdaySix, date);
                 if (date.after(DateUtils.addDays(new Date(), -2))) {
                     // 只打印最近2个交易日的连板数据
-                    log.warn("{}日连板数据：" + "\n一板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}\n七板{}支:{}",
+                    log.warn("{}日连板数据：" + "\n一板{}支:{}\n二板{}支:{}\n三板{}支:{}\n四板{}支:{}\n五板{}支:{}\n六板{}支:{}",
                             sdf.format(date), todayOne.keySet().size(), new ArrayList<>(todayOne.keySet()),
                             todayTwo.keySet().size(), new ArrayList<>(todayTwo.keySet()), todayThree.keySet().size(),
                             new ArrayList<>(todayThree.keySet()), todayFour.keySet().size(),
                             new ArrayList<>(todayFour.keySet()), todayFive.keySet().size(),
                             new ArrayList<>(todayFive.keySet()), todaySix.keySet().size(),
-                            new ArrayList<>(todaySix.keySet()), todaySeven.keySet().size(),
-                            new ArrayList<>(todaySeven.keySet()));
+                            new ArrayList<>(todaySix.keySet()));
                     if (DateUtils.isSameDay(new Date(), date)) {
                         updateStock(todayOne.keySet(), 1);
                         updateStock(todayTwo.keySet(), 2);
@@ -159,7 +146,6 @@ public class AnalyzeProcessor {
                         updateStock(todayFour.keySet(), 4);
                         updateStock(todayFive.keySet(), 5);
                         updateStock(todaySix.keySet(), 6);
-                        updateStock(todaySeven.keySet(), 7);
                     }
                 }
                 yesterdayOne.clear();
@@ -172,8 +158,6 @@ public class AnalyzeProcessor {
                 yesterdayFour.putAll(todayFour);
                 yesterdayFive.clear();
                 yesterdayFive.putAll(todayFive);
-                yesterdaySix.clear();
-                yesterdaySix.putAll(todaySix);
             }
             date = DateUtils.addDays(date, 1);
         } while (date.getTime() < System.currentTimeMillis());
@@ -186,8 +170,6 @@ public class AnalyzeProcessor {
         log.error("四板>四进五平均胜率：{}", (double) Math.round(fourToFive.values().stream()
                 .collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
         log.error("五板>五进六平均胜率：{}", (double) Math.round(fiveToSix.values().stream()
-                .collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
-        log.error("六板>六进七平均胜率：{}", (double) Math.round(sixToSeven.values().stream()
                 .collect(Collectors.averagingDouble(BigDecimal::doubleValue)) * 100) / 100);
     }
 
