@@ -103,12 +103,15 @@ public class Barbarossa implements CommandLineRunner {
         updateStockCache();
     }
 
-    @Scheduled(cron = "0 */2 * * * ?")
+    //    @Scheduled(cron = "0 */2 * * * ?")
+    @Scheduled(cron = "*/2 * * * * ?")
     private void executorStatus() {
         if (AutomaticTrading.isTradeTime()) {
             log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
                     Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
         }
+        log.error("打板一级缓存{}", AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.values()
+                .stream().map(Stock::getName).collect(Collectors.toList()));
     }
 
     /**
@@ -129,11 +132,14 @@ public class Barbarossa implements CommandLineRunner {
             } else if (e.getTransactionAmount().doubleValue() > plankConfig.getStockTurnoverThreshold()
                     && (Objects.isNull(e.getBuyTime()) || !DateUtils.isSameDay(new Date(), e.getBuyTime()))) {
                 // 过滤掉成交额小于plankConfig.getStockTurnoverFilter()的股票,
-                if (plankConfig.getAutomaticPlankTop5Bk() && CollectionUtils.isNotEmpty(StockProcessor.TOP5_BK.values())) {
-                    String bk = StockProcessor.TOP5_BK.keySet().stream().filter(v -> Objects.nonNull(e.getClassification()) &&
-                            e.getClassification().contains(v)).findFirst().orElse(null);
-                    if (StringUtils.isNotEmpty(bk)) {
-                        AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.put(e.getCode(), e);
+                if (plankConfig.getAutomaticPlankTop5Bk()) {
+                    if (CollectionUtils.isNotEmpty(StockProcessor.TOP5_BK.values())) {
+                        String bk = StockProcessor.TOP5_BK.keySet().stream().filter(v -> Objects.nonNull(e.getClassification()) &&
+                                e.getClassification().contains(v)).findFirst().orElse(null);
+                        if (StringUtils.isNotEmpty(bk)) {
+                            log.warn("{}板块的{}加入一级缓存", bk, e.getName() + e.getClassification());
+                            AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.put(e.getCode(), e);
+                        }
                     }
                 } else {
                     AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.put(e.getCode(), e);
@@ -141,8 +147,9 @@ public class Barbarossa implements CommandLineRunner {
             }
             STOCK_ALL_MAP.put(e.getCode(), e.getName());
         });
-        log.warn("实时加载[{}]支股票,添加到自动打板一级缓存[{}]支,是否只打涨幅Top5板块的成分股:{}",
-                stocks.size(), AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.size(), plankConfig.getAutomaticPlankTop5Bk());
+        log.warn("加载[{}]支股票,自动打板二级缓存[{}]支,开启自动打板:{},是否只打涨幅Top5板块的成分股:{}",
+                stocks.size(), AutomaticPlankTrading.PLANK_MONITOR.size(), plankConfig.getAutomaticPlankTrading(),
+                plankConfig.getAutomaticPlankTop5Bk());
     }
 
     /**

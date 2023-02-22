@@ -11,15 +11,15 @@ import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author rui.wang
@@ -82,6 +82,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      * @param codes codes
      */
     private void filterStock(List<String> codes) {
+        Set<String> todayBufSaleSet = selectTodayBufSaleSet();
         codes.forEach(e -> {
             StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
             if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() > 17) ||
@@ -89,19 +90,31 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                 double v = stockRealTimePriceByCode.getCurrentPrice() * 100;
                 if (v <= plankConfig.getSingleTransactionLimitAmount() &&
                         AutomaticTrading.TODAY_COST_MONEY.intValue() + v < plankConfig.getAutomaticTradingMoneyLimitUp() &&
-                        !PLANK_MONITOR.containsKey(e)) {
+                        !PLANK_MONITOR.containsKey(e) && !todayBufSaleSet.contains(e)) {
                     PLANK_MONITOR.put(e, STOCK_AUTO_PLANK_FILTER_MAP.get(e));
                     log.warn("{} 新加入打板监测", e);
                 }
                 if (AutomaticTrading.TODAY_BOUGHT_SUCCESS.contains(e)) {
                     PLANK_MONITOR.remove(e);
                 }
-                List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>().ge(HoldShares::getSaleTime, new Date()));
-                for (HoldShares holdShare : holdShares) {
-                    PLANK_MONITOR.remove(holdShare.getCode());
-                }
             }
         });
+    }
+
+    /**
+     * 获取今日买入,卖出的股票code
+     *
+     * @return Set<String> todayBufSaleSet = selectTodayBufSaleSet();
+     */
+    private Set<String> selectTodayBufSaleSet() {
+        List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
+                .ge(HoldShares::getSaleTime, DateUtil.beginOfDay(new Date()))
+                .or()
+                .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date())));
+        if (CollectionUtils.isEmpty(holdShares)) {
+            return new HashSet<>();
+        }
+        return holdShares.stream().map(HoldShares::getCode).collect(Collectors.toSet());
     }
 
     /**
@@ -119,8 +132,11 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     private void yesterdayPlankAddMonitor() {
         List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getPlankNumber, 2, 3));
+        Set<String> todayBufSaleSet = selectTodayBufSaleSet();
         for (Stock stock : stocks) {
-            PLANK_MONITOR.put(stock.getCode(), stock);
+            if (!todayBufSaleSet.contains(stock.getCode())) {
+                PLANK_MONITOR.put(stock.getCode(), stock);
+            }
         }
     }
 
@@ -133,23 +149,32 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                 if (openAutoPlank()) {
                     if (!PLANK_MONITOR.isEmpty()) {
                         for (Stock stock : PLANK_MONITOR.values()) {
-                            StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
-                            if (stockRealTimePriceByCode.isPlank()) {
-                                // 上板,下单排队
+                            if (AutomaticTrading.TODAY_COST_MONEY.intValue() + plankConfig.getSingleTransactionLimitAmount()
+                                    > plankConfig.getAutomaticTradingMoneyLimitUp()) {
                                 STOCK_AUTO_PLANK_FILTER_MAP.remove(stock.getCode());
                                 PLANK_MONITOR.remove(stock.getCode());
-                                int sum = 0, amount = 1;
-                                while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
-                                    sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
+                            } else {
+                                StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
+                                if (stockRealTimePriceByCode.isPlank()) {
+                                    // 上板,下单排队
+                                    int sum = 0, amount = 1;
+                                    while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
+                                        sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
+                                    }
+                                    amount -= 2;
+                                    if (amount >= 1) {
+                                        double cost = amount * 100 * stockRealTimePriceByCode.getLimitUp();
+                                        if (AutomaticTrading.TODAY_COST_MONEY.intValue() + cost < plankConfig.getAutomaticTradingMoneyLimitUp()) {
+                                            automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
+                                                    AutomaticTradingEnum.AUTO_PLANK.name());
+                                        }
+                                    }
+                                    STOCK_AUTO_PLANK_FILTER_MAP.remove(stock.getCode());
+                                    PLANK_MONITOR.remove(stock.getCode());
+                                } else if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 16) ||
+                                        (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 6)) {
+                                    PLANK_MONITOR.remove(stock.getCode());
                                 }
-                                amount -= 2;
-                                if (amount >= 1) {
-                                    automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
-                                            AutomaticTradingEnum.AUTO_PLANK.name());
-                                }
-                            } else if ((stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 16) ||
-                                    (!stockRealTimePriceByCode.getCode().contains("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 6)) {
-                                PLANK_MONITOR.remove(stock.getCode());
                             }
                         }
                         Thread.sleep(200);
