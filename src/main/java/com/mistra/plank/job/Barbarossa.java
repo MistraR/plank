@@ -233,7 +233,7 @@ public class Barbarossa implements CommandLineRunner {
                             .ge(DailyRecord::getDate, DateUtils.addDays(new Date(), -purchaseType * 3))
                             .orderByDesc(DailyRecord::getDate));
                     if (dailyRecords.size() < purchaseType) {
-                        log.error("{}的交易数据不完整，不够{}个交易日数据！请先爬取交易数据！", stock.getCode(), stock.getPurchaseType());
+                        log.error("{}的交易数据不完整,不足{}个交易日数据,请先爬取交易数据", stock.getCode(), stock.getPurchaseType());
                         continue;
                     }
                     StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
@@ -291,7 +291,7 @@ public class Barbarossa implements CommandLineRunner {
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
                 if (CollectionUtils.isNotEmpty(buyStocks)) {
-                    log.error("---------------------- 打板排单,排单金额:{} ---------------------",
+                    log.error("---------------------- 自动打板,排单金额:{} ---------------------",
                             AutomaticTrading.TODAY_COST_MONEY.intValue());
                     log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
                     if (plankConfig.getAutomaticPlankTrading() && automaticPlankTrading.openAutoPlank()) {

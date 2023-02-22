@@ -312,7 +312,7 @@ public class StockProcessor {
                     fundHoldingsTracking.setForeignTotalMarketDynamic(0L);
                     fundHoldingsTracking.setForeignFundTotalMarketDynamic(0L);
                     fundHoldingsTrackingMapper.insert(fundHoldingsTracking);
-                    log.warn("更新 [{}] {}季报基金持仓数据完成！", stock.getName(), fundHoldingsParam.getQuarter());
+                    log.warn("更新 [{}] {}季报基金持仓数据完成", stock.getName(), fundHoldingsParam.getQuarter());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
