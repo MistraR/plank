@@ -264,7 +264,7 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + "[" + e.getF62() /
                         W / W + "亿]" + e.getF3()).collect(Collectors.toList())));
-                log.error("------------------------- 板块涨幅Top5 --------------------------");
+                log.error("------------------------- 板块涨幅>2Top5 --------------------------");
                 ArrayList<Bk> bks = Lists.newArrayList(StockProcessor.TOP5_BK.values());
                 Collections.sort(bks);
                 log.warn(collectionToString(bks.stream().map(e -> e.getName() + ":" + e.getIncreaseRate()).collect(Collectors.toList())));
