@@ -184,7 +184,7 @@ public class StockProcessor {
         List<Bk> bks = bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false)
                 .orderByDesc(Bk::getIncreaseRate).last("limit 0,5"));
         TOP5_BK.clear();
-        bks.stream().filter(e -> e.getIncreaseRate().doubleValue() > 1.3).forEach(e -> TOP5_BK.put(e.getBk(), e));
+        bks.stream().filter(e -> e.getIncreaseRate().doubleValue() > 2).forEach(e -> TOP5_BK.put(e.getBk(), e));
     }
 
     /**
