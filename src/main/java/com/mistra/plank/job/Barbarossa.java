@@ -124,8 +124,9 @@ public class Barbarossa implements CommandLineRunner {
                 .notLike("name", "%ST%").notLike("code", "%688%")
                 .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
-        AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.clear();
         STOCK_TRACK_MAP.clear();
+        AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.clear();
+        AutomaticPlankTrading.PLANK_MONITOR.clear();
         stocks.forEach(e -> {
             if ((e.getShareholding() || e.getTrack())) {
                 STOCK_TRACK_MAP.put(e.getName(), e);
