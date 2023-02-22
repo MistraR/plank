@@ -4,8 +4,10 @@ import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.dao.HoldSharesMapper;
 import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockRealTimePrice;
+import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     private final StockProcessor stockProcessor;
     private final AutomaticTrading automaticTrading;
     private final StockMapper stockMapper;
+    private final HoldSharesMapper holdSharesMapper;
 
     /**
      * 自动打板股票,一级过滤map
@@ -51,11 +54,12 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     public static final ConcurrentHashMap<String, Stock> PLANK_MONITOR = new ConcurrentHashMap<>();
 
     public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor,
-                                 AutomaticTrading automaticTrading, StockMapper stockMapper) {
+                                 AutomaticTrading automaticTrading, StockMapper stockMapper, HoldSharesMapper holdSharesMapper) {
         this.plankConfig = plankConfig;
         this.stockProcessor = stockProcessor;
         this.automaticTrading = automaticTrading;
         this.stockMapper = stockMapper;
+        this.holdSharesMapper = holdSharesMapper;
     }
 
     /**
@@ -91,6 +95,10 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                 }
                 if (AutomaticTrading.TODAY_BOUGHT_SUCCESS.contains(e)) {
                     PLANK_MONITOR.remove(e);
+                }
+                List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>().ge(HoldShares::getSaleTime, new Date()));
+                for (HoldShares holdShare : holdShares) {
+                    PLANK_MONITOR.remove(holdShare.getCode());
                 }
             }
         });

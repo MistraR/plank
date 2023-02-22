@@ -7,6 +7,7 @@ import com.mistra.plank.common.exception.FieldInputException;
 import com.mistra.plank.common.util.StockUtil;
 import com.mistra.plank.dao.HoldSharesMapper;
 import com.mistra.plank.dao.StockMapper;
+import com.mistra.plank.job.AutomaticPlankTrading;
 import com.mistra.plank.model.entity.*;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.model.vo.AccountVo;
@@ -211,9 +212,13 @@ public class TradeController extends BaseController {
         List<HoldShares> holdShares = holdSharesMapper.selectList(new QueryWrapper<HoldShares>().eq("name", stockName));
         if (CollectionUtils.isNotEmpty(holdShares)) {
             for (HoldShares holdShare : holdShares) {
+                // 当日手动卖出的股票,不参与打板
+                AutomaticPlankTrading.PLANK_MONITOR.remove(holdShare.getCode());
                 if (holdShare.getAvailableVolume() > 0) {
                     holdShare.setAvailableVolume(holdShare.getAvailableVolume() - amount);
-                    holdShare.setProfit(BigDecimal.valueOf((holdShare.getBuyPrice().doubleValue() - price) * amount));
+                    holdShare.setProfit(BigDecimal.valueOf((price - holdShare.getBuyPrice().doubleValue()) * amount));
+                    holdShare.setClearance(true);
+                    holdShare.setSaleTime(new Date());
                     holdSharesMapper.updateById(holdShare);
                 }
             }

@@ -96,4 +96,11 @@ public class HoldShares {
     @TableField(value = "buy_time")
     private Date buyTime;
 
+    /**
+     * 清仓日期
+     */
+    @TableField(value = "sale_time")
+    private Date saleTime;
+
+
 }

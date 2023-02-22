@@ -240,6 +240,7 @@ public class AutomaticTrading implements CommandLineRunner {
         TradeResultVo<SubmitResponse> response = tradeApiService.submit(request);
         holdShare.setAvailableVolume(0);
         holdShare.setClearance(true);
+        holdShare.setSaleTime(new Date());
         holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
                 * holdShare.getNumber()));
         holdSharesMapper.updateById(holdShare);
