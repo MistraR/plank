@@ -292,7 +292,7 @@ public class Barbarossa implements CommandLineRunner {
                 if (CollectionUtils.isNotEmpty(buyStocks)) {
                     log.error("---------------------- 自动打板,排单金额:{} ---------------------",
                             AutomaticTrading.TODAY_COST_MONEY.intValue());
-                    log.warn("{}", buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet()));
+                    log.warn("{}", collectionToString(buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet())));
                     if (plankConfig.getAutomaticPlankTrading() && automaticPlankTrading.openAutoPlank()) {
                         log.warn("打板监测:{}", collectionToString(AutomaticPlankTrading.PLANK_MONITOR.values().stream()
                                 .map(Stock::getName).collect(Collectors.toList())));

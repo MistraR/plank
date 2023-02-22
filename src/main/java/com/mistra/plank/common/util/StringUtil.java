@@ -11,6 +11,7 @@ import java.util.Collection;
 public class StringUtil {
 
     public static String collectionToString(Collection collection) {
-        return collection.toString().replace(" ", "").replace("[", "").replace("]", "");
+        return collection.toString().replace(" ", "").replace("[", "")
+                .replace("]", "");
     }
 }
