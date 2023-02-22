@@ -100,24 +100,23 @@ public class Barbarossa implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        updateStockCache();
+        opening();
     }
 
-    //    @Scheduled(cron = "0 */2 * * * ?")
-    @Scheduled(cron = "*/2 * * * * ?")
+    @Scheduled(cron = "0 */2 * * * ?")
+//    @Scheduled(cron = "*/2 * * * * ?")
     private void executorStatus() {
         if (AutomaticTrading.isTradeTime()) {
             log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
                     Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
+            log.error("打板一级缓存{}", AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.values()
+                    .stream().map(Stock::getName).collect(Collectors.toList()));
         }
-        log.error("打板一级缓存{}", AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.values()
-                .stream().map(Stock::getName).collect(Collectors.toList()));
     }
 
     /**
-     * 集合竞价结束，初始化股票基本数据
+     * 初始化股票基本数据
      */
-    @Scheduled(cron = "0 25 9 * * ?")
     private void updateStockCache() {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
                 // 默认过滤掉了北交所,科创板,ST
@@ -138,7 +137,7 @@ public class Barbarossa implements CommandLineRunner {
                         String bk = StockProcessor.TOP5_BK.keySet().stream().filter(v -> Objects.nonNull(e.getClassification()) &&
                                 e.getClassification().contains(v)).findFirst().orElse(null);
                         if (StringUtils.isNotEmpty(bk)) {
-                            log.warn("{}板块的{}加入一级缓存", bk, e.getName() + e.getClassification());
+                            log.warn("{}板块的{}加入一级缓存", StockProcessor.TOP5_BK.get(bk).getName(), e.getName());
                             AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.put(e.getCode(), e);
                         }
                     }
@@ -160,6 +159,7 @@ public class Barbarossa implements CommandLineRunner {
     private void opening() {
         // 更新行业版块，概念版块涨幅信息
         this.updateBkRealTimeData();
+        this.updateStockCache();
     }
 
     /**
