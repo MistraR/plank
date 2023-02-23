@@ -267,7 +267,7 @@ public class Barbarossa implements CommandLineRunner {
                 ArrayList<Bk> bks = Lists.newArrayList(StockProcessor.TOP5_BK.values());
                 Collections.sort(bks);
                 log.warn(collectionToString(bks.stream().map(e -> e.getName() + ":" + e.getIncreaseRate()).collect(Collectors.toList())));
-                List<StockRealTimePrice> shareholding = realTimePrices.stream().filter(e ->
+                List<StockRealTimePrice> shareholding = realTimePrices.stream().filter(e -> STOCK_TRACK_MAP.containsKey(e.getName()) &&
                         STOCK_TRACK_MAP.get(e.getName()).getShareholding()).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(shareholding)) {
                     log.error("------------------------------- 持仓 ------------------------------");
@@ -288,7 +288,8 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
-                        .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date())));
+                        .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date()))
+                        .ne(HoldShares::getAutomaticTradingType, AutomaticTradingEnum.MANUAL.name()));
                 if (CollectionUtils.isNotEmpty(buyStocks)) {
                     log.error("----------------------- 自动打板,排单金额:{} -----------------------",
                             AutomaticTrading.TODAY_COST_MONEY.intValue());
