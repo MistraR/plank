@@ -189,6 +189,9 @@ public class TradeController extends BaseController {
                         .takeProfitPrice(BigDecimal.valueOf(price * plankConfig.getTakeProfitRate()).setScale(2, RoundingMode.HALF_UP))
                         .automaticTradingType(AutomaticTradingEnum.MANUAL.name()).buyPrice(BigDecimal.valueOf(price)).build();
                 holdSharesMapper.insert(holdShare);
+                stock.setShareholding(true);
+                stock.setBuyTime(new Date());
+                stockMapper.updateById(stock);
             }
         }
         return CommonResponse.buildResponse(message);
