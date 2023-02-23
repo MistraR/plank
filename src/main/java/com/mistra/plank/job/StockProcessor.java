@@ -151,10 +151,10 @@ public class StockProcessor {
         try {
             String body = HttpUtil.getHttpGetResponseString(plankConfig.getConceptBKUrl(), null);
             body = body.substring(body.indexOf("(") + 1, body.indexOf(")"));
+            bkLock.lock();
             updateBk(JSON.parseObject(body).getJSONObject("data").getJSONArray("diff"), "CONCEPT");
             body = HttpUtil.getHttpGetResponseString(plankConfig.getIndustryBKUrl(), null);
             body = body.substring(body.indexOf("(") + 1, body.indexOf(")"));
-            bkLock.lock();
             updateBk(JSON.parseObject(body).getJSONObject("data").getJSONArray("diff"), "INDUSTRY");
             bkLock.unlock();
         } catch (Exception e) {
