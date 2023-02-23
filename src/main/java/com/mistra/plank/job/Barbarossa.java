@@ -108,7 +108,7 @@ public class Barbarossa implements CommandLineRunner {
         if (AutomaticTrading.isTradeTime()) {
             log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
                     Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
-            log.error("打板一级缓存{}", collectionToString(AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.values()
+            log.error("打板一级缓存:{}", collectionToString(AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.values()
                     .stream().map(Stock::getName).collect(Collectors.toList())));
         }
     }
@@ -279,7 +279,7 @@ public class Barbarossa implements CommandLineRunner {
                         }
                     });
                 }
-                realTimePrices.removeIf(e -> STOCK_TRACK_MAP.get(e.getName()).getShareholding());
+                realTimePrices.removeIf(e -> STOCK_TRACK_MAP.containsKey(e.getName()) && STOCK_TRACK_MAP.get(e.getName()).getShareholding());
                 List<StockRealTimePrice> stockRealTimePrices = realTimePrices.stream().filter(e ->
                         e.getPurchaseRate() >= -2).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(stockRealTimePrices)) {
