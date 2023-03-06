@@ -105,9 +105,9 @@ public class Barbarossa implements CommandLineRunner {
 
     @Scheduled(cron = "0 */2 * * * ?")
     private void executorStatus() {
-        if (AutomaticTrading.isTradeTime()) {
-            log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
-                    Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
+        if (AutomaticTrading.isTradeTime() && plankConfig.getAutomaticPlankTrading()) {
+//            log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
+//                    Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
             log.error("打板一级缓存:{}", collectionToString(AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.values()
                     .stream().map(Stock::getName).collect(Collectors.toList())));
         }
@@ -136,7 +136,7 @@ public class Barbarossa implements CommandLineRunner {
                         String bk = StockProcessor.TOP5_BK.keySet().stream().filter(v -> Objects.nonNull(e.getClassification()) &&
                                 e.getClassification().contains(v)).findFirst().orElse(null);
                         if (StringUtils.isNotEmpty(bk)) {
-                            log.warn("{}板块的{}加入一级缓存", StockProcessor.TOP5_BK.get(bk).getName(), e.getName());
+                            //log.warn("{}板块的{}加入一级缓存", StockProcessor.TOP5_BK.get(bk).getName(), e.getName());
                             AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.put(e.getCode(), e);
                         }
                     }
