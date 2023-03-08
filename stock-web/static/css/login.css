@@ -1,7 +1,7 @@
 .container {
    position: relative;
    height: calc(100vh - 35px);
-   background-image: url('/static/img/login_bg.jpg');
+   background-image: url('/static/img/login_bg2.jpg');
    background-repeat: no-repeat;
    background-size: cover;
 }

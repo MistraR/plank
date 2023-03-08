@@ -121,6 +121,7 @@ public class PlankConfig {
 
     /**
      * 当日行业版块涨幅排行
+     * http://quote.eastmoney.com/center/hsbk.html
      */
     private String industryBKUrl;
 
