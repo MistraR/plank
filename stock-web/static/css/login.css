@@ -1,88 +1,95 @@
 .container {
-   position: relative;
-   height: calc(100vh - 35px);
-   background-image: url('/static/img/login_bg2.jpg');
-   background-repeat: no-repeat;
-   background-size: cover;
+  position: relative;
+  height: calc(100vh);
+  background-image: url('/static/img/3.jpg');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
 
 .innerBox {
-   width: 100%;
+  width: 100%;
 }
 
 #login-form {
-   position: absolute;
-   top: 50%;
-   right: 10rem;
-   transform: translate(-50%, 0) scale(2);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 0) scale(2);
+}
+
+#login-border {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 0) scale(2);
 }
 
 .login-title {
-   margin-bottom: 1rem;
-   font-size: 1.5rem;
-   color: #fff;
-   text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  color: #fff;
+  text-align: center;
 }
 
 .form-group {
-   display: flex;
-   margin-bottom: 1rem;
+  display: flex;
+  margin-bottom: 1rem;
 }
 
 .form-group .label {
-   width: 100px;
-   margin-right: 5px;
-   line-height: 32px;
-   color: #fff;
-   text-align: right;
+  width: 40px;
+  margin-right: 5px;
+  line-height: 32px;
+  color: #fff;
+  text-align: right;
 }
 
 .form-group .txt_input {
-   box-sizing: border-box;
-   margin: 0;
-   font-variant: tabular-nums;
-   list-style: none;
-   font-feature-settings: "tnum";
-   position: relative;
-   display: inline-block;
-   flex: 1;
-   padding: 4px 11px;
-   color: #000000d9;
-   font-size: 14px;
-   line-height: 1.5715;
-   background-color: #fff;
-   background-image: none;
-   border: 1px solid #d9d9d9;
-   border-radius: 2px;
-   transition: all .3s;
+  box-sizing: border-box;
+  margin: 0;
+  font-variant: tabular-nums;
+  list-style: none;
+  font-feature-settings: "tnum";
+  position: relative;
+  display: inline-block;
+  flex: 1;
+  padding: 4px 11px;
+  color: #000000d9;
+  font-size: 14px;
+  line-height: 1.5715;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #d9d9d9;
+  border-radius: 2px;
+  transition: all .3s;
 }
 
 .form-group .sub-button {
-   line-height: 1.5715;
-   position: relative;
-   display: inline-block;
-   font-weight: 400;
-   white-space: nowrap;
-   text-align: center;
-   background-image: none;
-   border: 1px solid transparent;
-   border-top-color: transparent;
-   border-right-color: transparent;
-   border-bottom-color: transparent;
-   border-left-color: transparent;
-   box-shadow: 0 2px #00000004;
-   cursor: pointer;
-   transition: all .3s cubic-bezier(.645, .045, .355, 1);
-   -webkit-user-select: none;
-   -moz-user-select: none;
-   -ms-user-select: none;
-   user-select: none;
-   touch-action: manipulation;
-   height: 32px;
-   padding: 4px 15px;
-   font-size: 14px;
-   border-radius: 2px;
-   color: #fff;
-   border-color: rgb(24, 144, 255);
-   background-color: rgb(24, 144, 255);
+  line-height: 1.5715;
+  position: relative;
+  display: inline-block;
+  font-weight: 400;
+  white-space: nowrap;
+  text-align: center;
+  background-image: none;
+  border: 1px solid transparent;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  box-shadow: 0 2px #00000004;
+  cursor: pointer;
+  transition: all .3s cubic-bezier(.645, .045, .355, 1);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  height: 32px;
+  padding: 4px 15px;
+  font-size: 14px;
+  border-radius: 2px;
+  color: #fff;
+  border-color: rgb(24, 144, 255);
+  background-color: rgb(24, 144, 255);
 }
