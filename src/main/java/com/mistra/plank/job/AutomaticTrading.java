@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -72,6 +73,8 @@ public class AutomaticTrading implements CommandLineRunner {
      */
     public static AtomicInteger TODAY_COST_MONEY = new AtomicInteger(0);
 
+    private final AtomicBoolean SELLING = new AtomicBoolean(false);
+
     public AutomaticTrading(StockMapper stockMapper, TradeApiService tradeApiService, PlankConfig plankConfig,
                             StockProcessor stockProcessor, HoldSharesMapper holdSharesMapper) {
         this.stockMapper = stockMapper;
@@ -82,7 +85,7 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     /**
-     * 每3秒更新一次需要打板或低吸的股票
+     * 每3秒更新一次需要打板或低吸的股票,需要卖出的股票线程监控
      */
     @Scheduled(cron = "*/3 * * * * ?")
     private void autoBuy() {
@@ -105,6 +108,19 @@ public class AutomaticTrading implements CommandLineRunner {
             } else {
                 UNDER_MONITORING.clear();
             }
+            // 监控持仓,止盈止损
+            List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
+                    .gt(HoldShares::getAvailableVolume, 0).eq(HoldShares::getClearance, false));
+            if (CollectionUtils.isNotEmpty(holdShares)) {
+                if (!SELLING.get()) {
+                    for (HoldShares holdShare : holdShares) {
+                        Barbarossa.executorService.submit(new SaleTask(holdShare));
+                    }
+                }
+                SELLING.set(true);
+            }
+        } else {
+            SELLING.set(false);
         }
     }
 
@@ -154,14 +170,6 @@ public class AutomaticTrading implements CommandLineRunner {
         for (HoldShares share : shares) {
             TODAY_COST_MONEY.set((int) (TODAY_COST_MONEY.intValue() + share.getBuyPrice().doubleValue() * share.getNumber()));
             TODAY_BOUGHT_SUCCESS.add(share.getCode());
-        }
-        // 监控持仓,止盈止损
-        if (isTradeTime()) {
-            List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
-                    .gt(HoldShares::getAvailableVolume, 0).eq(HoldShares::getClearance, false));
-            for (HoldShares holdShare : holdShares) {
-                Barbarossa.executorService.submit(new SaleTask(holdShare));
-            }
         }
     }
 
