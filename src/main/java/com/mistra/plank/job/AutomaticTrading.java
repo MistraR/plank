@@ -241,7 +241,9 @@ public class AutomaticTrading implements CommandLineRunner {
     private void sale(HoldShares holdShare, StockRealTimePrice stockRealTimePrice) {
         SubmitRequest request = new SubmitRequest(1);
         request.setAmount(holdShare.getAvailableVolume());
-        request.setPrice(stockRealTimePrice.getLimitDown());
+//        request.setPrice(stockRealTimePrice.getLimitDown());
+        // 全面注册制后只能最多挂-2%价格卖单
+        request.setPrice(BigDecimal.valueOf(stockRealTimePrice.getCurrentPrice() * 0.985).setScale(2, RoundingMode.HALF_UP).doubleValue());
         request.setStockCode(holdShare.getCode().substring(2, 8));
         request.setZqmc(holdShare.getName());
         request.setTradeType(SubmitRequest.S);

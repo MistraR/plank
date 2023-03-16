@@ -17,9 +17,11 @@ spring:
       maximum-pool-size: 50
       minimum-idle: 5
       pool-name: HikariPool
-    password: 123456
+    #    password: 123456
+    password: 1rsD8xDrG8q0KsbJ
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://localhost:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
+    #    url: jdbc:mysql://localhost:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
+    url: jdbc:mysql://122.51.126.37:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
     username: root
 
 mybatis-plus:
@@ -56,7 +58,7 @@ plank:
   enableMonitor: true
   printName: true
   recentDayNumber: 1
-  xueQiuCookie: device_id=e40e3ad4aae8c6cdb009e6713d7a7989; s=bw12h1o6cr; bid=9ea105651fb1563867b3225ba28c0f26_l8o4y1es; Hm_lvt_1db88642e346389874251b5a1eded6e3=1676597313,1676869239,1677042792,1677634287; remember=1; xq_a_token=185801a73ae876f278d165c5524a1fe7e9ff79d0; xqat=185801a73ae876f278d165c5524a1fe7e9ff79d0; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjU3MzM3MDcyNjEsImlzcyI6InVjIiwiZXhwIjoxNjgwMTg1MjE4LCJjdG0iOjE2Nzc2MzQ0MTIzMDAsImNpZCI6ImQ5ZDBuNEFadXAifQ.Aw0D35a3Os6TqLwg9XmYTeJovVkXrL0r8M6ti4TU3ogl4wbmclVoRo6zvRzPQKQXWhoPppzg15U0H69qr-eJJOod_gPeMmw6n8a6Itof7cCtluhjdJfQudtVXvJOczTqQ8K0MBUsG6r9u3VoYQSGpP87WK8kXXd1bMqvEKI7KTj1M0mvvQsGSCgRXVbgwJHS3c5JwV0rMlWe_zbRqvJ0EePGCvy2kI3IAx9Z09-eo_CdIKMc58pHNM88v95SzT9z7WeFl7ys_nil5sCDaNpTgsyiQwjVxyw3sPQaPkdqIRT_CX-JUQ_3CTcsZw4iGt1hfdx5Dh-vi0zzRaS4QzBJ-g; xq_r_token=2b0374ec3c03aa0e518be7052f24cab7a739af70; xq_is_login=1; u=5733707261; is_overseas=0; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1677634413
+  xueQiuCookie: Hm_lvt_1db88642e346389874251b5a1eded6e3=1678757426; device_id=a51d1f9867a7ab8b4cd39edf4bb37ce4; s=cd12hs3qer; remember=1; xq_a_token=83b3f0f3cf7ee2822a1cd863e629e212064bda9b; xqat=83b3f0f3cf7ee2822a1cd863e629e212064bda9b; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjU3MzM3MDcyNjEsImlzcyI6InVjIiwiZXhwIjoxNjgxNDgyNDgxLCJjdG0iOjE2Nzg5MjkzMjczNzYsImNpZCI6ImQ5ZDBuNEFadXAifQ.q1fKT0RZNK62y49MSXVUHhwxoEWU9u0UvdrNq7RKwvi5p5S3K7iCcxZgzOgO8sP8UI5thEWG5kJ1tu2nFfj7aFyak0u0MBESO1YNK6iL6wqJvsTMIkUXPj4m3Loh1DPiAEd-9p3QhzqlKVOAIiDU9FGynHFwpGchFo2XHUASrLFDyeGEbNQ3j1RKsaUv4FZk5D590PAI7hO7TCREf1JR5lwkYOCBTTO1vte1t_imVgJzDQGpFU_FWdfWpriOsQtLGJC6o07tCqcszb6gLRgGYloPqlVdJcEKAk5Aguk8xNHJRbYkRtgxqCBnrNiQ345NnYcm3iiDZ-lm-iQWQExWDw; xq_r_token=bd26445e5b3179f4685ef38db7cac2a65642bcd8; xq_is_login=1; u=5733707261; is_overseas=0; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1678930374
   mainFundUrl: https://push2.eastmoney.com/api/qt/clist/get?fid=f62&po=1&pz=6000&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m:0+t:6+f:!2,m:0+t:13+f:!2,m:0+t:80+f:!2,m:1+t:2+f:!2,m:1+t:23+f:!2&fields=f12,f14,f3,f62,f184,f267,f127,f268,f164,f109,f165,f174,f160,f175
   industryBKUrl: https://push2.eastmoney.com/api/qt/clist/get?cb=jQuery112306145005741278797_1676863228205&fid=f3&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A90+t%3A2&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124%2Cf1%2Cf13
   conceptBKUrl: https://push2.eastmoney.com/api/qt/clist/get?cb=jQuery112306145005741278797_1676863228203&fid=f3&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A90+t%3A3&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124%2Cf1%2Cf13
