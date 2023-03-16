@@ -2,6 +2,8 @@
 
 #### Introduction
 
+全面注册制之后,打板生态明显不行了,连板数不及原来的1/3!
+
 - 自动交易：集成了东方财富的自动交易接口，代码搬运来自于：https://github.com/bosspen1/stock
 - 自动打板：AutomaticPlankTrading，开启参数plank.automaticPlankTrading=true，默认策略：实时筛选当前涨幅Top5的板块，打Top5版块内10点以前涨停的票，可配置金额，单笔上限
 - 自动卖出：严格执行止损，止盈策略
