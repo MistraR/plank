@@ -39,8 +39,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import static com.mistra.plank.common.util.StringUtil.collectionToString;
 import static com.mistra.plank.common.config.SystemConstant.W;
+import static com.mistra.plank.common.util.StringUtil.collectionToString;
 
 /**
  * 涨停先锋
@@ -146,9 +146,11 @@ public class Barbarossa implements CommandLineRunner {
             }
             STOCK_ALL_MAP.put(e.getCode(), e.getName());
         });
-        log.warn("加载[{}]支股票,自动打板二级缓存[{}]支,开启自动打板:{},是否只打涨幅Top5板块的成分股:{}",
-                stocks.size(), AutomaticPlankTrading.PLANK_MONITOR.size(), plankConfig.getAutomaticPlankTrading(),
-                plankConfig.getAutomaticPlankTop5Bk());
+        if (plankConfig.getAutomaticPlankTrading()) {
+            log.warn("加载[{}]支股票,自动打板二级缓存[{}]支,开启自动打板:{},是否只打涨幅Top5板块的成分股:{}",
+                    stocks.size(), AutomaticPlankTrading.PLANK_MONITOR.size(), plankConfig.getAutomaticPlankTrading(),
+                    plankConfig.getAutomaticPlankTop5Bk());
+        }
     }
 
     /**
