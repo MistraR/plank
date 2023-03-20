@@ -25,11 +25,6 @@ WHERE s.focus=1 AND f.quarter=202204 ORDER BY f.foreign_fund_total_market_dynami
 SELECT * FROM stock WHERE shareholding=1
 SELECT * FROM stock WHERE focus=1
 SELECT * FROM stock WHERE track=1
-# 2023重点买入的公司
-SELECT * FROM stock WHERE name IN ('宁德时代','亿纬锂能','阳光电源','隆基绿能','五粮液','泸州老窖','药明康德') ORDER BY shareholding DESC;
-# 第二梯队
-SELECT * FROM stock WHERE name IN ('迈瑞医疗','东方财富','比亚迪','','中国中免','','','','');
-# 超短
-SELECT * FROM stock WHERE name IN ('','','','');
+
 
 
