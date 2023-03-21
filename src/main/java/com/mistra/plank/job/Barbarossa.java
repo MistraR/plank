@@ -283,7 +283,7 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 realTimePrices.removeIf(e -> STOCK_TRACK_MAP.containsKey(e.getName()) && STOCK_TRACK_MAP.get(e.getName()).getShareholding());
                 List<StockRealTimePrice> stockRealTimePrices = realTimePrices.stream().filter(e ->
-                        e.getPurchaseRate() >= -2).collect(Collectors.toList());
+                        e.getPurchaseRate() >= -1).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(stockRealTimePrices)) {
                     log.error("------------------------------ Track ------------------------------");
                     stockRealTimePrices.forEach(e -> Barbarossa.log.warn(convertLog(e)));
