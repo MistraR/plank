@@ -263,8 +263,7 @@ public class Barbarossa implements CommandLineRunner {
                 for (int i = 0; i < Math.min(MAIN_FUND_DATA.size(), 10); i++) {
                     topTen.add(MAIN_FUND_DATA.get(i));
                 }
-                log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + "[" + e.getF62() /
-                        W / W + "亿]" + e.getF3()).collect(Collectors.toList())));
+                log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + e.getF3()).collect(Collectors.toList())));
                 log.error("------------------------- 板块涨幅>2Top5 --------------------------");
                 ArrayList<Bk> bks = Lists.newArrayList(StockProcessor.TOP5_BK.values());
                 Collections.sort(bks);
@@ -390,9 +389,7 @@ public class Barbarossa implements CommandLineRunner {
                 .append("[高:").append(realTimePrice.getHighestPrice())
                 .append("|现:").append(realTimePrice.getCurrentPrice())
                 .append("|低:").append(realTimePrice.getLowestPrice())
-                .append("|差距:").append(realTimePrice.getPurchaseRate())
-                .append("%|涨幅:").append(realTimePrice.getIncreaseRate())
-                .append("|主力:").append(realTimePrice.getMainFund()).append("万]").toString();
+                .append("|").append(realTimePrice.getIncreaseRate()).append("%").toString();
     }
 
 }
