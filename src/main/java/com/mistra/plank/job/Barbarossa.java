@@ -363,7 +363,7 @@ public class Barbarossa implements CommandLineRunner {
                 // 分析主力流入数据
                 analyzePlank.analyzeMainFund();
                 // 分析日k均线多头排列的股票
-                //screeningStocks.movingAverageRise();
+                screeningStocks.movingAverageRise();
                 // 分析上升趋势的股票，周k均线多头排列
                 screeningStocks.upwardTrend();
                 // 分析爆量回踩

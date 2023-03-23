@@ -53,7 +53,7 @@ plank:
   automaticPlankTop5Bk: true
   automaticPlankTradingTimeLimit: 10
   singleTransactionLimitAmount: 5000
-  stockTurnoverThreshold: 300000000
+  stockTurnoverThreshold: 1000000000
   mainFundThreshold: 300000000
   enableMonitor: true
   printName: true
