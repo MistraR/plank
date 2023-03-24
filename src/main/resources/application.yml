@@ -46,8 +46,8 @@ ocr:
         user: ''
 plank:
   automaticTrading: true
-  stopLossRate: 0.97
-  takeProfitRate: 1.06
+  stopLossRate: 0.94
+  takeProfitRate: 1.09
   automaticTradingMoneyLimitUp: 10000
   automaticPlankTrading: false
   automaticPlankTop5Bk: true
