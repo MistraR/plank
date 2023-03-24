@@ -192,7 +192,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(holdShare.getCode());
                     if (stockRealTimePrice.getCurrentPrice() <= holdShare.getStopLossPrice().doubleValue()) {
                         // 触发止损,挂跌停价卖出
-                        log.error("{} 触发止损,挂跌停价卖出", holdShare.getName());
+                        log.error("{} 触发止损,自动卖出", holdShare.getName());
                         sale(holdShare, stockRealTimePrice);
                         break;
                     }
@@ -208,7 +208,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     holdSharesMapper.updateById(holdShare);
                     if (holdShare.getTodayPlank() && !stockRealTimePrice.isPlank()) {
                         // 当日炸板,挂跌停价卖出
-                        log.error("{} 炸板,挂跌停价卖出", holdShare.getName());
+                        log.error("{} 炸板,自动卖出", holdShare.getName());
                         sale(holdShare, stockRealTimePrice);
                         break;
                     }
@@ -217,7 +217,7 @@ public class AutomaticTrading implements CommandLineRunner {
                         // 自定义打板，低吸买入的股票
                         if (holdShare.getTakeProfitPrice().doubleValue() <= stockRealTimePrice.getCurrentPrice()) {
                             sale(holdShare, stockRealTimePrice);
-                            log.error("{} 触发止盈,挂跌停价卖出", holdShare.getName());
+                            log.error("{} 触发止盈,自动卖出", holdShare.getName());
                             break;
                         }
                     }
@@ -225,7 +225,7 @@ public class AutomaticTrading implements CommandLineRunner {
                         // 自动打板买入的股票
                         if (DateUtil.hour(new Date(), true) > 11 && !stockRealTimePrice.isPlank()) {
                             // 11点前还未涨停,挂跌停价卖出
-                            log.error("{} 11点前还未涨停,挂跌停价卖出", holdShare.getName());
+                            log.error("{} 11点前还未涨停,自动卖出", holdShare.getName());
                             sale(holdShare, stockRealTimePrice);
                             break;
                         }
