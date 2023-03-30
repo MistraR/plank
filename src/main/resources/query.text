@@ -1,3 +1,5 @@
+SELECT count(id) FROM	daily_record WHERE	DATE_FORMAT(date,'%Y-%m-%d') = '2022-05-05';
+SELECT count(id) FROM	daily_record WHERE	DATE_FORMAT(date,'%Y-%m-%d') = DATE_FORMAT(now(),'%Y-%m-%d');
 # 白酒 光伏 锂电池 医疗服务 龙头 半导体
 SELECT * FROM stock WHERE classification='医疗服务' and track=1 ORDER BY RIGHT(code,6) DESC;
 # 某公司的基金季度增减持仓明细
@@ -22,31 +24,21 @@ SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '�
 WHERE s.focus=1 AND f.quarter=202204 ORDER BY f.foreign_fund_total_market_dynamic DESC
 SELECT * FROM stock WHERE shareholding=1
 SELECT * FROM stock WHERE focus=1
-SELECT * FROM stock WHERE track=1 ORDER BY transaction_amount
-# 赛道
+SELECT * FROM stock WHERE track=1
+#
 SELECT * FROM stock WHERE name IN ('宁德时代','亿纬锂能','阳光电源','隆基绿能','五粮液','泸州老窖','药明康德') ORDER BY shareholding DESC;
 # 核心
-SELECT * FROM stock WHERE name IN ('捷成股份','紫光股份','中际旭创','','中兴通讯');
+SELECT * FROM stock WHERE name IN ('','','','','');
 # 芯片
-SELECT * FROM stock WHERE name IN ('长电科技','北方华创','通富微电','晶瑞电材','南大光电','容大感光','沪电股份');
-# AI
-SELECT * FROM stock WHERE name IN ('三六零','紫光股份','科大讯飞','中兴通讯','海康威视','中科曙光','大华股份','拓维信息','浪潮信息',
-																	'拓尔思','中际旭创','新易盛','光环新网') ORDER BY transaction_amount ;
+SELECT * FROM stock WHERE name IN ('','长电科技','','通富微电','晶瑞电材','','','','沪电股份','景嘉微');
+# 通信
+SELECT * FROM stock WHERE name IN ('剑桥科技','新易盛','中兴通讯','特发信息','中际旭创','光迅科技','中天科技','','','');
 # 传媒
-SELECT * FROM stock WHERE name IN ('汤姆猫','蓝色光标','昆仑万维','三七互娱','捷成股份','顺网科技');
-# 中特
-SELECT * FROM stock WHERE name IN ('中国能建','中国铁建','中国建筑','中国中铁','中国移动','中国电信');
-
-
-SELECT * FROM stock WHERE track=0 and transaction_amount >2000000000 ORDER by transaction_amount
-
-
-
-
-
-
-
-
+SELECT * FROM stock WHERE name IN ('汤姆猫','蓝色光标','昆仑万维','','','','中文在线','','世纪华通','');
+# 算力
+SELECT * FROM stock WHERE name IN ('','浪潮信息','紫光股份','中科曙光','海康威视','大华股份','易华录','同方股份','拓维信息','');
+# 应用
+SELECT * FROM stock WHERE name IN ('拓尔思','东方国信','同花顺','三六零','首都在线','润和软件','科大讯飞','','','');
 
 
 
