@@ -27,22 +27,25 @@ SELECT * FROM stock WHERE focus=1
 SELECT * FROM stock WHERE track=1
 # 2023重点买入的公司
 SELECT * FROM stock WHERE name IN ('宁德时代','亿纬锂能','阳光电源','隆基绿能','五粮液','泸州老窖','药明康德') ORDER BY shareholding DESC;
-# 第二梯队
-SELECT * FROM stock WHERE name IN ('迈瑞医疗','东方财富','比亚迪','','中国中免','恩捷股份','','','');
 # 核心
-SELECT * FROM stock WHERE name IN ('中天科技','紫光股份','通富微电','','中兴通讯');
+SELECT * FROM stock WHERE name IN ('金海通','特发信息','','','');
 # 芯片
-SELECT * FROM stock WHERE name IN ('张江高科','长电科技','北方华创','通富微电','晶瑞电材','南大光电','容大感光','立昂微','','');
-# AI
-SELECT * FROM stock WHERE name IN ('三六零','紫光股份','科大讯飞','卫士通','太极股份','中兴通讯','海康威视','中科曙光','大华股份','拓维信息','浪潮信息');
+SELECT * FROM stock WHERE name IN ('','长电科技','','通富微电','晶瑞电材','金海通','','','沪电股份','景嘉微');
+# 通信
+SELECT * FROM stock WHERE name IN ('剑桥科技','新易盛','中兴通讯','特发信息','中际旭创','光迅科技','中天科技','天孚通信','','');
 # 传媒
-SELECT * FROM stock WHERE name IN ('汤姆猫','蓝色光标','昆仑万维','三七互娱','完美世界','捷成股份','','','','');
-# 中特
-SELECT * FROM stock WHERE name IN ('中国能建','中国铁建','中国建筑','中国中铁','中国交建','','','中国移动','中国联通','中国电信');
+SELECT * FROM stock WHERE name IN ('汤姆猫','蓝色光标','昆仑万维','','','','中文在线','','世纪华通','');
+# 算力
+SELECT * FROM stock WHERE name IN ('','浪潮信息','紫光股份','中科曙光','海康威视','大华股份','易华录','同方股份','拓维信息','');
+# 应用
+SELECT * FROM stock WHERE name IN ('拓尔思','东方国信','同花顺','三六零','首都在线','润和软件','科大讯飞','恒生电子','','');
 
 
 
 
 
 
-1rsD8xDrG8q0KsbJ
+
+
+
+

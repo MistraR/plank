@@ -70,12 +70,12 @@ public class PlankConfig {
     private Boolean automaticTrading;
 
     /**
-     * 自动交易止损比率
+     * 止损比率
      */
     private Double stopLossRate;
 
     /**
-     * 自动交易止盈比率
+     * 止盈比率
      */
     private Double takeProfitRate;
 
@@ -121,6 +121,7 @@ public class PlankConfig {
 
     /**
      * 当日行业版块涨幅排行
+     * http://quote.eastmoney.com/center/hsbk.html
      */
     private String industryBKUrl;
 

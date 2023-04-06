@@ -39,8 +39,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static com.mistra.plank.common.config.SystemConstant.W;
 import static com.mistra.plank.common.util.StringUtil.collectionToString;
-import static com.mistra.plank.config.SystemConstant.W;
 
 /**
  * 涨停先锋
@@ -105,9 +105,9 @@ public class Barbarossa implements CommandLineRunner {
 
     @Scheduled(cron = "0 */2 * * * ?")
     private void executorStatus() {
-        if (AutomaticTrading.isTradeTime()) {
-            log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
-                    Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
+        if (AutomaticTrading.isTradeTime() && plankConfig.getAutomaticPlankTrading()) {
+//            log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
+//                    Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
             log.error("打板一级缓存:{}", collectionToString(AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.values()
                     .stream().map(Stock::getName).collect(Collectors.toList())));
         }
@@ -136,7 +136,7 @@ public class Barbarossa implements CommandLineRunner {
                         String bk = StockProcessor.TOP5_BK.keySet().stream().filter(v -> Objects.nonNull(e.getClassification()) &&
                                 e.getClassification().contains(v)).findFirst().orElse(null);
                         if (StringUtils.isNotEmpty(bk)) {
-                            log.warn("{}板块的{}加入一级缓存", StockProcessor.TOP5_BK.get(bk).getName(), e.getName());
+                            //log.warn("{}板块的{}加入一级缓存", StockProcessor.TOP5_BK.get(bk).getName(), e.getName());
                             AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.put(e.getCode(), e);
                         }
                     }
@@ -146,9 +146,11 @@ public class Barbarossa implements CommandLineRunner {
             }
             STOCK_ALL_MAP.put(e.getCode(), e.getName());
         });
-        log.warn("加载[{}]支股票,自动打板二级缓存[{}]支,开启自动打板:{},是否只打涨幅Top5板块的成分股:{}",
-                stocks.size(), AutomaticPlankTrading.PLANK_MONITOR.size(), plankConfig.getAutomaticPlankTrading(),
-                plankConfig.getAutomaticPlankTop5Bk());
+        if (plankConfig.getAutomaticPlankTrading()) {
+            log.warn("加载[{}]支股票,自动打板二级缓存[{}]支,开启自动打板:{},是否只打涨幅Top5板块的成分股:{}",
+                    stocks.size(), AutomaticPlankTrading.PLANK_MONITOR.size(), plankConfig.getAutomaticPlankTrading(),
+                    plankConfig.getAutomaticPlankTop5Bk());
+        }
     }
 
     /**
@@ -261,8 +263,7 @@ public class Barbarossa implements CommandLineRunner {
                 for (int i = 0; i < Math.min(MAIN_FUND_DATA.size(), 10); i++) {
                     topTen.add(MAIN_FUND_DATA.get(i));
                 }
-                log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + "[" + e.getF62() /
-                        W / W + "亿]" + e.getF3()).collect(Collectors.toList())));
+                log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + e.getF3()).collect(Collectors.toList())));
                 log.error("------------------------- 板块涨幅>2Top5 --------------------------");
                 ArrayList<Bk> bks = Lists.newArrayList(StockProcessor.TOP5_BK.values());
                 Collections.sort(bks);
@@ -305,7 +306,6 @@ public class Barbarossa implements CommandLineRunner {
                             .map(Stock::getName).collect(Collectors.toList())));
                 }
                 realTimePrices.clear();
-                Thread.sleep(3000);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -362,7 +362,7 @@ public class Barbarossa implements CommandLineRunner {
                 // 分析主力流入数据
                 analyzePlank.analyzeMainFund();
                 // 分析日k均线多头排列的股票
-                //screeningStocks.movingAverageRise();
+                screeningStocks.movingAverageRise();
                 // 分析上升趋势的股票，周k均线多头排列
                 screeningStocks.upwardTrend();
                 // 分析爆量回踩
@@ -384,14 +384,9 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private String convertLog(StockRealTimePrice realTimePrice) {
-        return new StringBuilder().append(realTimePrice.getName())
-                .append((realTimePrice.getName().length() == 3 ? "  " : ""))
-                .append("[高:").append(realTimePrice.getHighestPrice())
-                .append("|现:").append(realTimePrice.getCurrentPrice())
-                .append("|低:").append(realTimePrice.getLowestPrice())
-                .append("|差距:").append(realTimePrice.getPurchaseRate())
-                .append("%|涨幅:").append(realTimePrice.getIncreaseRate())
-                .append("|主力:").append(realTimePrice.getMainFund()).append("万]").toString();
+        return realTimePrice.getName() + (realTimePrice.getName().length() == 3 ? "  " : "") +
+                ">高:" + realTimePrice.getHighestPrice() + "|现:" + realTimePrice.getCurrentPrice() +
+                "|低:" + realTimePrice.getLowestPrice() + "|" + realTimePrice.getIncreaseRate() + "%";
     }
 
 }

@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -72,6 +73,8 @@ public class AutomaticTrading implements CommandLineRunner {
      */
     public static AtomicInteger TODAY_COST_MONEY = new AtomicInteger(0);
 
+    private final AtomicBoolean SELLING = new AtomicBoolean(false);
+
     public AutomaticTrading(StockMapper stockMapper, TradeApiService tradeApiService, PlankConfig plankConfig,
                             StockProcessor stockProcessor, HoldSharesMapper holdSharesMapper) {
         this.stockMapper = stockMapper;
@@ -82,7 +85,7 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     /**
-     * 每3秒更新一次需要打板或低吸的股票
+     * 每3秒更新一次需要打板或低吸的股票,需要卖出的股票线程监控
      */
     @Scheduled(cron = "*/3 * * * * ?")
     private void autoBuy() {
@@ -105,6 +108,19 @@ public class AutomaticTrading implements CommandLineRunner {
             } else {
                 UNDER_MONITORING.clear();
             }
+            // 监控持仓,止盈止损
+            List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
+                    .gt(HoldShares::getAvailableVolume, 0).eq(HoldShares::getClearance, false));
+            if (CollectionUtils.isNotEmpty(holdShares)) {
+                if (!SELLING.get()) {
+                    for (HoldShares holdShare : holdShares) {
+                        Barbarossa.executorService.submit(new SaleTask(holdShare));
+                    }
+                }
+                SELLING.set(true);
+            }
+        } else {
+            SELLING.set(false);
         }
     }
 
@@ -155,14 +171,6 @@ public class AutomaticTrading implements CommandLineRunner {
             TODAY_COST_MONEY.set((int) (TODAY_COST_MONEY.intValue() + share.getBuyPrice().doubleValue() * share.getNumber()));
             TODAY_BOUGHT_SUCCESS.add(share.getCode());
         }
-        // 监控持仓,止盈止损
-        if (isTradeTime()) {
-            List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
-                    .gt(HoldShares::getAvailableVolume, 0).eq(HoldShares::getClearance, false));
-            for (HoldShares holdShare : holdShares) {
-                Barbarossa.executorService.submit(new SaleTask(holdShare));
-            }
-        }
     }
 
     class SaleTask implements Runnable {
@@ -184,7 +192,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(holdShare.getCode());
                     if (stockRealTimePrice.getCurrentPrice() <= holdShare.getStopLossPrice().doubleValue()) {
                         // 触发止损,挂跌停价卖出
-                        log.error("{} 触发止损,挂跌停价卖出", holdShare.getName());
+                        log.error("{} 触发止损,自动卖出", holdShare.getName());
                         sale(holdShare, stockRealTimePrice);
                         break;
                     }
@@ -200,7 +208,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     holdSharesMapper.updateById(holdShare);
                     if (holdShare.getTodayPlank() && !stockRealTimePrice.isPlank()) {
                         // 当日炸板,挂跌停价卖出
-                        log.error("{} 炸板,挂跌停价卖出", holdShare.getName());
+                        log.error("{} 炸板,自动卖出", holdShare.getName());
                         sale(holdShare, stockRealTimePrice);
                         break;
                     }
@@ -209,7 +217,7 @@ public class AutomaticTrading implements CommandLineRunner {
                         // 自定义打板，低吸买入的股票
                         if (holdShare.getTakeProfitPrice().doubleValue() <= stockRealTimePrice.getCurrentPrice()) {
                             sale(holdShare, stockRealTimePrice);
-                            log.error("{} 触发止盈,挂跌停价卖出", holdShare.getName());
+                            log.error("{} 触发止盈,自动卖出", holdShare.getName());
                             break;
                         }
                     }
@@ -217,7 +225,7 @@ public class AutomaticTrading implements CommandLineRunner {
                         // 自动打板买入的股票
                         if (DateUtil.hour(new Date(), true) > 11 && !stockRealTimePrice.isPlank()) {
                             // 11点前还未涨停,挂跌停价卖出
-                            log.error("{} 11点前还未涨停,挂跌停价卖出", holdShare.getName());
+                            log.error("{} 11点前还未涨停,自动卖出", holdShare.getName());
                             sale(holdShare, stockRealTimePrice);
                             break;
                         }
@@ -233,7 +241,9 @@ public class AutomaticTrading implements CommandLineRunner {
     private void sale(HoldShares holdShare, StockRealTimePrice stockRealTimePrice) {
         SubmitRequest request = new SubmitRequest(1);
         request.setAmount(holdShare.getAvailableVolume());
-        request.setPrice(stockRealTimePrice.getLimitDown());
+//        request.setPrice(stockRealTimePrice.getLimitDown());
+        // 全面注册制后只能最多挂-2%价格卖单
+        request.setPrice(BigDecimal.valueOf(stockRealTimePrice.getCurrentPrice() * 0.985).setScale(2, RoundingMode.HALF_UP).doubleValue());
         request.setStockCode(holdShare.getCode().substring(2, 8));
         request.setZqmc(holdShare.getName());
         request.setTradeType(SubmitRequest.S);

@@ -19,7 +19,8 @@ spring:
       pool-name: HikariPool
     password: 123456
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://localhost:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
+    #    url: jdbc:mysql://localhost:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
+    url: jdbc:mysql://122.51.126.37:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
     username: root
 
 mybatis-plus:
@@ -44,19 +45,19 @@ ocr:
         user: ''
 plank:
   automaticTrading: true
-  stopLossRate: 0.97
-  takeProfitRate: 1.06
+  stopLossRate: 0.94
+  takeProfitRate: 1.18
   automaticTradingMoneyLimitUp: 10000
-  automaticPlankTrading: true
+  automaticPlankTrading: false
   automaticPlankTop5Bk: true
   automaticPlankTradingTimeLimit: 10
   singleTransactionLimitAmount: 5000
-  stockTurnoverThreshold: 300000000
+  stockTurnoverThreshold: 1000000000
   mainFundThreshold: 300000000
   enableMonitor: true
   printName: true
   recentDayNumber: 1
-  xueQiuCookie: device_id=e40e3ad4aae8c6cdb009e6713d7a7989; s=bw12h1o6cr; bid=9ea105651fb1563867b3225ba28c0f26_l8o4y1es; remember=1; xq_is_login=1; u=5733707261; xq_a_token=5d4c18098a527f7065dae9b250e9c7ff70367ca5; xqat=5d4c18098a527f7065dae9b250e9c7ff70367ca5; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjU3MzM3MDcyNjEsImlzcyI6InVjIiwiZXhwIjoxNjc4ODQzODM3LCJjdG0iOjE2NzYyNTE4Mzc1NDcsImNpZCI6ImQ5ZDBuNEFadXAifQ.NphNBTHY5tTycxxUqIU5LNSmNT86Zc43oqgLRGUOXtZBMxS8BIdASVfvyrpYjdv4GvzLKKR-7ipwRNAxOsOr4uvB0elYh-0UUxsA8VkAWauCae0DA2HbHA9WpH9CdeNZ7ZeYgqDFX4dJvt57O3tLzxbJ2fpph91JBofuhvJdMI0iD9YkbenmQ9ED60PCpxyw4Ebl_ULdDzsvSTwsvIZi4uhfld5ZFL71k55VuukWCBCSFmRxt46DG42ml4JNgtpUtUojvuhSpxZB3f7r5pv9QT6Hi3vomEZnCVG6rU7mfRELbTfQ_iQKgpy6uIsY99Jx49yXaU9VvjXuXV-0pO9abA; xq_r_token=42240ea238de7255e82bae91172ddfcc63f4bfef; Hm_lvt_1db88642e346389874251b5a1eded6e3=1676251841,1676597313,1676869239,1677042792; snbim_minify=true; acw_tc=0bd17c2216771241648617377e5f77d00b5a678b9757ade235ce1fa06d8c37; is_overseas=0; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1677124240
+  xueQiuCookie: device_id=a51d1f9867a7ab8b4cd39edf4bb37ce4; remember=1; xq_a_token=69041f023e406b646e08e7f7ea563bde7dfc262b; xqat=69041f023e406b646e08e7f7ea563bde7dfc262b; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjU3MzM3MDcyNjEsImlzcyI6InVjIiwiZXhwIjoxNjgyNzgwNjY1LCJjdG0iOjE2ODAyMzE0Njk1NTEsImNpZCI6ImQ5ZDBuNEFadXAifQ.lcb4HKha_4cu-L5B9VDXIL-UPk4t_NvXTw2MDDPQjKHZzTWNt0uWaeQzB3wWgB07luxrHju_7DYH7pwkWY0RcAFPGRnvu-AHwWjziadU1cZqzf1siS_-pMPtCx7mDj60xv5aYuCCybOzCPWopQR-ILl29NGaCJTtMgMK_119B2HS8jLKe797FZRBUvZe-bvUdRo3Kktj_UgZEgcZ_EhZ1OK7uOnoRFELdavu8p77o5sCDfbeBCarsJSI5WwE35wI2YPeD1HYbQ0zSoBvmeN6MApeaPXVlBH0kaY_1FdihPjN15cwyNrLUWA4tHidsD-A1okLAa0Xd9mbh7D-ppOWPQ; xq_r_token=ec51aa82f9fc53562155f32a1294c5d869ac54b6; xq_is_login=1; u=5733707261; acw_tc=2760826516807468645463485ef647086ad63c4bde18490ad10c621ddd9cee; is_overseas=0; Hm_lvt_1db88642e346389874251b5a1eded6e3=1679449018,1679899730,1680746870; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1680746870
   mainFundUrl: https://push2.eastmoney.com/api/qt/clist/get?fid=f62&po=1&pz=6000&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m:0+t:6+f:!2,m:0+t:13+f:!2,m:0+t:80+f:!2,m:1+t:2+f:!2,m:1+t:23+f:!2&fields=f12,f14,f3,f62,f184,f267,f127,f268,f164,f109,f165,f174,f160,f175
   industryBKUrl: https://push2.eastmoney.com/api/qt/clist/get?cb=jQuery112306145005741278797_1676863228205&fid=f3&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A90+t%3A2&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124%2Cf1%2Cf13
   conceptBKUrl: https://push2.eastmoney.com/api/qt/clist/get?cb=jQuery112306145005741278797_1676863228203&fid=f3&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A90+t%3A3&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124%2Cf1%2Cf13

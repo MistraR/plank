@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.mistra.plank.common.util.StringUtil.collectionToString;
-import static com.mistra.plank.config.SystemConstant.W;
+import static com.mistra.plank.common.config.SystemConstant.W;
 
 /**
  * @author rui.wang

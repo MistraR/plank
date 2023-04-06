@@ -1,5 +1,19 @@
 package com.mistra.plank.strategy;
 
+import com.mistra.plank.common.exception.ServiceException;
+import com.mistra.plank.common.util.DecimalUtil;
+import com.mistra.plank.common.util.StockConsts;
+import com.mistra.plank.common.util.StockUtil;
+import com.mistra.plank.common.util.TradeUtil;
+import com.mistra.plank.model.entity.TradeOrder;
+import com.mistra.plank.model.vo.trade.TradeRuleVo;
+import com.mistra.plank.service.MessageService;
+import com.mistra.plank.service.StockInfoService;
+import com.mistra.plank.service.TradeApiService;
+import com.mistra.plank.service.TradeService;
+import com.mistra.plank.strategy.model.GridStrategyInput;
+import com.mistra.plank.strategy.model.GridStrategyResult;
+import com.mistra.plank.strategy.model.StrategySubmitResult;
 import com.mistra.plank.tradeapi.TradeResultVo;
 import com.mistra.plank.tradeapi.request.GetDealDataRequest;
 import com.mistra.plank.tradeapi.request.GetOrdersDataRequest;
@@ -9,20 +23,6 @@ import com.mistra.plank.tradeapi.response.GetDealDataResponse;
 import com.mistra.plank.tradeapi.response.GetOrdersDataResponse;
 import com.mistra.plank.tradeapi.response.RevokeResponse;
 import com.mistra.plank.tradeapi.response.SubmitResponse;
-import com.mistra.plank.common.exception.ServiceException;
-import com.mistra.plank.strategy.model.GridStrategyInput;
-import com.mistra.plank.strategy.model.GridStrategyResult;
-import com.mistra.plank.strategy.model.StrategySubmitResult;
-import com.mistra.plank.model.entity.TradeOrder;
-import com.mistra.plank.model.vo.trade.TradeRuleVo;
-import com.mistra.plank.service.MessageService;
-import com.mistra.plank.service.StockInfoService;
-import com.mistra.plank.service.TradeApiService;
-import com.mistra.plank.service.TradeService;
-import com.mistra.plank.common.util.DecimalUtil;
-import com.mistra.plank.common.util.StockConsts;
-import com.mistra.plank.common.util.StockUtil;
-import com.mistra.plank.common.util.TradeUtil;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 
 @Component("gridStrategyHandler")
 public class GridStrategyHandler extends BaseStrategyHandler<GridStrategyInput, GridStrategyResult> {
@@ -72,6 +73,7 @@ public class GridStrategyHandler extends BaseStrategyHandler<GridStrategyInput, 
 
         // 30 day, yibao yicheng
         List<TradeOrder> tradeOrderList = tradeService.getLastTradeOrderListByRuleId(tradeRuleVo.getId().intValue(), tradeRuleVo.getUserId());
+        tradeOrderList = tradeOrderList.stream().filter(v -> v.getStockCode().equals(tradeRuleVo.getStockCode())).collect(Collectors.toList());
 
         updateTradeState(tradeOrderList, dealDataList, orderData.getData());
 
