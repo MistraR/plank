@@ -67,8 +67,8 @@ public class PlankController {
      * 更新某支股票最近recentDayNumber天的交易数据
      */
     @PostMapping("/update-dailyRecord-byCode")
-    public void updateByCode(@RequestParam String code, @RequestParam String name, @RequestParam Integer recentDayNumber) {
-        dailyRecordProcessor.updateByCode(code, name, recentDayNumber);
+    public void updateByName(@RequestParam String name, @RequestParam Integer recentDayNumber) {
+        dailyRecordProcessor.updateByName(name, recentDayNumber);
     }
 
 }
