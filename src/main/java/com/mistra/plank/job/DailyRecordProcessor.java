@@ -3,6 +3,7 @@ package com.mistra.plank.job;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
@@ -44,6 +45,41 @@ public class DailyRecordProcessor {
     public DailyRecordProcessor(DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig) {
         this.dailyRecordMapper = dailyRecordMapper;
         this.plankConfig = plankConfig;
+    }
+
+    /**
+     * 更新某支股票最近recentDayNumber天的交易数据
+     */
+    public void updateByCode(String code, String name, int recentDayNumber) {
+        dailyRecordMapper.delete(new LambdaQueryWrapper<DailyRecord>().eq(DailyRecord::getCode, code));
+        String url = plankConfig.getXueQiuStockDetailUrl().replace("{code}", code)
+                .replace("{time}", String.valueOf(System.currentTimeMillis()))
+                .replace("{recentDayNumber}", String.valueOf(recentDayNumber));
+        String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
+        JSONObject data = JSON.parseObject(body).getJSONObject("data");
+        JSONArray list = data.getJSONArray("item");
+        if (CollectionUtils.isNotEmpty(list)) {
+            JSONArray array;
+            for (Object o : list) {
+                array = (JSONArray) o;
+                DailyRecord dailyRecord = new DailyRecord();
+                Date date = new Date(array.getLongValue(0));
+                dailyRecord.setDate(date);
+                dailyRecord.setCode(code);
+                dailyRecord.setName(name);
+                dailyRecord.setOpenPrice(BigDecimal.valueOf(array.getDoubleValue(2)));
+                dailyRecord.setHighest(BigDecimal.valueOf(array.getDoubleValue(3)));
+                dailyRecord.setLowest(BigDecimal.valueOf(array.getDoubleValue(4)));
+                dailyRecord.setClosePrice(BigDecimal.valueOf(array.getDoubleValue(5)));
+                dailyRecord.setIncreaseRate(BigDecimal.valueOf(array.getDoubleValue(7)));
+                dailyRecord.setAmount(array.getLongValue(9) / 10000);
+                if (DateUtils.isSameDay(date, new Date())) {
+                    StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(code);
+                    dailyRecord.setPlank(stockRealTimePriceByCode.isPlank());
+                }
+                dailyRecordMapper.insert(dailyRecord);
+            }
+        }
     }
 
     public void run(HashMap<String, String> map, CountDownLatch countDownLatch) {

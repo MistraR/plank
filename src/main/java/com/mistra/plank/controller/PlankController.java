@@ -1,14 +1,12 @@
 package com.mistra.plank.controller;
 
+import com.mistra.plank.job.DailyRecordProcessor;
 import com.mistra.plank.job.StockProcessor;
 import com.mistra.plank.model.param.AutoTradeParam;
 import com.mistra.plank.model.param.FundHoldingsParam;
 import com.mistra.plank.model.param.SelfSelectParam;
 import com.mistra.plank.service.StockSelectedService;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
@@ -22,10 +20,12 @@ public class PlankController {
 
     private final StockProcessor stockProcessor;
     private final StockSelectedService stockSelectedService;
+    private final DailyRecordProcessor dailyRecordProcessor;
 
-    public PlankController(StockProcessor stockProcessor, StockSelectedService stockSelectedService) {
+    public PlankController(StockProcessor stockProcessor, StockSelectedService stockSelectedService, DailyRecordProcessor dailyRecordProcessor) {
         this.stockProcessor = stockProcessor;
         this.stockSelectedService = stockSelectedService;
+        this.dailyRecordProcessor = dailyRecordProcessor;
     }
 
     /**
@@ -61,6 +61,14 @@ public class PlankController {
     @PostMapping("/tomorrow-auto-trade-pool")
     public void tomorrowAutoTradePool(@RequestBody List<AutoTradeParam> autoTradeParams) {
         stockSelectedService.tomorrowAutoTradePool(autoTradeParams);
+    }
+
+    /**
+     * 更新某支股票最近recentDayNumber天的交易数据
+     */
+    @PostMapping("/update-dailyRecord-byCode")
+    public void updateByCode(@RequestParam String code, @RequestParam String name, @RequestParam Integer recentDayNumber) {
+        dailyRecordProcessor.updateByCode(code, name, recentDayNumber);
     }
 
 }
