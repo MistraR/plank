@@ -272,20 +272,14 @@ public class Barbarossa implements CommandLineRunner {
                         STOCK_TRACK_MAP.get(e.getName()).getShareholding()).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(shareholding)) {
                     log.error("------------------------------- 持仓 ------------------------------");
-                    shareholding.forEach(e -> {
-                        if (e.getIncreaseRate() > 0) {
-                            Barbarossa.log.error(convertLog(e));
-                        } else {
-                            Barbarossa.log.warn(convertLog(e));
-                        }
-                    });
+                    shareholding.forEach(this::print);
                 }
                 realTimePrices.removeIf(e -> STOCK_TRACK_MAP.containsKey(e.getName()) && STOCK_TRACK_MAP.get(e.getName()).getShareholding());
                 List<StockRealTimePrice> stockRealTimePrices = realTimePrices.stream().filter(e ->
                         e.getPurchaseRate() >= -2).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(stockRealTimePrices)) {
                     log.error("------------------------------ Track ------------------------------");
-                    stockRealTimePrices.forEach(e -> Barbarossa.log.warn(convertLog(e)));
+                    stockRealTimePrices.forEach(this::print);
                 }
                 List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
@@ -311,6 +305,14 @@ public class Barbarossa implements CommandLineRunner {
             e.printStackTrace();
         } finally {
             monitoring.set(false);
+        }
+    }
+
+    private void print(StockRealTimePrice stockRealTimePrices) {
+        if (stockRealTimePrices.getIncreaseRate() > 0) {
+            Barbarossa.log.error(convertLog(stockRealTimePrices));
+        } else {
+            Barbarossa.log.warn(convertLog(stockRealTimePrices));
         }
     }
 
