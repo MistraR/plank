@@ -23,21 +23,23 @@ WHERE f.quarter=202204 ORDER BY f.foreign_fund_total_market_dynamic DESC
 SELECT quarter AS '季度',s.name AS '公司',f.fund_total_market_dynamic AS '基金持仓市值/万',f.foreign_total_market_dynamic AS '外资持仓市值/万(实时)',f.foreign_fund_total_market_dynamic AS '外资+基金持仓市值/万',f.shareholding_change_amount AS '本季度基金增减市值/万' FROM stock s LEFT JOIN foreign_fund_holdings_tracking f ON (s.name COLLATE utf8mb4_general_ci)=(f.name COLLATE utf8mb4_general_ci)
 WHERE s.focus=1 AND f.quarter=202204 ORDER BY f.foreign_fund_total_market_dynamic DESC
 SELECT * FROM stock WHERE shareholding=1
-SELECT * FROM stock WHERE track=1
+SELECT * FROM stock WHERE track=1 ORDER BY purchase_type;
 # 新能源
-SELECT * FROM stock WHERE name IN ('宁德时代','亿纬锂能','阳光电源','隆基绿能','五粮液','泸州老窖','药明康德') ORDER BY shareholding DESC;
+SELECT * FROM stock WHERE name IN ('宁德时代','亿纬锂能','阳光电源','隆基绿能','比亚迪','','') ORDER BY shareholding DESC;
 # 核心
-SELECT * FROM stock WHERE name IN ('','闻泰科技','','','');
+SELECT * FROM stock WHERE name IN ('','','四川长虹','中远海科','');
 # 芯片
-SELECT * FROM stock WHERE name IN ('全志科技','长电科技','士兰微','韦尔股份','','','立昂微','兆易创新','沪电股份','景嘉微','紫光国微','北京君正','三安光电');
-# 通信
-SELECT * FROM stock WHERE name IN ('剑桥科技','新易盛','中兴通讯','','中际旭创','光迅科技','','','','');
+SELECT * FROM stock WHERE name IN ('全志科技','长电科技','同有科技','胜宏科技','全志科技','兴森科技','深科技','','沪电股份','景嘉微','');
+# CPO
+SELECT * FROM stock WHERE name IN ('剑桥科技','新易盛','太辰光','联特科技','中际旭创','光迅科技','天孚通信','光库科技','华工科技','剑桥科技');
 # 传媒
-SELECT * FROM stock WHERE name IN ('汤姆猫','蓝色光标','昆仑万维','捷成股份','','','中文在线','','世纪华通','');
+SELECT * FROM stock WHERE name IN ('神州泰岳','蓝色光标','昆仑万维','天娱数科','人民网','中文在线','中国科传','世纪华通','中文在线','天地在线','视觉中国');
+# 游戏
+SELECT * FROM stock WHERE name IN ('汤姆猫','三七互娱','游族网络','汤姆猫','完美世界','世纪华通','冰川网络');
 # 算力
-SELECT * FROM stock WHERE name IN ('浪潮信息','紫光股份','中科曙光','海康威视','大华股份','','','拓维信息','');
+SELECT * FROM stock WHERE name IN ('浪潮信息','紫光股份','中科曙光','工业富联','大华股份','中兴通讯','四川长虹','拓维信息','鸿博股份');
 # 应用
-SELECT * FROM stock WHERE name IN ('拓尔思','','同花顺','三六零','首都在线','','科大讯飞','','','易华录');
+SELECT * FROM stock WHERE name IN ('拓尔思','金桥信息','同花顺','三六零','首都在线','中远海科','科大讯飞','中科信息','易华录','万兴科技');
 
 
 
