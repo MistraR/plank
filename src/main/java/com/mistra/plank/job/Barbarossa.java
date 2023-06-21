@@ -219,6 +219,15 @@ public class Barbarossa implements CommandLineRunner {
         }
     }
 
+    /**
+     * 复盘就会发现,大的亏损都是不遵守卖出原则导致的,对分时图的下跌趋势存在幻想,幻想它会扭转下跌趋势
+     * 当然,不排除会在你卖出之后走强,但是首要原则是防止亏损,因为由赚到亏是非常伤害心态的
+     * 有4条硬性卖出原则必须执行
+     * 跌破成本 核
+     * 跌破止损位  核
+     * 跌破MA10 核
+     * 当日亏损达到总仓位-2.5% 核
+     */
     private void monitorStock() {
         try {
             List<StockRealTimePrice> realTimePrices = new ArrayList<>();
