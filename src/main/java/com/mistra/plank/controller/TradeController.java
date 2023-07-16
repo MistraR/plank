@@ -1,5 +1,18 @@
 package com.mistra.plank.controller;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.common.config.PlankConfig;
@@ -7,8 +20,13 @@ import com.mistra.plank.common.exception.FieldInputException;
 import com.mistra.plank.common.util.StockUtil;
 import com.mistra.plank.dao.HoldSharesMapper;
 import com.mistra.plank.dao.StockMapper;
-import com.mistra.plank.job.AutomaticPlankTrading;
-import com.mistra.plank.model.entity.*;
+import com.mistra.plank.job.StockProcessor;
+import com.mistra.plank.model.dto.StockRealTimePrice;
+import com.mistra.plank.model.entity.HoldShares;
+import com.mistra.plank.model.entity.Stock;
+import com.mistra.plank.model.entity.StockSelected;
+import com.mistra.plank.model.entity.TradeMethod;
+import com.mistra.plank.model.entity.TradeUser;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.model.vo.AccountVo;
 import com.mistra.plank.model.vo.CommonResponse;
@@ -22,20 +40,27 @@ import com.mistra.plank.service.StockSelectedService;
 import com.mistra.plank.service.TradeApiService;
 import com.mistra.plank.service.TradeService;
 import com.mistra.plank.tradeapi.TradeResultVo;
-import com.mistra.plank.tradeapi.request.*;
-import com.mistra.plank.tradeapi.response.*;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.mistra.plank.tradeapi.request.AuthenticationRequest;
+import com.mistra.plank.tradeapi.request.BaseTradeRequest;
+import com.mistra.plank.tradeapi.request.GetAssetsRequest;
+import com.mistra.plank.tradeapi.request.GetDealDataRequest;
+import com.mistra.plank.tradeapi.request.GetHisDealDataRequest;
+import com.mistra.plank.tradeapi.request.GetOrdersDataRequest;
+import com.mistra.plank.tradeapi.request.GetStockListRequest;
+import com.mistra.plank.tradeapi.request.RevokeRequest;
+import com.mistra.plank.tradeapi.request.SubmitRequest;
+import com.mistra.plank.tradeapi.response.AuthenticationResponse;
+import com.mistra.plank.tradeapi.response.GetAssetsResponse;
+import com.mistra.plank.tradeapi.response.GetDealDataResponse;
+import com.mistra.plank.tradeapi.response.GetHisDealDataResponse;
+import com.mistra.plank.tradeapi.response.GetOrdersDataResponse;
+import com.mistra.plank.tradeapi.response.GetStockListResponse;
+import com.mistra.plank.tradeapi.response.RevokeResponse;
+import com.mistra.plank.tradeapi.response.SubmitResponse;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.*;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("trade")
 public class TradeController extends BaseController {
@@ -57,6 +82,9 @@ public class TradeController extends BaseController {
 
     @Autowired
     private PlankConfig plankConfig;
+
+    @Autowired
+    private StockProcessor stockProcessor;
 
     @RequestMapping("queryVerifyCodeUrl")
     public CommonResponse queryVerifyCodeUrl() {
@@ -168,6 +196,7 @@ public class TradeController extends BaseController {
 
     @RequestMapping("buy")
     public CommonResponse buy(int amount, double price, String stockCode, String stockName, Integer tradeUserId) {
+        log.info("手动买入 {} {}股", stockName, amount);
         SubmitRequest request = new SubmitRequest(getTradeUserId(tradeUserId));
         request.setAmount(amount);
         request.setPrice(price);
@@ -199,9 +228,13 @@ public class TradeController extends BaseController {
 
     @RequestMapping("sale")
     public CommonResponse sale(int amount, double price, String stockCode, String stockName, Integer tradeUserId) {
+        HoldShares holdShare = holdSharesMapper.selectOne(new QueryWrapper<HoldShares>().eq("name", stockName)
+                .ge("available_volume", 0));
+        log.info("手动卖出 {} {}股", stockName, amount);
         SubmitRequest request = new SubmitRequest(getTradeUserId(tradeUserId));
-        request.setAmount(amount);
-        request.setPrice(price);
+        StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(holdShare.getCode());
+        request.setAmount(Math.min(amount, holdShare.getAvailableVolume()));
+        request.setPrice(BigDecimal.valueOf(stockRealTimePrice.getCurrentPrice() * 0.985).setScale(2, RoundingMode.HALF_UP).doubleValue());
         request.setStockCode(stockCode);
         request.setZqmc(stockName);
         request.setTradeType(SubmitRequest.S);
@@ -212,20 +245,11 @@ public class TradeController extends BaseController {
             message = response.getData().get(0).getWtbh();
         }
         // WEB页面手动卖出的，同时更新掉数据库持仓表的数据
-        List<HoldShares> holdShares = holdSharesMapper.selectList(new QueryWrapper<HoldShares>().eq("name", stockName));
-        if (CollectionUtils.isNotEmpty(holdShares)) {
-            for (HoldShares holdShare : holdShares) {
-                // 当日手动卖出的股票,不参与打板
-                AutomaticPlankTrading.PLANK_MONITOR.remove(holdShare.getCode());
-                if (holdShare.getAvailableVolume() > 0) {
-                    holdShare.setAvailableVolume(holdShare.getAvailableVolume() - amount);
-                    holdShare.setProfit(BigDecimal.valueOf((price - holdShare.getBuyPrice().doubleValue()) * amount));
-                    holdShare.setClearance(true);
-                    holdShare.setSaleTime(new Date());
-                    holdSharesMapper.updateById(holdShare);
-                }
-            }
-        }
+        holdShare.setAvailableVolume(holdShare.getAvailableVolume() - request.getAmount());
+        holdShare.setProfit(holdShare.getProfit().add(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue()) * request.getAmount())));
+        holdShare.setClearance(true);
+        holdShare.setSaleTime(new Date());
+        holdSharesMapper.updateById(holdShare);
         return CommonResponse.buildResponse(message);
     }
 

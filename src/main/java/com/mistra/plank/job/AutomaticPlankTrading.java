@@ -1,11 +1,12 @@
 package com.mistra.plank.job;
 
-import static com.mistra.plank.common.util.StringUtil.collectionToString;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,6 +23,7 @@ import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -29,11 +31,10 @@ import lombok.extern.slf4j.Slf4j;
  * @ Version: 1.0
  * @ Time: 2023/2/15 13:17
  * @ Description:
- * 自动打板交易，开启的话会监控 PLANK_MONITOR缓存 的股票，发现上板则会自动下单排队
- * 根据不同策略筛选出来的股票放入 PLANK_MONITOR 即可
+ * 根据不同策略筛选出来的股票 新开一个线程 Barbarossa.executorService.submit(new AutoPlankTask(stock)); 发现上板则会自动下单排队
  * 目前有：
- * 1.创业板首板 - 隔日溢价率挺高的
- * 2.自己复盘筛选的打板标的 - 筛选出人气龙头
+ * 1.创业板首板 - 隔日溢价率挺高的 filterStock()
+ * 2.自己复盘筛选的打板标的 - 筛选出人气龙头 selectAutoPlankStock()
  * 3.隔日一进二，二进三
  */
 @Slf4j
@@ -41,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(prefix = "plank", name = "automaticPlankTrading", havingValue = "true")
 public class AutomaticPlankTrading implements CommandLineRunner {
 
+    private static final int availableProcessors = Runtime.getRuntime().availableProcessors();
     private final PlankConfig plankConfig;
     private final StockProcessor stockProcessor;
     private final AutomaticTrading automaticTrading;
@@ -52,6 +54,8 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     public static final ConcurrentHashMap<String, Stock> PLANK_MONITOR = new ConcurrentHashMap<>();
 
+    public static final ThreadPoolExecutor PLANK_POOL = new ThreadPoolExecutor(availableProcessors, availableProcessors, 100L,
+            TimeUnit.SECONDS, new LinkedBlockingQueue<>(5000), new NamedThreadFactory("Plank-", false));
 
     public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor, AutomaticTrading automaticTrading, StockMapper stockMapper
             , HoldSharesMapper holdSharesMapper) {
@@ -65,14 +69,6 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     @Override
     public void run(String... args) {
         selectAutoPlankStock();
-    }
-
-    @Scheduled(cron = "0 */2 * * * ?")
-    private void executorStatus() {
-        if (AutomaticTrading.isTradeTime() && plankConfig.getAutomaticPlankTrading()) {
-            log.error("盯板:{}",
-                    collectionToString(AutomaticPlankTrading.PLANK_MONITOR.values().stream().map(Stock::getName).collect(Collectors.toList())));
-        }
     }
 
     @Scheduled(cron = "*/3 * * * * ?")
@@ -96,7 +92,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
         codes.forEach(e -> {
             StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
             if (stockRealTimePriceByCode.getIncreaseRate() > 17 && !PLANK_MONITOR.containsKey(e)) {
-                Barbarossa.executorService.submit(new AutoPlankTask(Barbarossa.SZ30_STOCKS.get(e)));
+                PLANK_POOL.submit(new AutoPlankTask(Barbarossa.SZ30_STOCKS.get(e)));
             }
         });
     }
@@ -120,7 +116,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
         Set<String> todayBufSaleSet = selectTodayTradedStock();
         for (Stock stock : stocks) {
             if (!todayBufSaleSet.contains(stock.getCode())) {
-                Barbarossa.executorService.submit(new AutoPlankTask(stock));
+                PLANK_POOL.submit(new AutoPlankTask(stock));
             }
         }
     }

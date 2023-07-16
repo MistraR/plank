@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -33,6 +36,7 @@ import com.mistra.plank.tradeapi.request.SubmitRequest;
 import com.mistra.plank.tradeapi.response.SubmitResponse;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -80,6 +84,9 @@ public class AutomaticTrading implements CommandLineRunner {
 
     private final AtomicBoolean SELLING = new AtomicBoolean(false);
 
+    public static final ThreadPoolExecutor SALE_POOL = new ThreadPoolExecutor(2, 10, 100L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(0), new NamedThreadFactory("Sale-", false));
+
     public AutomaticTrading(StockMapper stockMapper, TradeApiService tradeApiService, PlankConfig plankConfig,
                             StockProcessor stockProcessor, HoldSharesMapper holdSharesMapper) {
         this.stockMapper = stockMapper;
@@ -119,7 +126,7 @@ public class AutomaticTrading implements CommandLineRunner {
             if (CollectionUtils.isNotEmpty(holdShares)) {
                 if (!SELLING.get()) {
                     for (HoldShares holdShare : holdShares) {
-                        Barbarossa.executorService.submit(new SaleTask(holdShare));
+                        SALE_POOL.submit(new SaleTask(holdShare));
                     }
                 }
                 SELLING.set(true);
@@ -220,7 +227,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.PLANK.name()) ||
                             holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name())) {
                         // 自定义打板，低吸买入的股票
-                        if (holdShare.getTakeProfitPrice().doubleValue() <= stockRealTimePrice.getCurrentPrice()) {
+                        if (holdShare.getTakeProfitPrice().doubleValue() <= stockRealTimePrice.getHighestPrice()) {
                             sale(holdShare, stockRealTimePrice);
                             log.error("{} 触发止盈,自动卖出", holdShare.getName());
                             break;
