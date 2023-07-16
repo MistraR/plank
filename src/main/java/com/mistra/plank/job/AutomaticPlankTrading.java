@@ -50,7 +50,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     private final HoldSharesMapper holdSharesMapper;
 
     /**
-     * 自动打板缓存
+     * 打板监控缓存
      */
     public static final ConcurrentHashMap<String, Stock> PLANK_MONITOR = new ConcurrentHashMap<>();
 

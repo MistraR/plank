@@ -243,13 +243,13 @@ public class TradeController extends BaseController {
         String message = response.getMessage();
         if (response.success()) {
             message = response.getData().get(0).getWtbh();
+            // WEB页面手动卖出的，同时更新掉数据库持仓表的数据
+            holdShare.setAvailableVolume(holdShare.getAvailableVolume() - request.getAmount());
+            holdShare.setProfit(holdShare.getProfit().add(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue()) * request.getAmount())));
+            holdShare.setClearance(holdShare.getAvailableVolume() == 0);
+            holdShare.setSaleTime(new Date());
+            holdSharesMapper.updateById(holdShare);
         }
-        // WEB页面手动卖出的，同时更新掉数据库持仓表的数据
-        holdShare.setAvailableVolume(holdShare.getAvailableVolume() - request.getAmount());
-        holdShare.setProfit(holdShare.getProfit().add(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue()) * request.getAmount())));
-        holdShare.setClearance(true);
-        holdShare.setSaleTime(new Date());
-        holdSharesMapper.updateById(holdShare);
         return CommonResponse.buildResponse(message);
     }
 
