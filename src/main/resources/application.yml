@@ -1,5 +1,5 @@
 server:
-  port: 8088
+  port: 8089
 spring:
   task:
     scheduling:
@@ -19,8 +19,7 @@ spring:
       pool-name: HikariPool
     password: 123456
     type: com.zaxxer.hikari.HikariDataSource
-    #    url: jdbc:mysql://localhost:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
-    url: jdbc:mysql://122.51.126.37:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
+    url: jdbc:mysql://localhost:3306/plank?createDatabaseIfNotExist=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=GMT%2b8
     username: root
 
 mybatis-plus:
@@ -46,14 +45,14 @@ ocr:
 plank:
   # 是否开启自动交易
   automaticTrading: true
-  # 止损净值率
-  stopLossRate: 0.95
-  # 止盈净值率
-  takeProfitRate: 1.07
-  # 每日自动交易买入金额上限
-  automaticTradingMoneyLimitUp: 50000
   # 自动打板
   automaticPlankTrading: true
+  # 止损净值率
+  stopLossRate: 0.96
+  # 止盈净值率
+  takeProfitRate: 1.0685
+  # 每日自动交易买入金额上限
+  automaticTradingMoneyLimitUp: 50000
   # 自动打板交易时间 11->11点之前上板的才打
   automaticPlankTradingTimeLimit: 12
   # 自动交易单笔交易金额上限
