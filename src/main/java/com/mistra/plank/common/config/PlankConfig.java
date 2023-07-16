@@ -1,11 +1,12 @@
 package com.mistra.plank.common.config;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * @author Mistra @ Version: 1.0
@@ -98,11 +99,6 @@ public class PlankConfig {
      * 是否开启自动打板
      */
     private Boolean automaticPlankTrading;
-
-    /**
-     * 自动打板是否只打当日涨幅Top5版块的成分股
-     */
-    private Boolean automaticPlankTop5Bk;
 
     /**
      * 自动打板时间限制，一般只打早盘强势快速封板的 比如只打10点前封板的票

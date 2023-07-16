@@ -1,6 +1,21 @@
 package com.mistra.plank.job;
 
-import cn.hutool.core.date.DateUtil;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -16,19 +31,9 @@ import com.mistra.plank.service.TradeApiService;
 import com.mistra.plank.tradeapi.TradeResultVo;
 import com.mistra.plank.tradeapi.request.SubmitRequest;
 import com.mistra.plank.tradeapi.response.SubmitResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import cn.hutool.core.date.DateUtil;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author rui.wang
@@ -207,7 +212,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     }
                     holdSharesMapper.updateById(holdShare);
                     if (holdShare.getTodayPlank() && !stockRealTimePrice.isPlank()) {
-                        // 当日炸板,挂跌停价卖出
+                        // 当日炸板 卖出
                         log.error("{} 炸板,自动卖出", holdShare.getName());
                         sale(holdShare, stockRealTimePrice);
                         break;
@@ -224,7 +229,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.AUTO_PLANK.name())) {
                         // 自动打板买入的股票
                         if (DateUtil.hour(new Date(), true) > 11 && !stockRealTimePrice.isPlank()) {
-                            // 11点前还未涨停,挂跌停价卖出
+                            // 11点前还未涨停,卖出
                             log.error("{} 11点前还未涨停,自动卖出", holdShare.getName());
                             sale(holdShare, stockRealTimePrice);
                             break;

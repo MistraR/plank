@@ -1,7 +1,30 @@
 package com.mistra.plank.job;
 
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.thread.NamedThreadFactory;
+import static com.mistra.plank.common.config.SystemConstant.W;
+import static com.mistra.plank.common.util.StringUtil.collectionToString;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
@@ -23,24 +46,10 @@ import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.service.impl.ScreeningStocks;
+
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import static com.mistra.plank.common.config.SystemConstant.W;
-import static com.mistra.plank.common.util.StringUtil.collectionToString;
 
 /**
  * 涨停先锋
@@ -71,9 +80,13 @@ public class Barbarossa implements CommandLineRunner {
      */
     public static final HashMap<String, String> STOCK_ALL_MAP = new HashMap<>(4096);
     /**
-     * 需要监控关注的机构趋势票 key-name value-Stock
+     * 需要重点关注的股票 key-name value-Stock
      */
-    public static final HashMap<String, Stock> STOCK_TRACK_MAP = new HashMap<>(32);
+    public static final ConcurrentHashMap<String, Stock> STOCK_TRACK_MAP = new ConcurrentHashMap<>(32);
+    /**
+     * 创业板股票
+     */
+    public static final ConcurrentHashMap<String, Stock> SZ30_STOCKS = new ConcurrentHashMap<>(512);
     /**
      * 主力流入数据
      */
@@ -100,17 +113,7 @@ public class Barbarossa implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        opening();
-    }
-
-    @Scheduled(cron = "0 */2 * * * ?")
-    private void executorStatus() {
-        if (AutomaticTrading.isTradeTime() && plankConfig.getAutomaticPlankTrading()) {
-//            log.error("ThreadPoolExecutor core:{},max:{},queue:{}", Barbarossa.executorService.getCorePoolSize(),
-//                    Barbarossa.executorService.getMaximumPoolSize(), Barbarossa.executorService.getQueue().size());
-            log.error("打板一级缓存:{}", collectionToString(AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.values()
-                    .stream().map(Stock::getName).collect(Collectors.toList())));
-        }
+        monitor();
     }
 
     /**
@@ -123,100 +126,41 @@ public class Barbarossa implements CommandLineRunner {
                 .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
         STOCK_TRACK_MAP.clear();
-        AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.clear();
-        AutomaticPlankTrading.PLANK_MONITOR.clear();
         stocks.forEach(e -> {
             if ((e.getShareholding() || e.getTrack())) {
                 STOCK_TRACK_MAP.put(e.getName(), e);
-            } else if (e.getTransactionAmount().doubleValue() > plankConfig.getStockTurnoverThreshold()
-                    && (Objects.isNull(e.getBuyTime()) || !DateUtils.isSameDay(new Date(), e.getBuyTime()))) {
-                // 过滤掉成交额小于plankConfig.getStockTurnoverFilter()的股票,
-                if (plankConfig.getAutomaticPlankTop5Bk()) {
-                    if (CollectionUtils.isNotEmpty(StockProcessor.TOP5_BK.values())) {
-                        String bk = StockProcessor.TOP5_BK.keySet().stream().filter(v -> Objects.nonNull(e.getClassification()) &&
-                                e.getClassification().contains(v)).findFirst().orElse(null);
-                        if (StringUtils.isNotEmpty(bk)) {
-                            //log.warn("{}板块的{}加入一级缓存", StockProcessor.TOP5_BK.get(bk).getName(), e.getName());
-                            AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.put(e.getCode(), e);
-                        }
-                    }
-                } else {
-                    AutomaticPlankTrading.STOCK_AUTO_PLANK_FILTER_MAP.put(e.getCode(), e);
-                }
             }
-            STOCK_ALL_MAP.put(e.getCode(), e.getName());
+            if (e.getCode().startsWith("SZ30")) {
+                SZ30_STOCKS.put(e.getCode(), e);
+            }
+            STOCK_TRACK_MAP.put(e.getCode(), e);
         });
-        if (plankConfig.getAutomaticPlankTrading()) {
-            log.warn("加载[{}]支股票,自动打板二级缓存[{}]支,开启自动打板:{},是否只打涨幅Top5板块的成分股:{}",
-                    stocks.size(), AutomaticPlankTrading.PLANK_MONITOR.size(), plankConfig.getAutomaticPlankTrading(),
-                    plankConfig.getAutomaticPlankTop5Bk());
-        }
     }
 
     /**
-     * 开盘,初始化版块基本数据
+     * 每10秒更新一次版块涨跌幅
      */
-    @Scheduled(cron = "0 30 9 * * ?")
-    private void opening() {
-        // 更新行业版块，概念版块涨幅信息
-        this.updateBkRealTimeData();
-        this.updateStockCache();
-    }
-
-    /**
-     * 每3秒更新一次版块涨跌幅
-     */
-    @Scheduled(cron = "*/3 * * * * ?")
+    @Scheduled(cron = "*/10 * * * * ?")
     private void updateBkCache() {
         if (AutomaticTrading.isTradeTime()) {
             // 更新行业版块，概念版块涨幅信息
-            this.updateBkRealTimeData();
+            stockProcessor.updateBk();
+            stockProcessor.updateTop5IncreaseRateBk();
         }
     }
 
     /**
-     * 更新版块实时数据
-     */
-    private void updateBkRealTimeData() {
-        stockProcessor.updateBk();
-        stockProcessor.updateTop5IncreaseRateBk();
-    }
-
-    /**
-     * 每2分钟更新每支股票的成交额,开盘6分钟内不更新,开盘快速封板的票当日成交额可能比较少
-     * 成交额满足阈值的会放入 STOCK_AUTO_PLANK_FILTER_MAP 去检测涨幅
-     */
-    @Scheduled(cron = "0 */2 * * * ?")
-    private void updateStockRealTimeData() throws InterruptedException {
-        Date openingTime = new Date();
-        openingTime = DateUtils.setHours(openingTime, 9);
-        openingTime = DateUtils.setMinutes(openingTime, 30);
-        if (AutomaticTrading.isTradeTime() && DateUtils.addMinutes(new Date(), -6).getTime() > openingTime.getTime()) {
-            List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_ALL_MAP.keySet()), 300);
-            CountDownLatch countDownLatch = new CountDownLatch(partition.size());
-            for (List<String> list : partition) {
-                executorService.submit(() -> stockProcessor.run(list, countDownLatch));
-            }
-            countDownLatch.await();
-            this.updateStockCache();
-        }
-    }
-
-    /**
-     * 此方法主要用来预警接近建仓价的股票
      * 实时监测数据 显示股票实时涨跌幅度，最高，最低价格，主力流入
      * 想要监测哪些股票需要手动在数据库stock表更改track字段为true
-     * 我一般会选择趋势股或赛道股，所以默认把MA10作为建仓基准价格，可以手动修改stock.purchase_type字段来设置，5-则以MA5为基准价格,最多MA20
-     * 股价除权之后需要重新爬取交易数据，算均价就不准了
      */
-    @Scheduled(cron = "0 */1 * * * ?")
+    @Scheduled(cron = "0 */2 * * * ?")
     public void monitor() {
-        if (plankConfig.getEnableMonitor() && AutomaticTrading.isTradeTime() &&
-                !monitoring.get() && STOCK_TRACK_MAP.size() > 0) {
+        if (plankConfig.getEnableMonitor() && AutomaticTrading.isTradeTime() && !monitoring.get() && STOCK_TRACK_MAP.size() > 0) {
             monitoring.set(true);
             executorService.submit(this::monitorStock);
             executorService.submit(this::queryMainFundData);
         }
+        updateStockCache();
     }
 
     /**
@@ -314,6 +258,7 @@ public class Barbarossa implements CommandLineRunner {
                             .map(Stock::getName).collect(Collectors.toList())));
                 }
                 realTimePrices.clear();
+                Thread.sleep(2000);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -368,6 +313,11 @@ public class Barbarossa implements CommandLineRunner {
             dailyRecordProcessor.run(Barbarossa.STOCK_ALL_MAP, countDownLatch);
             this.resetStockData();
             countDownLatch.await();
+            List<List<String>> partition = Lists.partition(Lists.newArrayList(Barbarossa.STOCK_ALL_MAP.keySet()), 300);
+            for (List<String> list : partition) {
+                // 更新每支股票的成交额
+                executorService.submit(() -> stockProcessor.run(list));
+            }
             log.warn("每日涨跌明细、成交额、MA5、MA10、MA20更新完成");
             executorService.submit(stockProcessor::updateStockBkInfo);
             // 更新 外资+基金 持仓 只更新到最新季度报告的汇总表上 基金季报有滞后性，外资持仓则是实时计算，每天更新的
@@ -393,7 +343,7 @@ public class Barbarossa implements CommandLineRunner {
      * 重置stock表,持仓表数据
      */
     private void resetStockData() {
-        stockMapper.update(Stock.builder().plankNumber(0).automaticTradingType(AutomaticTradingEnum.CANCEL.name())
+        stockMapper.update(Stock.builder().plankNumber(0).autoPlank(false).automaticTradingType(AutomaticTradingEnum.CANCEL.name())
                 .suckTriggerPrice(new BigDecimal(0)).buyAmount(0).build(), new LambdaUpdateWrapper<>());
         holdSharesMapper.update(HoldShares.builder().todayPlank(false).build(), new LambdaUpdateWrapper<HoldShares>()
                 .eq(HoldShares::getClearance, false));

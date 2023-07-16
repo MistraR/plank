@@ -1,6 +1,20 @@
 package com.mistra.plank.job;
 
-import cn.hutool.core.date.DateUtil;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -21,20 +35,9 @@ import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.ForeignFundHoldingsTracking;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.param.FundHoldingsParam;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
+import cn.hutool.core.date.DateUtil;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Mistra @ Version: 1.0
@@ -73,7 +76,7 @@ public class StockProcessor {
         this.bkMapper = bkMapper;
     }
 
-    public void run(List<String> codes, CountDownLatch countDownLatch) {
+    public void run(List<String> codes) {
         for (String code : codes) {
             try {
                 StockRealTimePrice stockRealTimePrice = getStockRealTimePriceByCode(code);
@@ -101,7 +104,6 @@ public class StockProcessor {
                 e.printStackTrace();
             }
         }
-        countDownLatch.countDown();
     }
 
     /**
