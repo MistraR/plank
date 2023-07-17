@@ -1,7 +1,27 @@
 package com.mistra.plank.service.impl;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+import org.springframework.util.FileCopyUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mistra.plank.common.util.StockConsts;
 import com.mistra.plank.dao.StockInfoDao;
 import com.mistra.plank.dao.StockLogDao;
 import com.mistra.plank.dao.impl.DailyIndexDao;
@@ -14,27 +34,6 @@ import com.mistra.plank.model.vo.PageVo;
 import com.mistra.plank.service.DailyIndexParser;
 import com.mistra.plank.service.StockCrawlerService;
 import com.mistra.plank.service.StockInfoService;
-import com.mistra.plank.common.util.StockConsts;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
-import org.springframework.util.FileCopyUtils;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 public class StockServiceImpl implements StockInfoService {
@@ -197,8 +196,12 @@ public class StockServiceImpl implements StockInfoService {
     @Cacheable(value = StockConsts.CACHE_KEY_DATA_STOCK, key = "#code")
     @Override
     public StockInfo getStockByFullCode(String code) {
-        StockInfo stockInfo = stockInfoDao.selectOne(new LambdaQueryWrapper<StockInfo>()
-                .eq(StockInfo::getCode, code.substring(2, 8)).eq(StockInfo::getExchange, code.substring(0, 2)));
+        StockInfo stockInfo =
+                stockInfoDao.selectOne(new LambdaQueryWrapper<StockInfo>().eq(StockInfo::getCode, code.substring(2, 8)).eq(StockInfo::getExchange,
+                        code.substring(0, 2)));
+        if (stockInfo == null) {
+            stockInfo = stockInfoDao.selectOne(new LambdaQueryWrapper<StockInfo>().eq(StockInfo::getCode, code));
+        }
         if (stockInfo == null) {
             stockInfo = new StockInfo();
             stockInfo.setAbbreviation("wlrzq");
