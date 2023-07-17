@@ -84,8 +84,8 @@ public class AutomaticTrading implements CommandLineRunner {
 
     private final AtomicBoolean SELLING = new AtomicBoolean(false);
 
-    public static final ThreadPoolExecutor SALE_POOL = new ThreadPoolExecutor(2, 10, 100L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(0), new NamedThreadFactory("Sale-", false));
+    private final ThreadPoolExecutor SALE_POOL = new ThreadPoolExecutor(2, 10, 100L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(1), new NamedThreadFactory("Sale-", false));
 
     public AutomaticTrading(StockMapper stockMapper, TradeApiService tradeApiService, PlankConfig plankConfig,
                             StockProcessor stockProcessor, HoldSharesMapper holdSharesMapper) {
