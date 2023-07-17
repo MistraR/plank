@@ -54,8 +54,8 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     public static final ConcurrentHashMap<String, Stock> PLANK_MONITOR = new ConcurrentHashMap<>();
 
-    public static final ThreadPoolExecutor PLANK_POOL = new ThreadPoolExecutor(availableProcessors, availableProcessors, 100L,
-            TimeUnit.SECONDS, new LinkedBlockingQueue<>(5000), new NamedThreadFactory("Plank-", false));
+    public static final ThreadPoolExecutor PLANK_POOL = new ThreadPoolExecutor(availableProcessors, availableProcessors, 100L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(5000), new NamedThreadFactory("Plank-", false));
 
     public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor, AutomaticTrading automaticTrading, StockMapper stockMapper
             , HoldSharesMapper holdSharesMapper) {
@@ -92,7 +92,10 @@ public class AutomaticPlankTrading implements CommandLineRunner {
         codes.forEach(e -> {
             StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
             if (stockRealTimePriceByCode.getIncreaseRate() > 17 && !PLANK_MONITOR.containsKey(e)) {
-                PLANK_POOL.submit(new AutoPlankTask(Barbarossa.SZ30_STOCKS.get(e)));
+                Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, e));
+                if (!stock.getCancelPlank()) {
+                    PLANK_POOL.submit(new AutoPlankTask(Barbarossa.SZ30_STOCKS.get(e)));
+                }
             }
         });
     }

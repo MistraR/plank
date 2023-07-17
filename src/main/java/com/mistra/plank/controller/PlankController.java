@@ -1,15 +1,18 @@
 package com.mistra.plank.controller;
 
+import java.util.Date;
+import java.util.List;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import com.mistra.plank.job.DailyRecordProcessor;
 import com.mistra.plank.job.StockProcessor;
 import com.mistra.plank.model.param.AutoTradeParam;
 import com.mistra.plank.model.param.FundHoldingsParam;
 import com.mistra.plank.model.param.SelfSelectParam;
 import com.mistra.plank.service.StockSelectedService;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author mistra@future.com

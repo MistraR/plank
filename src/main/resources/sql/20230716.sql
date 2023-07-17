@@ -7,3 +7,6 @@ DROP COLUMN `available_balance`,
 MODIFY COLUMN `price` decimal(10, 2) NOT NULL COMMENT '卖出价格' AFTER `number`,
 ADD COLUMN `profit` decimal(10, 2) NOT NULL COMMENT '本笔交易利润' AFTER `reason`,
 ADD COLUMN `cost_price` decimal(10, 2) NOT NULL COMMENT '成本价' AFTER `profit`;
+
+ALTER TABLE `plank`.`stock`
+    ADD COLUMN `cancel_plank` tinyint NOT NULL DEFAULT 0 COMMENT '是否取消打板' AFTER `auto_plank`;
