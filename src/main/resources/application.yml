@@ -43,8 +43,8 @@ ocr:
         softid: 0
         user: ''
 plank:
-  # 是否开启自动交易
-  automaticTrading: false
+  # 是否开启自动交易->自动止盈止损
+  automaticTrading: true
   # 自动打板
   automaticPlankTrading: false
   # 止损净值率
