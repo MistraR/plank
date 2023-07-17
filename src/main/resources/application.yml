@@ -1,5 +1,5 @@
 server:
-  port: 8089
+  port: 8088
 spring:
   task:
     scheduling:
@@ -44,9 +44,9 @@ ocr:
         user: ''
 plank:
   # 是否开启自动交易
-  automaticTrading: true
+  automaticTrading: false
   # 自动打板
-  automaticPlankTrading: true
+  automaticPlankTrading: false
   # 止损净值率
   stopLossRate: 0.96
   # 止盈净值率
@@ -54,7 +54,7 @@ plank:
   # 每日自动交易买入金额上限
   automaticTradingMoneyLimitUp: 50000
   # 自动打板交易时间 11->11点之前上板的才打
-  automaticPlankTradingTimeLimit: 12
+  automaticPlankTradingTimeLimit: 11
   # 自动交易单笔交易金额上限
   singleTransactionLimitAmount: 10000
   stockTurnoverThreshold: 200000000
