@@ -274,27 +274,6 @@ INSERT INTO `bk` VALUES (237, 'BK0807', '共享经济', 1.74, 'CONCEPT', 0);
 INSERT INTO `bk` VALUES (238, 'BK0807', '共享经济', 1.74, 'CONCEPT', 0);
 
 -- ----------------------------
--- Table structure for clearance
--- ----------------------------
-DROP TABLE IF EXISTS `clearance`;
-CREATE TABLE `clearance`  (
-  `id` bigint(0) NOT NULL AUTO_INCREMENT,
-  `date` datetime(0) NOT NULL COMMENT '日期',
-  `name` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '名称',
-  `code` char(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '证券代码',
-  `cost_price` decimal(10, 2) NOT NULL COMMENT '买入成本价',
-  `number` int(0) NOT NULL COMMENT '数量',
-  `price` decimal(10, 2) NOT NULL COMMENT '清仓价格',
-  `rate` decimal(10, 2) NOT NULL COMMENT '盈亏比率',
-  `balance` decimal(10, 2) NOT NULL COMMENT '账户余额',
-  `available_balance` decimal(10, 2) NOT NULL COMMENT '可用余额',
-  `reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '清仓原因',
-  `profit` decimal(10, 2) NOT NULL COMMENT '盈亏利润',
-  `day_number` int(0) NOT NULL COMMENT '持股天数',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
 -- Table structure for daily_index
 -- ----------------------------
 DROP TABLE IF EXISTS `daily_index`;
