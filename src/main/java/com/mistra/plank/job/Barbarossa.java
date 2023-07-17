@@ -111,6 +111,11 @@ public class Barbarossa implements CommandLineRunner {
         this.analyzePlank = analyzePlank;
     }
 
+    /**
+     * 启动前端服务
+     * cd ./stock-web
+     * npm start
+     */
     @Override
     public void run(String... args) {
         monitor();
@@ -133,7 +138,7 @@ public class Barbarossa implements CommandLineRunner {
             if (e.getCode().startsWith("SZ30")) {
                 SZ30_STOCKS.put(e.getCode(), e);
             }
-            STOCK_TRACK_MAP.put(e.getCode(), e);
+            STOCK_ALL_MAP.put(e.getCode(), e.getName());
         });
     }
 
