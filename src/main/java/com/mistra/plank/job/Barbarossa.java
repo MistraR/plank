@@ -348,10 +348,9 @@ public class Barbarossa implements CommandLineRunner {
      * 重置stock表,持仓表数据
      */
     private void resetStockData() {
-        stockMapper.update(Stock.builder().plankNumber(0).autoPlank(false).automaticTradingType(AutomaticTradingEnum.CANCEL.name())
-                .suckTriggerPrice(new BigDecimal(0)).buyAmount(0).build(), new LambdaUpdateWrapper<>());
-        holdSharesMapper.update(HoldShares.builder().todayPlank(false).build(), new LambdaUpdateWrapper<HoldShares>()
-                .eq(HoldShares::getClearance, false));
+        stockMapper.update(Stock.builder().plankNumber(0).autoPlank(false).cancelPlank(false).automaticTradingType(AutomaticTradingEnum.CANCEL.name()).suckTriggerPrice(new BigDecimal(0)).buyAmount(0).build(), new LambdaUpdateWrapper<>());
+        holdSharesMapper.update(HoldShares.builder().todayPlank(false).build(), new LambdaUpdateWrapper<HoldShares>().eq(HoldShares::getClearance,
+                false));
     }
 
     private String convertLog(StockRealTimePrice realTimePrice) {
