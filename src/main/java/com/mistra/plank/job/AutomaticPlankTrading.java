@@ -115,7 +115,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     /**
      * 查询需要自动打板的股票
      */
-    private void selectAutoPlankStock() {
+    public void selectAutoPlankStock() {
         List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getAutoPlank, true));
         Set<String> todayBufSaleSet = selectTodayTradedStock();
         for (Stock stock : stocks) {

@@ -1,10 +1,16 @@
 package com.mistra.plank.service.impl;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Objects;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mistra.plank.dao.StockInfoDao;
 import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.dao.StockSelectedDao;
+import com.mistra.plank.job.AutomaticPlankTrading;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.entity.StockInfo;
 import com.mistra.plank.model.entity.StockSelected;
@@ -12,12 +18,6 @@ import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.model.param.AutoTradeParam;
 import com.mistra.plank.model.param.SelfSelectParam;
 import com.mistra.plank.service.StockSelectedService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Objects;
 
 @Service
 public class StockSelectedServiceImpl implements StockSelectedService {
@@ -30,6 +30,9 @@ public class StockSelectedServiceImpl implements StockSelectedService {
 
     @Autowired
     private StockMapper stockMapper;
+
+    @Autowired
+    private AutomaticPlankTrading automaticPlankTrading;
 
     @Override
     public List<StockSelected> getList() {
@@ -65,5 +68,16 @@ public class StockSelectedServiceImpl implements StockSelectedService {
                 }
             }
         }
+    }
+
+    @Override
+    public void addAutoPlank(SelfSelectParam selfSelectParam) {
+        stockMapper.update(Stock.builder().autoPlank(false).build(), new LambdaUpdateWrapper<>());
+        List<Stock> stockInfos = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getName, selfSelectParam.getNames()));
+        for (Stock stock : stockInfos) {
+            stock.setAutoPlank(true);
+            stockMapper.updateById(stock);
+        }
+        automaticPlankTrading.selectAutoPlankStock();
     }
 }

@@ -14,4 +14,6 @@ public interface StockSelectedService {
     void addSelfSelect(SelfSelectParam selfSelectParam);
 
     void tomorrowAutoTradePool(List<AutoTradeParam> autoTradeParams);
+
+    void addAutoPlank(SelfSelectParam selfSelectParam);
 }

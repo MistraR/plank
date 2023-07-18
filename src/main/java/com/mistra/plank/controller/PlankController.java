@@ -57,6 +57,16 @@ public class PlankController {
     }
 
     /**
+     * 编辑自动打板股票
+     *
+     * @param selfSelectParam SelfSelectParam
+     */
+    @PostMapping("/add-auto-plank")
+    public void addAutoPlank(@RequestBody SelfSelectParam selfSelectParam) {
+        stockSelectedService.addAutoPlank(selfSelectParam);
+    }
+
+    /**
      * 下一个交易日自动交易池
      *
      * @param autoTradeParams autoTradeParams
