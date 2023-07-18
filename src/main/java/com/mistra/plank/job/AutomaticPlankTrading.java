@@ -80,6 +80,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
             for (List<String> list : lists) {
                 Barbarossa.executorService.submit(() -> filterStock(list));
             }
+            selectAutoPlankStock();
         }
     }
 
@@ -118,7 +119,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
         List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getAutoPlank, true));
         Set<String> todayBufSaleSet = selectTodayTradedStock();
         for (Stock stock : stocks) {
-            if (!todayBufSaleSet.contains(stock.getCode())) {
+            if (!todayBufSaleSet.contains(stock.getCode()) && !PLANK_MONITOR.containsKey(stock.getCode())) {
                 PLANK_POOL.submit(new AutoPlankTask(stock));
             }
         }

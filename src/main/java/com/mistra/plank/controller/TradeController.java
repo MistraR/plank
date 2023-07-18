@@ -249,6 +249,9 @@ public class TradeController extends BaseController {
             holdShare.setClearance(holdShare.getAvailableVolume() == 0);
             holdShare.setSaleTime(new Date());
             holdSharesMapper.updateById(holdShare);
+            Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getName, stockName));
+            stock.setShareholding(false);
+            stockMapper.updateById(stock);
         }
         return CommonResponse.buildResponse(message);
     }

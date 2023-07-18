@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,6 +35,7 @@ import com.mistra.plank.tradeapi.TradeResultVo;
 import com.mistra.plank.tradeapi.request.SubmitRequest;
 import com.mistra.plank.tradeapi.response.SubmitResponse;
 
+import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -84,8 +85,13 @@ public class AutomaticTrading implements CommandLineRunner {
 
     private final AtomicBoolean SELLING = new AtomicBoolean(false);
 
-    private final ThreadPoolExecutor SALE_POOL = new ThreadPoolExecutor(2, 10, 100L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(1), new NamedThreadFactory("Sale-", false));
+    private final ThreadPoolExecutor SALE_POOL = new ThreadPoolExecutor(10, 20, 100L, TimeUnit.SECONDS,
+            new SynchronousQueue<>(), new NamedThreadFactory("Sale-", false));
+
+    /**
+     * 正在监控中的持仓
+     */
+    public static final ConcurrentHashSet<String> SALE_SET = new ConcurrentHashSet<>();
 
     public AutomaticTrading(StockMapper stockMapper, TradeApiService tradeApiService, PlankConfig plankConfig,
                             StockProcessor stockProcessor, HoldSharesMapper holdSharesMapper) {
@@ -190,8 +196,11 @@ public class AutomaticTrading implements CommandLineRunner {
 
         private HoldShares holdShare;
 
+        private final String name;
+
         public SaleTask(HoldShares holdShare) {
             this.holdShare = holdShare;
+            this.name = holdShare.getName();
         }
 
         /**
@@ -200,9 +209,13 @@ public class AutomaticTrading implements CommandLineRunner {
         @Override
         public void run() {
             while (Objects.nonNull(holdShare) && holdShare.getAvailableVolume() > 0) {
+                SALE_SET.add(name);
                 try {
                     if (isTradeTime()) {
                         holdShare = holdSharesMapper.selectById(holdShare.getId());
+                        if (Objects.isNull(holdShare) || holdShare.getAvailableVolume() <= 0) {
+                            break;
+                        }
                         StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(holdShare.getCode());
                         if (stockRealTimePrice.getCurrentPrice() <= holdShare.getStopLossPrice().doubleValue()) {
                             // 触发止损,挂跌停价卖出
@@ -252,6 +265,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     e.printStackTrace();
                 }
             }
+            SALE_SET.remove(name);
         }
     }
 
