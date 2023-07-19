@@ -10,9 +10,7 @@ public enum AutomaticTradingEnum {
     /**
      * 自动交易策略
      */
-    PLANK("打板"), AUTO_PLANK("自动打板"), SUCK("低吸"),
-    BOX_BOTTOM("箱体底部买入"), BREAKTHROUGH("突破买入"),
-    MANUAL("手动买入"), CANCEL("取消自动交易监控");
+    AUTO_PLANK("自动打板"), SUCK("低吸"), MANUAL("手动买入"), CANCEL("取消自动交易监控");
 
     /**
      * 描述

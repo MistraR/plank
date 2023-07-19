@@ -122,7 +122,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      *
      * @return Set<String> todayBufSaleSet = selectTodayBufSaleSet();
      */
-    private Set<String> selectTodayTradedStock() {
+    public Set<String> selectTodayTradedStock() {
         List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>().ge(HoldShares::getSaleTime,
                 DateUtil.beginOfDay(new Date())).or().ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date())));
         return holdShares.stream().map(HoldShares::getCode).collect(Collectors.toSet());

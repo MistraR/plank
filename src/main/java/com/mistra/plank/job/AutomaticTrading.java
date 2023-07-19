@@ -103,13 +103,12 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     /**
-     * 每3秒更新一次需要打板或低吸的股票,需要卖出的股票线程监控
+     * 每30秒更新一次需要低吸的股票,需要卖出的股票线程监控
      */
-    @Scheduled(cron = "*/3 * * * * ?")
+    @Scheduled(cron = "*/30 * * * * ?")
     private void autoBuy() {
         if (plankConfig.getAutomaticTrading() && isTradeTime()) {
-            List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getAutomaticTradingType,
-                    AutomaticTradingEnum.PLANK.name(), AutomaticTradingEnum.SUCK.name()));
+            List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getAutomaticTradingType, AutomaticTradingEnum.SUCK.name()));
             if (CollectionUtils.isNotEmpty(stocks)) {
                 List<String> codes = stocks.stream().map(Stock::getCode).collect(Collectors.toList());
                 for (Map.Entry<String, Stock> entry : UNDER_MONITORING.entrySet()) {
@@ -160,7 +159,7 @@ public class AutomaticTrading implements CommandLineRunner {
             }
         }
         LambdaUpdateWrapper<Stock> wrapper = new LambdaUpdateWrapper<Stock>()
-                .in(Stock::getAutomaticTradingType, AutomaticTradingEnum.PLANK.name(),
+                .in(Stock::getAutomaticTradingType, AutomaticTradingEnum.AUTO_PLANK.name(),
                         AutomaticTradingEnum.MANUAL.name(), AutomaticTradingEnum.SUCK.name());
         stockMapper.update(Stock.builder().automaticTradingType(AutomaticTradingEnum.CANCEL.name()).build(), wrapper);
     }
@@ -239,9 +238,8 @@ public class AutomaticTrading implements CommandLineRunner {
                             sale(holdShare, stockRealTimePrice);
                             break;
                         }
-                        if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.PLANK.name()) ||
-                                holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name())) {
-                            // 自定义打板，低吸买入的股票
+                        if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name())) {
+                            // 低吸买入的股票
                             if (holdShare.getTakeProfitPrice().doubleValue() <= stockRealTimePrice.getHighestPrice()) {
                                 sale(holdShare, stockRealTimePrice);
                                 log.error("{} 触发止盈,自动卖出", holdShare.getName());
@@ -323,10 +321,7 @@ public class AutomaticTrading implements CommandLineRunner {
     private void automaticTrading(Stock stock) {
         StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
         if (Objects.nonNull(stockRealTimePrice)) {
-            if (stock.getAutomaticTradingType().equals(AutomaticTradingEnum.PLANK.name()) && stockRealTimePrice.isPlank()) {
-                // 触发打板下单条件，挂单
-                buy(stock, stock.getBuyAmount(), stockRealTimePrice.getLimitUp(), stock.getAutomaticTradingType());
-            } else if (stock.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name()) &&
+            if (stock.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name()) &&
                     stockRealTimePrice.getCurrentPrice() <= stock.getSuckTriggerPrice().doubleValue()) {
                 // 触发低吸下单条件，挂单
                 buy(stock, stock.getBuyAmount(), stockRealTimePrice.getLimitUp(), stock.getAutomaticTradingType());

@@ -168,7 +168,9 @@ public class Barbarossa implements CommandLineRunner {
     @Scheduled(cron = "* 28 9 * * ?")
     private void updatePlankStockCache() {
         long begin = System.currentTimeMillis();
-        Barbarossa.SZ30_STOCKS.keySet().parallelStream().filter(code -> !AutomaticPlankTrading.PLANK_LEVEL1_CACHE.containsKey(code) && !AutomaticPlankTrading.PLANK_MONITOR.containsKey(code)).forEach(e -> {
+        Set<String> tradedStock = automaticPlankTrading.selectTodayTradedStock();
+        Barbarossa.SZ30_STOCKS.keySet().parallelStream().filter(code -> !AutomaticPlankTrading.PLANK_LEVEL1_CACHE.containsKey(code)
+                && !AutomaticPlankTrading.PLANK_MONITOR.containsKey(code) && !tradedStock.contains(code)).forEach(e -> {
             try {
                 StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
                 if (Objects.isNull(stockRealTimePriceByCode) || Objects.isNull(stockRealTimePriceByCode.getIncreaseRate())) {
@@ -183,7 +185,8 @@ public class Barbarossa implements CommandLineRunner {
                 exception.printStackTrace();
             }
         });
-        Barbarossa.SH10_STOCKS.keySet().parallelStream().filter(code -> !AutomaticPlankTrading.PLANK_LEVEL1_CACHE.containsKey(code) && !AutomaticPlankTrading.PLANK_MONITOR.containsKey(code)).forEach(e -> {
+        Barbarossa.SH10_STOCKS.keySet().parallelStream().filter(code -> !AutomaticPlankTrading.PLANK_LEVEL1_CACHE.containsKey(code) &&
+                !AutomaticPlankTrading.PLANK_MONITOR.containsKey(code) && !tradedStock.contains(code)).forEach(e -> {
             try {
                 StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
                 if (Objects.isNull(stockRealTimePriceByCode) || Objects.isNull(stockRealTimePriceByCode.getIncreaseRate())) {
@@ -287,7 +290,6 @@ public class Barbarossa implements CommandLineRunner {
                     topTen.add(MAIN_FUND_DATA.get(i));
                 }
                 log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + e.getF3()).collect(Collectors.toList())));
-                log.error("------------------------- 板块涨幅>2Top5 --------------------------");
                 ArrayList<Bk> bks = Lists.newArrayList(StockProcessor.TOP5_BK.values());
                 Collections.sort(bks);
                 log.warn(collectionToString(bks.stream().map(e -> e.getName() + ":" + e.getIncreaseRate()).collect(Collectors.toList())));
@@ -307,24 +309,16 @@ public class Barbarossa implements CommandLineRunner {
                 List<HoldShares> buyStocks = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
                         .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
                         .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date()))
-                        .ne(HoldShares::getAutomaticTradingType, AutomaticTradingEnum.MANUAL.name()));
+                        .eq(HoldShares::getAutomaticTradingType, AutomaticTradingEnum.AUTO_PLANK.name()));
                 if (CollectionUtils.isNotEmpty(buyStocks)) {
-                    log.error("----------------------- 自动打板,排单金额:{} -----------------------",
-                            AutomaticTrading.TODAY_COST_MONEY.intValue());
-                    log.warn("今日排单:{}", collectionToString(buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet())));
-                    if (plankConfig.getAutomaticPlankTrading() && automaticPlankTrading.openAutoPlank()) {
-                        log.warn("打板监测:{}", collectionToString(AutomaticPlankTrading.PLANK_MONITOR.values().stream()
-                                .map(Stock::getName).collect(Collectors.toList())));
-                    }
+                    log.warn("排单金额:{} {}", AutomaticTrading.TODAY_COST_MONEY.intValue(), collectionToString(buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet())));
+                }
+                if (plankConfig.getAutomaticPlankTrading() && automaticPlankTrading.openAutoPlank()) {
+                    log.warn("打板监测:{}", collectionToString(AutomaticPlankTrading.PLANK_MONITOR.values().stream()
+                            .map(Stock::getName).collect(Collectors.toList())));
                 }
                 if (CollectionUtils.isNotEmpty(AutomaticTrading.SALE_SET)) {
-                    log.error("----------------------- 止盈止损 -----------------------");
-                    log.warn("{}", collectionToString(AutomaticTrading.SALE_SET));
-                }
-                if (CollectionUtils.isNotEmpty(AutomaticTrading.UNDER_MONITORING.values())) {
-                    log.error("--------------------------- 自定义交易监测 --------------------------");
-                    log.warn("{}", collectionToString(AutomaticTrading.UNDER_MONITORING.values().stream()
-                            .map(Stock::getName).collect(Collectors.toList())));
+                    log.error("止盈止损:{}", collectionToString(AutomaticTrading.SALE_SET));
                 }
                 realTimePrices.clear();
                 Thread.sleep(2000);
