@@ -224,6 +224,15 @@ public class AutomaticTrading implements CommandLineRunner {
                         // 当前盈利
                         holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
                                 * holdShare.getNumber()));
+                        BigDecimal rate = divide(stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue(),
+                                holdShare.getBuyPrice().doubleValue());
+                        if (holdShare.getHighestProfitRatio().doubleValue() < rate.doubleValue()) {
+                            holdShare.setHighestProfitRatio(rate);
+                        }
+                        if (holdShare.getHighestProfitRatio().doubleValue() > 0.04 && stockRealTimePrice.getCurrentPrice() < holdShare.getBuyPrice().doubleValue()) {
+                            // 动态调整止损位,由盈利4%到回撤到触及成本,自动卖出
+                            sale(holdShare, stockRealTimePrice);
+                        }
                         holdSharesMapper.updateById(holdShare);
                         Thread.sleep(200);
                     } else {
@@ -235,6 +244,10 @@ public class AutomaticTrading implements CommandLineRunner {
             }
             SALE_SET.remove(name);
         }
+    }
+
+    private BigDecimal divide(double x, double y) {
+        return y <= 0 ? new BigDecimal(0) : new BigDecimal(x).divide(new BigDecimal(y), 2, RoundingMode.HALF_UP);
     }
 
     private void sale(HoldShares holdShare, StockRealTimePrice stockRealTimePrice) {

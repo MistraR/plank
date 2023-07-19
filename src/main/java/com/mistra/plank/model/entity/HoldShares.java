@@ -80,6 +80,12 @@ public class HoldShares {
     private BigDecimal profit;
 
     /**
+     * 最高盈利百分比
+     */
+    @TableField(value = "highest_profit_ratio")
+    private BigDecimal highestProfitRatio;
+
+    /**
      * 今日是否触板,炸板则挂跌停走人
      */
     @TableField(value = "today_plank")
