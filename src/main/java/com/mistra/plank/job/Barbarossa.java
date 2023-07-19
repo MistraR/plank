@@ -228,7 +228,9 @@ public class Barbarossa implements CommandLineRunner {
             executorService.submit(this::monitorStock);
             executorService.submit(this::queryMainFundData);
         }
-        updatePlankStockCache();
+        if (automaticPlankTrading.openAutoPlank()) {
+            updatePlankStockCache();
+        }
     }
 
     /**
