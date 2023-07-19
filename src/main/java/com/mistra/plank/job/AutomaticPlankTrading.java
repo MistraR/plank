@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -33,9 +33,9 @@ import lombok.extern.slf4j.Slf4j;
  * @ Description:
  * 根据不同策略筛选出来的股票 新开一个线程 Barbarossa.executorService.submit(new AutoPlankTask(stock)); 发现上板则会自动下单排队
  * 目前有：
- * 1.创业板首板 - 隔日溢价率挺高的 filterStock()
+ * 1.20cm首板 - 隔日溢价率挺高的 filterStock()
+ * 2.10cm 开盘10分钟内上板的     filterStock()
  * 2.自己复盘筛选的打板标的 - 筛选出人气龙头 selectAutoPlankStock()
- * 3.隔日一进二，二进三
  */
 @Slf4j
 @Component
@@ -54,8 +54,13 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      */
     public static final ConcurrentHashMap<String, Stock> PLANK_MONITOR = new ConcurrentHashMap<>();
 
-    public static final ThreadPoolExecutor PLANK_POOL = new ThreadPoolExecutor(availableProcessors, availableProcessors, 100L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(5000), new NamedThreadFactory("Plank-", false));
+    /**
+     * 打板一级缓存
+     */
+    public static final ConcurrentHashMap<String, Stock> PLANK_LEVEL1_CACHE = new ConcurrentHashMap<>();
+
+    public static final ThreadPoolExecutor PLANK_POOL = new ThreadPoolExecutor(availableProcessors * 3, availableProcessors * 3, 100L, TimeUnit.SECONDS,
+            new SynchronousQueue<>(), new NamedThreadFactory("Plank-", false));
 
     public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor, AutomaticTrading automaticTrading, StockMapper stockMapper
             , HoldSharesMapper holdSharesMapper) {
@@ -73,36 +78,47 @@ public class AutomaticPlankTrading implements CommandLineRunner {
 
     @Scheduled(cron = "*/3 * * * * ?")
     private void filterStock() {
-        if (openAutoPlank() && Barbarossa.executorService.getQueue().size() < 32) {
-            Set<String> todayBufSaleSet = selectTodayTradedStock();
-            List<List<String>> lists =
-                    Lists.partition(Lists.newArrayList(Barbarossa.SZ30_STOCKS.keySet().stream().filter(e -> !todayBufSaleSet.contains(e)).collect(Collectors.toSet())), Barbarossa.executorService.getMaximumPoolSize() / 2);
-            for (List<String> list : lists) {
-                Barbarossa.executorService.submit(() -> filterStock(list));
+        try {
+            if (openAutoPlank()) {
+                Set<String> todayBufSaleSet = selectTodayTradedStock();
+                List<List<String>> lists =
+                        Lists.partition(Lists.newArrayList(PLANK_LEVEL1_CACHE.keySet().stream().filter(e -> !todayBufSaleSet.contains(e) && !PLANK_MONITOR.containsKey(e)).collect(Collectors.toSet())),
+                                Barbarossa.executorService.getMaximumPoolSize() / 2);
+                for (List<String> list : lists) {
+                    Barbarossa.executorService.submit(() -> filterStock(list));
+                }
+                selectAutoPlankStock();
             }
-            selectAutoPlankStock();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    /**
-     * 过滤创业板涨幅大于17个点的股票，放入打板监控缓存
-     *
-     * @param codes codes
-     */
     private void filterStock(List<String> codes) {
         codes.forEach(e -> {
-            StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
-            if (stockRealTimePriceByCode.getIncreaseRate() > 17 && !PLANK_MONITOR.containsKey(e)) {
-                Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, e));
-                if (!stock.getCancelPlank()) {
-                    PLANK_POOL.submit(new AutoPlankTask(Barbarossa.SZ30_STOCKS.get(e)));
+            try {
+                StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
+                if (e.startsWith("SZ30")) {
+                    if (stockRealTimePriceByCode.getIncreaseRate() > 17) {
+                        PLANK_POOL.submit(new AutoPlankTask(PLANK_LEVEL1_CACHE.get(e)));
+                    } else if (stockRealTimePriceByCode.getIncreaseRate() < 10) {
+                        PLANK_LEVEL1_CACHE.remove(e);
+                    }
+                } else {
+                    if (stockRealTimePriceByCode.getIncreaseRate() > 8) {
+                        PLANK_POOL.submit(new AutoPlankTask(PLANK_LEVEL1_CACHE.get(e)));
+                    } else if (stockRealTimePriceByCode.getIncreaseRate() < 5) {
+                        PLANK_LEVEL1_CACHE.remove(e);
+                    }
                 }
+            } catch (Exception exception) {
+                exception.printStackTrace();
             }
         });
     }
 
     /**
-     * 获取今日交易过(买入,卖出)的股票code
+     * 获取今日交易过(买入,卖出)的股票code,今日交易过的票就不再买入了
      *
      * @return Set<String> todayBufSaleSet = selectTodayBufSaleSet();
      */
@@ -125,10 +141,13 @@ public class AutomaticPlankTrading implements CommandLineRunner {
         }
     }
 
+    public void plank(Stock stock) {
+        PLANK_POOL.submit(new AutoPlankTask(stock));
+    }
+
     /**
      * 每个打板标的一个线程，尽最快速度获取实时价格与挂单
-     *
-     * 打板标的数量不宜超过当前可用CPU核心数，系统其他获取数据的线程也会消耗CPU资源
+     * 打板标的数量不宜过多，系统其他获取数据的线程也会消耗CPU资源
      */
     class AutoPlankTask implements Runnable {
 
@@ -142,6 +161,9 @@ public class AutomaticPlankTrading implements CommandLineRunner {
         public void run() {
             if (PLANK_MONITOR.containsKey(stock.getCode())) {
                 return;
+            }
+            if (PLANK_MONITOR.size() >= availableProcessors * 3) {
+                log.warn("打板线程过多,取消盯板 {}", stock.getName());
             }
             log.warn("{} 新加入打板监测", stock.getName());
             boolean watch = true;
@@ -171,11 +193,15 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                     }
                                 }
                                 PLANK_MONITOR.remove(stock.getCode());
-                            } else if (stockRealTimePriceByCode.getIncreaseRate() < 17) {
-                                log.warn("{} 取消打板监控", stock.getName());
+                            } else if ((stock.getName().startsWith("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 17) ||
+                                    (!stock.getName().startsWith("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 8)) {
+                                log.warn("{} 取消打板监控,当前涨幅 {}%", stock.getName(), stockRealTimePriceByCode.getIncreaseRate());
                                 PLANK_MONITOR.remove(stock.getCode());
                                 watch = false;
                             }
+                        }
+                        if (PLANK_MONITOR.size() > availableProcessors) {
+                            Thread.yield();
                         }
                     } else {
                         Thread.sleep(3000);

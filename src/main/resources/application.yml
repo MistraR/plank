@@ -4,7 +4,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 20
+        size: 10
       thread-name-prefix: Scheduled-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -46,17 +46,17 @@ plank:
   # 是否开启自动交易->自动止盈止损
   automaticTrading: true
   # 自动打板
-  automaticPlankTrading: false
+  automaticPlankTrading: true
   # 止损净值率
-  stopLossRate: 0.96
+  stopLossRate: 0.965
   # 止盈净值率
-  takeProfitRate: 1.0685
+  takeProfitRate: 1.067
   # 每日自动交易买入金额上限
-  automaticTradingMoneyLimitUp: 50000
-  # 自动打板交易时间 11->11点之前上板的才打
-  automaticPlankTradingTimeLimit: 11
+  automaticTradingMoneyLimitUp: 60000
+  # 自动打板交易时间 10->10点之前上板的才打
+  automaticPlankTradingTimeLimit: 10
   # 自动交易单笔交易金额上限
-  singleTransactionLimitAmount: 10000
+  singleTransactionLimitAmount: 15000
   stockTurnoverThreshold: 200000000
   mainFundThreshold: 300000000
   # 是否开启持仓监控

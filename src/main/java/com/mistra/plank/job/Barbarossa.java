@@ -84,15 +84,18 @@ public class Barbarossa implements CommandLineRunner {
      */
     public static final ConcurrentHashMap<String, Stock> STOCK_TRACK_MAP = new ConcurrentHashMap<>(32);
     /**
-     * 创业板股票
+     * 成交额>1亿的创业板股票
      */
     public static final ConcurrentHashMap<String, Stock> SZ30_STOCKS = new ConcurrentHashMap<>(512);
+    /**
+     * 市值600亿以内,成交额>2亿的10cm股票,自动盯板
+     */
+    public static final ConcurrentHashMap<String, Stock> SH10_STOCKS = new ConcurrentHashMap<>(1024);
     /**
      * 主力流入数据
      */
     public static final CopyOnWriteArrayList<StockMainFundSample> MAIN_FUND_DATA = new CopyOnWriteArrayList<>();
-    public static final ConcurrentHashMap<String, StockMainFundSample> MAIN_FUND_DATA_MAP =
-            new ConcurrentHashMap<>(4096);
+    public static final ConcurrentHashMap<String, StockMainFundSample> MAIN_FUND_DATA_MAP = new ConcurrentHashMap<>(4096);
     /**
      * 是否开启监控中
      */
@@ -118,34 +121,66 @@ public class Barbarossa implements CommandLineRunner {
      */
     @Override
     public void run(String... args) {
-        monitor();
-    }
-
-    /**
-     * 初始化股票基本数据
-     */
-    private void updateStockCache() {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
                 // 默认过滤掉了北交所,科创板,ST
                 .notLike("name", "%ST%").notLike("code", "%688%")
                 .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
-        STOCK_TRACK_MAP.clear();
         stocks.forEach(e -> {
             if ((e.getShareholding() || e.getTrack())) {
                 STOCK_TRACK_MAP.put(e.getName(), e);
             }
             if (e.getCode().startsWith("SZ30")) {
-                SZ30_STOCKS.put(e.getCode(), e);
+                if (e.getTransactionAmount().longValue() > 100000000L) {
+                    SZ30_STOCKS.put(e.getCode(), e);
+                }
+            } else if (e.getTransactionAmount().longValue() > 100000000L && e.getMarketValue() < 50000000000L) {
+                SH10_STOCKS.put(e.getCode(), e);
             }
             STOCK_ALL_MAP.put(e.getCode(), e.getName());
         });
+        log.info("盯板 20CM:{}支 10CM:{}支", SZ30_STOCKS.size(), SH10_STOCKS.size());
+        monitor();
     }
 
     /**
-     * 每10秒更新一次版块涨跌幅
+     * 更新盯板一级缓存
      */
-    @Scheduled(cron = "*/10 * * * * ?")
+    @Scheduled(cron = "* 28 9 * * ?")
+    private void updatePlankStockCache() {
+        long begin = System.currentTimeMillis();
+        Barbarossa.SZ30_STOCKS.keySet().parallelStream().filter(code -> !AutomaticPlankTrading.PLANK_LEVEL1_CACHE.containsKey(code) && !AutomaticPlankTrading.PLANK_MONITOR.containsKey(code)).forEach(e -> {
+            try {
+                StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
+                if (stockRealTimePriceByCode.getIncreaseRate() > 17) {
+                    automaticPlankTrading.plank(Barbarossa.SZ30_STOCKS.get(e));
+                } else if (stockRealTimePriceByCode.getIncreaseRate() > 10) {
+                    AutomaticPlankTrading.PLANK_LEVEL1_CACHE.put(e, Barbarossa.SZ30_STOCKS.get(e));
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+        Barbarossa.SH10_STOCKS.keySet().parallelStream().filter(code -> !AutomaticPlankTrading.PLANK_LEVEL1_CACHE.containsKey(code) && !AutomaticPlankTrading.PLANK_MONITOR.containsKey(code)).forEach(e -> {
+            try {
+                StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
+                if (stockRealTimePriceByCode.getIncreaseRate() > 8) {
+                    automaticPlankTrading.plank(Barbarossa.SH10_STOCKS.get(e));
+                } else if (stockRealTimePriceByCode.getIncreaseRate() > 5) {
+                    AutomaticPlankTrading.PLANK_LEVEL1_CACHE.put(e, Barbarossa.SH10_STOCKS.get(e));
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+        log.info("更新盯盘一级缓存耗时: {} 秒,一共 {} 支:{}", (System.currentTimeMillis() - begin) / 1000, AutomaticPlankTrading.PLANK_LEVEL1_CACHE.size(),
+                collectionToString(AutomaticPlankTrading.PLANK_LEVEL1_CACHE.values()));
+    }
+
+    /**
+     * 更新版块涨跌幅
+     */
+    @Scheduled(cron = "0 */1 * * * ?")
     private void updateBkCache() {
         if (AutomaticTrading.isTradeTime()) {
             // 更新行业版块，概念版块涨幅信息
@@ -165,7 +200,7 @@ public class Barbarossa implements CommandLineRunner {
             executorService.submit(this::monitorStock);
             executorService.submit(this::queryMainFundData);
         }
-        updateStockCache();
+        updatePlankStockCache();
     }
 
     /**
