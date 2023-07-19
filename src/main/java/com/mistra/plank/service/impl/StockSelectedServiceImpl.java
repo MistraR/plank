@@ -51,7 +51,7 @@ public class StockSelectedServiceImpl implements StockSelectedService {
     @Override
     public void tomorrowAutoTradePool(List<AutoTradeParam> autoTradeParams) {
         LambdaUpdateWrapper<Stock> wrapper = new LambdaUpdateWrapper<Stock>()
-                .in(Stock::getAutomaticTradingType, AutomaticTradingEnum.PLANK.name(), AutomaticTradingEnum.SUCK.name());
+                .in(Stock::getAutomaticTradingType, AutomaticTradingEnum.SUCK.name());
         stockMapper.update(Stock.builder().automaticTradingType(AutomaticTradingEnum.CANCEL.name()).build(), wrapper);
         for (AutoTradeParam autoTradeParam : autoTradeParams) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>()

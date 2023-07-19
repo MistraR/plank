@@ -284,7 +284,7 @@ public class Barbarossa implements CommandLineRunner {
                 }
                 Collections.sort(realTimePrices);
                 System.out.println("\n\n\n");
-                log.error("------------------------ 主力净流入Top10 --------------------------");
+                log.error("------------------------ 主力净流入与板块 --------------------------");
                 List<StockMainFundSample> topTen = new ArrayList<>();
                 for (int i = 0; i < Math.min(MAIN_FUND_DATA.size(), 10); i++) {
                     topTen.add(MAIN_FUND_DATA.get(i));
@@ -292,7 +292,7 @@ public class Barbarossa implements CommandLineRunner {
                 log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + e.getF3()).collect(Collectors.toList())));
                 ArrayList<Bk> bks = Lists.newArrayList(StockProcessor.TOP5_BK.values());
                 Collections.sort(bks);
-                log.warn(collectionToString(bks.stream().map(e -> e.getName() + ":" + e.getIncreaseRate()).collect(Collectors.toList())));
+                log.warn(collectionToString(bks.stream().map(e -> e.getName() + e.getIncreaseRate() + "%").collect(Collectors.toList())));
                 List<StockRealTimePrice> shareholding = realTimePrices.stream().filter(e -> STOCK_TRACK_MAP.containsKey(e.getName()) &&
                         STOCK_TRACK_MAP.get(e.getName()).getShareholding()).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(shareholding)) {
