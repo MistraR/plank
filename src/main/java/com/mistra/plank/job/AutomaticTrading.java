@@ -20,7 +20,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.StockUtil;
 import com.mistra.plank.dao.HoldSharesMapper;
@@ -109,7 +108,8 @@ public class AutomaticTrading implements CommandLineRunner {
     @Scheduled(cron = "*/30 * * * * ?")
     private void autoBuy() {
         if (plankConfig.getAutomaticTrading() && isTradeTime()) {
-            List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getAutomaticTradingType, AutomaticTradingEnum.SUCK.name()));
+            List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getAutomaticTradingType,
+                    AutomaticTradingEnum.SUCK.name()));
             if (CollectionUtils.isNotEmpty(stocks)) {
                 List<String> codes = stocks.stream().map(Stock::getCode).collect(Collectors.toList());
                 for (Map.Entry<String, Stock> entry : UNDER_MONITORING.entrySet()) {
@@ -143,8 +143,7 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     /**
-     * 当前时间是否是交易时间
-     * 只判定了时分秒，没有判定非交易日（周末及法定节假日），因为我一般只交易日才会启动项目
+     * 当前时间是否是交易时间 只判定了时分秒，没有判定非交易日（周末及法定节假日），因为我一般只交易日才会启动项目
      *
      * @return 是否是交易时间
      */
@@ -195,44 +194,37 @@ public class AutomaticTrading implements CommandLineRunner {
                         }
                         StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(holdShare.getCode());
                         if (stockRealTimePrice.getCurrentPrice() <= holdShare.getStopLossPrice().doubleValue()) {
-                            // 触发止损,挂跌停价卖出
                             log.error("{} 触发止损,自动卖出", holdShare.getName());
                             sale(holdShare, stockRealTimePrice);
                             break;
                         }
-                        // 当前盈利
-                        holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
-                                * holdShare.getNumber()));
                         if ((stockRealTimePrice.getHighestPrice().doubleValue() == stockRealTimePrice.getLimitUp().doubleValue()
                                 || stockRealTimePrice.isPlank()) && !holdShare.getTodayPlank()) {
-                            // 当日首次触板
-                            log.error("{} 封板", holdShare.getName());
+                            log.error("{} 首次封板", holdShare.getName());
                             holdShare.setTodayPlank(true);
                         }
-                        holdSharesMapper.updateById(holdShare);
                         if (holdShare.getTodayPlank() && !stockRealTimePrice.isPlank()) {
-                            // 当日炸板 卖出
                             log.error("{} 炸板,自动卖出", holdShare.getName());
                             sale(holdShare, stockRealTimePrice);
                             break;
                         }
-                        if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.SUCK.name())) {
-                            // 低吸买入的股票
-                            if (holdShare.getTakeProfitPrice().doubleValue() <= stockRealTimePrice.getHighestPrice()) {
-                                sale(holdShare, stockRealTimePrice);
-                                log.error("{} 触发止盈,自动卖出", holdShare.getName());
-                                break;
-                            }
+                        if (holdShare.getTakeProfitPrice().doubleValue() <= stockRealTimePrice.getHighestPrice()) {
+                            sale(holdShare, stockRealTimePrice);
+                            log.error("{} 触发止盈,自动卖出", holdShare.getName());
+                            break;
                         }
                         if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.AUTO_PLANK.name())) {
-                            // 自动打板买入的股票
+                            // 自动打板买入的股票,11点前还未涨停,自动卖出
                             if (DateUtil.hour(new Date(), true) > 11 && !stockRealTimePrice.isPlank()) {
-                                // 11点前还未涨停,卖出
                                 log.error("{} 11点前还未涨停,自动卖出", holdShare.getName());
                                 sale(holdShare, stockRealTimePrice);
                                 break;
                             }
                         }
+                        // 当前盈利
+                        holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
+                                * holdShare.getNumber()));
+                        holdSharesMapper.updateById(holdShare);
                         Thread.sleep(200);
                     } else {
                         Thread.sleep(3000);
@@ -262,8 +254,9 @@ public class AutomaticTrading implements CommandLineRunner {
         holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
                 * holdShare.getNumber()));
         holdSharesMapper.updateById(holdShare);
-        Stock stock = stockMapper.selectOne(new QueryWrapper<Stock>().eq("name", holdShare.getName()));
+        Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getName, holdShare.getName()));
         stock.setShareholding(false);
+        stock.setAutomaticTradingType(AutomaticTradingEnum.CANCEL.name());
         stockMapper.updateById(stock);
         if (response.success()) {
             log.error("触发{}止盈、止损，交易成功!", holdShare.getName());
