@@ -1,5 +1,6 @@
 package com.mistra.plank.common.config;
 
+import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -99,6 +100,11 @@ public class PlankConfig {
      * 是否开启自动打板
      */
     private Boolean automaticPlankTrading;
+
+    /**
+     * 自动打板连板高度筛选 0->只打今日首板  1->今日1进2  2->今日2进3
+     */
+    private List<Integer> automaticPlankLevel;
 
     /**
      * 自动打板时间限制，一般只打早盘强势快速封板的 比如只打10点前封板的票

@@ -1,5 +1,22 @@
 package com.mistra.plank.job;
 
+import static com.mistra.plank.common.config.SystemConstant.W;
+import static com.mistra.plank.common.util.StringUtil.collectionToString;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.joda.time.DateTime;
+import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mistra.plank.common.config.PlankConfig;
@@ -8,26 +25,16 @@ import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockMainFundSample;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.Stock;
+
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.joda.time.DateTime;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.mistra.plank.common.util.StringUtil.collectionToString;
-import static com.mistra.plank.common.config.SystemConstant.W;
 
 /**
- * @author rui.wang
- * @ Version: 1.0
- * @ Time: 2023/2/13 17:21
+ * @author Mistra @ Version: 1.0
+ * @ Time: 2021/11/18 22:09
  * @ Description:
+ * @ Copyright (c) Mistra,All Rights Reserved
+ * @ Github: https://github.com/MistraR
+ * @ CSDN: https://blog.csdn.net/axela30w
  */
 @Slf4j
 @Component

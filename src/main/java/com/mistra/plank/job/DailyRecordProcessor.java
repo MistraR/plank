@@ -1,5 +1,16 @@
 package com.mistra.plank.job;
 
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -12,19 +23,8 @@ import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.Stock;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Mistra @ Version: 1.0

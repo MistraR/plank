@@ -47,16 +47,21 @@ plank:
   automaticTrading: true
   # 自动打板
   automaticPlankTrading: true
+  # 自动打板连板筛选 0->只打今日首板  1->今日1进2  2->今日2进3
+  automaticPlankLevel:
+    - 0
+    - 1
+    - 2
   # 止损净值率
   stopLossRate: 0.965
   # 止盈净值率
   takeProfitRate: 1.067
   # 每日自动交易买入金额上限
-  automaticTradingMoneyLimitUp: 60000
+  automaticTradingMoneyLimitUp: 88000
   # 自动打板交易时间 10->10点之前上板的才打
   automaticPlankTradingTimeLimit: 10
   # 自动交易单笔交易金额上限
-  singleTransactionLimitAmount: 15000
+  singleTransactionLimitAmount: 22000
   stockTurnoverThreshold: 200000000
   mainFundThreshold: 300000000
   # 是否开启持仓监控

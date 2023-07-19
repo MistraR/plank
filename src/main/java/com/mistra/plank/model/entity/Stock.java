@@ -132,18 +132,6 @@ public class Stock implements Comparable<Stock> {
     @TableField(value = "plank_num")
     private Integer plankNumber;
 
-    /**
-     * 是否加入自动打板缓存
-     */
-    @TableField(value = "auto_plank")
-    private Boolean autoPlank;
-
-    /**
-     * 该股票当日取消打板
-     */
-    @TableField(value = "cancel_plank")
-    private Boolean cancelPlank;
-
     @Override
     public int compareTo(Stock o) {
         return (int) (this.transactionAmount.doubleValue()) - (int) (o.transactionAmount.doubleValue());

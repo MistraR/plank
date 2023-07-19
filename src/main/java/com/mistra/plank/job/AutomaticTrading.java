@@ -21,7 +21,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.StockUtil;
 import com.mistra.plank.dao.HoldSharesMapper;
@@ -41,21 +40,23 @@ import cn.hutool.core.thread.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * @author rui.wang
- * @ Version: 1.0
- * @ Time: 2022/11/1 14:18
- * @ Description: 自动交易任务，需要自己在数据库 stock表 手动编辑自己想要交易的股票，买入模式(打板还是低吸)，买入数量，价格，暂时还没有UI页面供操作
+ * @author Mistra @ Version: 1.0
+ * @ Time: 2021/11/18 22:09
+ * @ Copyright (c) Mistra,All Rights Reserved
+ * @ Github: https://github.com/MistraR
+ * @ CSDN: https://blog.csdn.net/axela30w
+ * @ Description: 自动交易任务，需要自己在数据库 stock表 手动编辑自己想要交易的股票，买入模式(打板还是低吸)，买入数量，价格
  * 买入：1.打板，发现上板则立即挂买单排板  2.低吸，发现股票价格触发到低吸价格，挂涨停价买入
  * 卖出：1.止损，跌破止损价，挂跌停价割肉  2.止盈，触发止盈标准挂跌停价卖出
  * 编辑自动交易接口地址:/tomorrow-auto-trade-pool
  * 参数：[
- * {
- * "name": "亿纬锂能",
- * "automaticTradingType": "PLANK",
- * "buyAmount": 100,
- * "triggerPrice": 100.93
- * }
- * ]
+ *          {
+ *              "name": "亿纬锂能",
+ *              "automaticTradingType": "SUCK",
+ *              "buyAmount": 100,
+ *              "triggerPrice": 100.93
+ *          }
+ *      ]
  */
 @Slf4j
 @Component
@@ -139,29 +140,6 @@ public class AutomaticTrading implements CommandLineRunner {
         } else {
             SELLING.set(false);
         }
-    }
-
-    /**
-     * 防止忘记当日复盘，每天收盘后取消掉当天未成交的自动交易的监测
-     * 已成交的更新持仓可用数量
-     */
-    @Scheduled(cron = "0 2 15 * * ?")
-    private void updateHoldShares() {
-        List<HoldShares> holdShares = holdSharesMapper.selectList(new LambdaQueryWrapper<HoldShares>()
-                .ge(HoldShares::getBuyTime, DateUtil.beginOfDay(new Date()))
-                .le(HoldShares::getBuyTime, DateUtil.endOfDay(new Date()))
-                .gt(HoldShares::getNumber, 0));
-        if (CollectionUtils.isNotEmpty(holdShares)) {
-            for (HoldShares holdShare : holdShares) {
-                holdShare.setAvailableVolume(holdShare.getAvailableVolume() + holdShare.getNumber());
-                holdShare.setNumber(0);
-                holdSharesMapper.updateById(holdShare);
-            }
-        }
-        LambdaUpdateWrapper<Stock> wrapper = new LambdaUpdateWrapper<Stock>()
-                .in(Stock::getAutomaticTradingType, AutomaticTradingEnum.AUTO_PLANK.name(),
-                        AutomaticTradingEnum.MANUAL.name(), AutomaticTradingEnum.SUCK.name());
-        stockMapper.update(Stock.builder().automaticTradingType(AutomaticTradingEnum.CANCEL.name()).build(), wrapper);
     }
 
     /**

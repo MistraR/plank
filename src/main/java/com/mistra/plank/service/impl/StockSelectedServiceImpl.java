@@ -11,6 +11,7 @@ import com.mistra.plank.dao.StockInfoDao;
 import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.dao.StockSelectedDao;
 import com.mistra.plank.job.AutomaticPlankTrading;
+import com.mistra.plank.job.Barbarossa;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.entity.StockInfo;
 import com.mistra.plank.model.entity.StockSelected;
@@ -72,12 +73,17 @@ public class StockSelectedServiceImpl implements StockSelectedService {
 
     @Override
     public void addAutoPlank(SelfSelectParam selfSelectParam) {
-        stockMapper.update(Stock.builder().autoPlank(false).build(), new LambdaUpdateWrapper<>());
+        stockMapper.update(Stock.builder().automaticTradingType(AutomaticTradingEnum.CANCEL.name()).build(),
+                new LambdaUpdateWrapper<Stock>().eq(Stock::getAutomaticTradingType, AutomaticTradingEnum.AUTO_PLANK.name()));
         List<Stock> stockInfos = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getName, selfSelectParam.getNames()));
         for (Stock stock : stockInfos) {
-            stock.setAutoPlank(true);
+            stock.setAutomaticTradingType(AutomaticTradingEnum.AUTO_PLANK.name());
+            if (stock.getCode().startsWith("SZ30")) {
+                Barbarossa.SZ30_STOCK_MAP.put(stock.getCode(), stock);
+            } else {
+                Barbarossa.SH10_STOCK_MAP.put(stock.getCode(), stock);
+            }
             stockMapper.updateById(stock);
         }
-        automaticPlankTrading.selectAutoPlankStock();
     }
 }

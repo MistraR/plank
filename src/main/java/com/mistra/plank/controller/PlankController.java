@@ -2,13 +2,18 @@ package com.mistra.plank.controller;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.mistra.plank.common.util.StringUtil;
+import com.mistra.plank.job.Barbarossa;
 import com.mistra.plank.job.DailyRecordProcessor;
 import com.mistra.plank.job.StockProcessor;
+import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.param.AutoTradeParam;
 import com.mistra.plank.model.param.FundHoldingsParam;
 import com.mistra.plank.model.param.SelfSelectParam;
@@ -64,6 +69,16 @@ public class PlankController {
     @PostMapping("/add-auto-plank")
     public void addAutoPlank(@RequestBody SelfSelectParam selfSelectParam) {
         stockSelectedService.addAutoPlank(selfSelectParam);
+    }
+
+    /**
+     * 查询自动打板盯盘的股票
+     */
+    @GetMapping("/get-auto-plank")
+    public String getAutoPlank() {
+        List<String> list = Barbarossa.SZ30_STOCK_MAP.values().stream().map(Stock::getName).collect(Collectors.toList());
+        list.addAll(Barbarossa.SH10_STOCK_MAP.values().stream().map(Stock::getName).collect(Collectors.toList()));
+        return StringUtil.collectionToString(list);
     }
 
     /**

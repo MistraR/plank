@@ -120,9 +120,9 @@ public class ScreeningStocks {
      * 趋势股选出来之后我一般会直接用.txt文档导入到东方财富windows版客户端，再来人为筛选一遍k线好看的票
      */
     public void upwardTrend() {
-        List<UpwardTrendSample> samples = new ArrayList<>(Barbarossa.STOCK_ALL_MAP.size());
+        List<UpwardTrendSample> samples = new ArrayList<>(Barbarossa.ALL_STOCK_MAP.size());
         List<String> failed = new ArrayList<>();
-        for (Map.Entry<String, String> entry : Barbarossa.STOCK_ALL_MAP.entrySet()) {
+        for (Map.Entry<String, String> entry : Barbarossa.ALL_STOCK_MAP.entrySet()) {
             Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, entry.getKey()));
             if (stock.getTrack() || stock.getTransactionAmount().doubleValue() < plankConfig.getStockTurnoverThreshold()) {
                 continue;
