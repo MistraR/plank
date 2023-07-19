@@ -325,8 +325,8 @@ public class Barbarossa implements CommandLineRunner {
                     log.warn("打板监测:{}", collectionToString(AutomaticPlankTrading.PLANKING_CACHE.values().stream()
                             .map(Stock::getName).collect(Collectors.toList())));
                 }
-                if (CollectionUtils.isNotEmpty(AutomaticTrading.SALE_SET)) {
-                    log.error("止盈止损:{}", collectionToString(AutomaticTrading.SALE_SET));
+                if (CollectionUtils.isNotEmpty(AutomaticTrading.SALE_STOCK_CACHE)) {
+                    log.error("止盈止损:{}", collectionToString(AutomaticTrading.SALE_STOCK_CACHE));
                 }
                 realTimePrices.clear();
                 Thread.sleep(5000);

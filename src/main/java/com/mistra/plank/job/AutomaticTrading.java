@@ -28,6 +28,7 @@ import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
+import com.mistra.plank.model.enums.ClearanceReasonEnum;
 import com.mistra.plank.service.TradeApiService;
 import com.mistra.plank.tradeapi.TradeResultVo;
 import com.mistra.plank.tradeapi.request.SubmitRequest;
@@ -89,9 +90,9 @@ public class AutomaticTrading implements CommandLineRunner {
             new SynchronousQueue<>(), new NamedThreadFactory("Sale-", false));
 
     /**
-     * 正在监控中的持仓
+     * 正在监控中的持仓,自动止盈止损
      */
-    public static final ConcurrentHashSet<String> SALE_SET = new ConcurrentHashSet<>();
+    public static final ConcurrentHashSet<String> SALE_STOCK_CACHE = new ConcurrentHashSet<>();
 
     public AutomaticTrading(StockMapper stockMapper, TradeApiService tradeApiService, PlankConfig plankConfig,
                             StockProcessor stockProcessor, HoldSharesMapper holdSharesMapper) {
@@ -185,7 +186,7 @@ public class AutomaticTrading implements CommandLineRunner {
         @Override
         public void run() {
             while (Objects.nonNull(holdShare) && holdShare.getAvailableVolume() > 0) {
-                SALE_SET.add(name);
+                SALE_STOCK_CACHE.add(name);
                 try {
                     if (isTradeTime()) {
                         holdShare = holdSharesMapper.selectById(holdShare.getId());
@@ -195,7 +196,7 @@ public class AutomaticTrading implements CommandLineRunner {
                         StockRealTimePrice stockRealTimePrice = stockProcessor.getStockRealTimePriceByCode(holdShare.getCode());
                         if (stockRealTimePrice.getCurrentPrice() <= holdShare.getStopLossPrice().doubleValue()) {
                             log.error("{} 触发止损,自动卖出", holdShare.getName());
-                            sale(holdShare, stockRealTimePrice);
+                            sale(holdShare, stockRealTimePrice, ClearanceReasonEnum.STOP_LOSE);
                             break;
                         }
                         if ((stockRealTimePrice.getHighestPrice().doubleValue() == stockRealTimePrice.getLimitUp().doubleValue()
@@ -205,11 +206,11 @@ public class AutomaticTrading implements CommandLineRunner {
                         }
                         if (holdShare.getTodayPlank() && !stockRealTimePrice.isPlank()) {
                             log.error("{} 炸板,自动卖出", holdShare.getName());
-                            sale(holdShare, stockRealTimePrice);
+                            sale(holdShare, stockRealTimePrice, ClearanceReasonEnum.RATTY_PLANK);
                             break;
                         }
                         if (holdShare.getTakeProfitPrice().doubleValue() <= stockRealTimePrice.getHighestPrice()) {
-                            sale(holdShare, stockRealTimePrice);
+                            sale(holdShare, stockRealTimePrice, ClearanceReasonEnum.TAKE_PROFIT);
                             log.error("{} 触发止盈,自动卖出", holdShare.getName());
                             break;
                         }
@@ -217,13 +218,13 @@ public class AutomaticTrading implements CommandLineRunner {
                             // 自动打板买入的股票,11点前还未涨停,自动卖出
                             if (DateUtil.hour(new Date(), true) > 11 && !stockRealTimePrice.isPlank()) {
                                 log.error("{} 11点前还未涨停,自动卖出", holdShare.getName());
-                                sale(holdShare, stockRealTimePrice);
+                                sale(holdShare, stockRealTimePrice, ClearanceReasonEnum.UN_PLANK);
                                 break;
                             }
                         }
                         // 当前盈利
                         holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
-                                * holdShare.getNumber()));
+                                * holdShare.getAvailableVolume()));
                         BigDecimal rate = divide(stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue(),
                                 holdShare.getBuyPrice().doubleValue());
                         if (holdShare.getHighestProfitRatio().doubleValue() < rate.doubleValue()) {
@@ -231,7 +232,7 @@ public class AutomaticTrading implements CommandLineRunner {
                         }
                         if (holdShare.getHighestProfitRatio().doubleValue() > 0.04 && stockRealTimePrice.getCurrentPrice() < holdShare.getBuyPrice().doubleValue()) {
                             // 动态调整止损位,由盈利4%到回撤到触及成本,自动卖出
-                            sale(holdShare, stockRealTimePrice);
+                            sale(holdShare, stockRealTimePrice, ClearanceReasonEnum.ROLLER_COASTER);
                         }
                         holdSharesMapper.updateById(holdShare);
                         Thread.sleep(200);
@@ -242,7 +243,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     e.printStackTrace();
                 }
             }
-            SALE_SET.remove(name);
+            SALE_STOCK_CACHE.remove(name);
         }
     }
 
@@ -250,7 +251,7 @@ public class AutomaticTrading implements CommandLineRunner {
         return y <= 0 ? new BigDecimal(0) : new BigDecimal(x).divide(new BigDecimal(y), 2, RoundingMode.HALF_UP);
     }
 
-    private void sale(HoldShares holdShare, StockRealTimePrice stockRealTimePrice) {
+    private void sale(HoldShares holdShare, StockRealTimePrice stockRealTimePrice, ClearanceReasonEnum reason) {
         SubmitRequest request = new SubmitRequest(1);
         request.setAmount(holdShare.getAvailableVolume());
 //        request.setPrice(stockRealTimePrice.getLimitDown());
@@ -263,6 +264,7 @@ public class AutomaticTrading implements CommandLineRunner {
         TradeResultVo<SubmitResponse> response = tradeApiService.submit(request);
         holdShare.setAvailableVolume(0);
         holdShare.setClearance(true);
+        holdShare.setClearanceReason(reason.name());
         holdShare.setSaleTime(new Date());
         holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
                 * holdShare.getNumber()));

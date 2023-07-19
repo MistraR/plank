@@ -1,16 +1,16 @@
 package com.mistra.plank.model.entity;
 
+import java.math.BigDecimal;
+import java.util.Date;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.util.Date;
 
 /**
  * 持仓
@@ -94,7 +94,14 @@ public class HoldShares {
     /**
      * 是否清仓
      */
+    @TableField(value = "clearance")
     private Boolean clearance;
+
+    /**
+     * 清仓原因
+     */
+    @TableField(value = "clearance_reason")
+    private String clearanceReason;
 
     /**
      * 建仓日期
