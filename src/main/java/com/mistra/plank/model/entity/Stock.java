@@ -139,7 +139,7 @@ public class Stock implements Comparable<Stock> {
     private Boolean autoPlank;
 
     /**
-     * 是否取消打板
+     * 该股票当日取消打板
      */
     @TableField(value = "cancel_plank")
     private Boolean cancelPlank;

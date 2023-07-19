@@ -137,6 +137,7 @@ public class Barbarossa implements CommandLineRunner {
                 STOCK_TRACK_MAP.put(e.getName(), e);
             }
             if (!e.getCancelPlank() && havingBk(e.getClassification(), BK)) {
+                // havingBk()只打某些板块的票
                 if (e.getCode().startsWith("SZ30")) {
                     if (e.getTransactionAmount().longValue() > 100000000L) {
                         SZ30_STOCKS.put(e.getCode(), e);

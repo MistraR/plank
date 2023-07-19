@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * 根据不同策略筛选出来的股票 新开一个线程 Barbarossa.executorService.submit(new AutoPlankTask(stock)); 发现上板则会自动下单排队
  * 目前有：
  * 1.20cm首板 - 隔日溢价率挺高的 filterStock()
- * 2.10cm 开盘10分钟内上板的     filterStock()
+ * 2.10cm 开盘30分钟内上板的     filterStock()
  * 2.自己复盘筛选的打板标的 - 筛选出人气龙头 selectAutoPlankStock()
  */
 @Slf4j
@@ -179,20 +179,25 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                             watch = false;
                         } else {
                             if (stockRealTimePriceByCode.isPlank()) {
-                                // 上板,下单排队
-                                int sum = 0, amount = 1;
-                                while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
-                                    sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
-                                }
-                                amount -= 2;
-                                if (amount >= 1) {
-                                    double cost = amount * 100 * stockRealTimePriceByCode.getLimitUp();
-                                    if (AutomaticTrading.TODAY_COST_MONEY.intValue() + cost < plankConfig.getAutomaticTradingMoneyLimitUp()) {
-                                        automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
-                                                AutomaticTradingEnum.AUTO_PLANK.name());
+                                Thread.sleep(600);
+                                // 二次确认,有些票只是瞬间摸一下涨停价就回落
+                                stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(stock.getCode());
+                                if (stockRealTimePriceByCode.isPlank()) {
+                                    // 上板,下单排队
+                                    int sum = 0, amount = 1;
+                                    while (sum <= plankConfig.getSingleTransactionLimitAmount()) {
+                                        sum = (int) (amount++ * 100 * stockRealTimePriceByCode.getCurrentPrice());
                                     }
+                                    amount -= 2;
+                                    if (amount >= 1) {
+                                        double cost = amount * 100 * stockRealTimePriceByCode.getLimitUp();
+                                        if (AutomaticTrading.TODAY_COST_MONEY.intValue() + cost < plankConfig.getAutomaticTradingMoneyLimitUp()) {
+                                            automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
+                                                    AutomaticTradingEnum.AUTO_PLANK.name());
+                                        }
+                                    }
+                                    PLANK_MONITOR.remove(stock.getCode());
                                 }
-                                PLANK_MONITOR.remove(stock.getCode());
                             } else if ((stock.getName().startsWith("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 17) ||
                                     (!stock.getName().startsWith("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 8)) {
                                 log.warn("{} 取消打板监控,当前涨幅 {}%", stock.getName(), stockRealTimePriceByCode.getIncreaseRate());
