@@ -13,7 +13,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.dao.HoldSharesMapper;
 import com.mistra.plank.dao.StockMapper;

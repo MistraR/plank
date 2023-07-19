@@ -329,7 +329,7 @@ public class Barbarossa implements CommandLineRunner {
                     log.error("止盈止损:{}", collectionToString(AutomaticTrading.SALE_SET));
                 }
                 realTimePrices.clear();
-                Thread.sleep(2000);
+                Thread.sleep(5000);
             }
         } catch (Exception e) {
             e.printStackTrace();
