@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -35,6 +36,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
+import com.mistra.plank.dao.BkMapper;
 import com.mistra.plank.dao.DailyRecordMapper;
 import com.mistra.plank.dao.HoldSharesMapper;
 import com.mistra.plank.dao.StockMapper;
@@ -63,6 +65,7 @@ public class Barbarossa implements CommandLineRunner {
 
     private static final int availableProcessors = Runtime.getRuntime().availableProcessors();
     private final StockMapper stockMapper;
+    private final BkMapper bkMapper;
     private final StockProcessor stockProcessor;
     private final DailyRecordMapper dailyRecordMapper;
     private final HoldSharesMapper holdSharesMapper;
@@ -101,10 +104,11 @@ public class Barbarossa implements CommandLineRunner {
      */
     private final AtomicBoolean monitoring = new AtomicBoolean(false);
 
-    public Barbarossa(StockMapper stockMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
+    public Barbarossa(StockMapper stockMapper, BkMapper bkMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
                       HoldSharesMapper holdSharesMapper, PlankConfig plankConfig, ScreeningStocks screeningStocks,
                       DailyRecordProcessor dailyRecordProcessor, AnalyzeProcessor analyzePlank) {
         this.stockMapper = stockMapper;
+        this.bkMapper = bkMapper;
         this.stockProcessor = stockProcessor;
         this.dailyRecordMapper = dailyRecordMapper;
         this.holdSharesMapper = holdSharesMapper;
@@ -126,21 +130,35 @@ public class Barbarossa implements CommandLineRunner {
                 .notLike("name", "%ST%").notLike("code", "%688%")
                 .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
+        List<Bk> bks = bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getAutoPlank, true));
+        Set<String> BK = bks.stream().map(Bk::getBk).collect(Collectors.toSet());
         stocks.forEach(e -> {
             if ((e.getShareholding() || e.getTrack())) {
                 STOCK_TRACK_MAP.put(e.getName(), e);
             }
-            if (e.getCode().startsWith("SZ30")) {
-                if (e.getTransactionAmount().longValue() > 100000000L) {
-                    SZ30_STOCKS.put(e.getCode(), e);
+            if (!e.getCancelPlank() && havingBk(e.getClassification(), BK)) {
+                if (e.getCode().startsWith("SZ30")) {
+                    if (e.getTransactionAmount().longValue() > 100000000L) {
+                        SZ30_STOCKS.put(e.getCode(), e);
+                    }
+                } else if (e.getTransactionAmount().longValue() > 100000000L && e.getMarketValue() < 50000000000L) {
+                    SH10_STOCKS.put(e.getCode(), e);
                 }
-            } else if (e.getTransactionAmount().longValue() > 100000000L && e.getMarketValue() < 50000000000L) {
-                SH10_STOCKS.put(e.getCode(), e);
             }
             STOCK_ALL_MAP.put(e.getCode(), e.getName());
         });
         log.info("盯板 20CM:{}支 10CM:{}支", SZ30_STOCKS.size(), SH10_STOCKS.size());
         monitor();
+    }
+
+    private boolean havingBk(String bk, Set<String> BK) {
+        String[] split = bk.split(",");
+        for (String s : split) {
+            if (BK.contains(s)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -152,6 +170,9 @@ public class Barbarossa implements CommandLineRunner {
         Barbarossa.SZ30_STOCKS.keySet().parallelStream().filter(code -> !AutomaticPlankTrading.PLANK_LEVEL1_CACHE.containsKey(code) && !AutomaticPlankTrading.PLANK_MONITOR.containsKey(code)).forEach(e -> {
             try {
                 StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
+                if (Objects.isNull(stockRealTimePriceByCode) || Objects.isNull(stockRealTimePriceByCode.getIncreaseRate())) {
+                    return;
+                }
                 if (stockRealTimePriceByCode.getIncreaseRate() > 17) {
                     automaticPlankTrading.plank(Barbarossa.SZ30_STOCKS.get(e));
                 } else if (stockRealTimePriceByCode.getIncreaseRate() > 10) {
@@ -164,6 +185,9 @@ public class Barbarossa implements CommandLineRunner {
         Barbarossa.SH10_STOCKS.keySet().parallelStream().filter(code -> !AutomaticPlankTrading.PLANK_LEVEL1_CACHE.containsKey(code) && !AutomaticPlankTrading.PLANK_MONITOR.containsKey(code)).forEach(e -> {
             try {
                 StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
+                if (Objects.isNull(stockRealTimePriceByCode) || Objects.isNull(stockRealTimePriceByCode.getIncreaseRate())) {
+                    return;
+                }
                 if (stockRealTimePriceByCode.getIncreaseRate() > 8) {
                     automaticPlankTrading.plank(Barbarossa.SH10_STOCKS.get(e));
                 } else if (stockRealTimePriceByCode.getIncreaseRate() > 5) {
@@ -174,7 +198,7 @@ public class Barbarossa implements CommandLineRunner {
             }
         });
         log.info("更新盯盘一级缓存耗时: {} 秒,一共 {} 支:{}", (System.currentTimeMillis() - begin) / 1000, AutomaticPlankTrading.PLANK_LEVEL1_CACHE.size(),
-                collectionToString(AutomaticPlankTrading.PLANK_LEVEL1_CACHE.values()));
+                collectionToString(AutomaticPlankTrading.PLANK_LEVEL1_CACHE.values().stream().map(Stock::getName).collect(Collectors.toList())));
     }
 
     /**

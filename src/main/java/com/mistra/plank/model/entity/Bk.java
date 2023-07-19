@@ -54,6 +54,12 @@ public class Bk implements Comparable<Bk> {
     @TableField(value = "ignore_update")
     private Boolean ignoreUpdate;
 
+    /**
+     * 是否参与自动打板
+     */
+    @TableField(value = "auto_plank")
+    private Boolean autoPlank;
+
     @Override
     public int compareTo(Bk o) {
         return (int) ((o.increaseRate.doubleValue() * 100) - (this.increaseRate.doubleValue() * 100));

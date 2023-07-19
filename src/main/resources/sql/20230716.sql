@@ -10,3 +10,8 @@ ADD COLUMN `cost_price` decimal(10, 2) NOT NULL COMMENT '成本价' AFTER `profi
 
 ALTER TABLE `plank`.`stock`
     ADD COLUMN `cancel_plank` tinyint NOT NULL DEFAULT 0 COMMENT '是否取消打板' AFTER `auto_plank`;
+
+ALTER TABLE `plank`.`bk`
+    ADD COLUMN `auto_plank` tinyint(1) NOT NULL DEFAULT 0 COMMENT '参与自动打板的板块' AFTER `ignore_update`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`id`) USING BTREE;
