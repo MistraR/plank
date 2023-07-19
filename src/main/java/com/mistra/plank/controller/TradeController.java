@@ -216,7 +216,8 @@ public class TradeController extends BaseController {
                         .stopLossPrice(BigDecimal.valueOf(price * plankConfig.getStopLossRate()).setScale(2, RoundingMode.HALF_UP))
                         // 设置触发止盈价
                         .takeProfitPrice(BigDecimal.valueOf(price * plankConfig.getTakeProfitRate()).setScale(2, RoundingMode.HALF_UP))
-                        .automaticTradingType(AutomaticTradingEnum.MANUAL.name()).buyPrice(BigDecimal.valueOf(price)).build();
+                        .automaticTradingType(AutomaticTradingEnum.MANUAL.name()).buyPrice(BigDecimal.valueOf(price))
+                        .highestProfitRatio(new BigDecimal(0)).build();
                 holdSharesMapper.insert(holdShare);
                 stock.setShareholding(true);
                 stock.setBuyTime(new Date());

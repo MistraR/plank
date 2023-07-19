@@ -336,7 +336,7 @@ public class AutomaticTrading implements CommandLineRunner {
                     .stopLossPrice(BigDecimal.valueOf(price * plankConfig.getStopLossRate()).setScale(2, RoundingMode.HALF_UP))
                     // 设置触发止盈价
                     .takeProfitPrice(BigDecimal.valueOf(price * plankConfig.getTakeProfitRate()).setScale(2, RoundingMode.HALF_UP))
-                    .automaticTradingType(automaticTradingType).buyPrice(BigDecimal.valueOf(price)).build();
+                    .automaticTradingType(automaticTradingType).buyPrice(BigDecimal.valueOf(price)).highestProfitRatio(new BigDecimal(0)).build();
             holdSharesMapper.insert(holdShare);
         }
     }
