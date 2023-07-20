@@ -8,3 +8,8 @@ ADD COLUMN `cost_price` decimal(10, 2) NOT NULL COMMENT '成本价' AFTER `profi
 
 ALTER TABLE `plank`.`hold_shares`
     ADD COLUMN `highest_profit_ratio` decimal(10, 2) NULL COMMENT '最高盈利百分比' AFTER `sale_time`;
+
+ALTER TABLE `plank`.`hold_shares`
+    ADD COLUMN `clearance_reason` varchar(32) NULL DEFAULT 0 COMMENT '清仓原因' AFTER `clearance`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`id`) USING BTREE;
