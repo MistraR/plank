@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -36,15 +37,19 @@ import com.google.common.collect.Lists;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
 import com.mistra.plank.dao.BkMapper;
+import com.mistra.plank.dao.DailyIndexMapper;
 import com.mistra.plank.dao.DailyRecordMapper;
 import com.mistra.plank.dao.HoldSharesMapper;
+import com.mistra.plank.dao.StockInfoDao;
 import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockMainFundSample;
 import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.Bk;
+import com.mistra.plank.model.entity.DailyIndex;
 import com.mistra.plank.model.entity.DailyRecord;
 import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
+import com.mistra.plank.model.entity.StockInfo;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
 import com.mistra.plank.service.impl.ScreeningStocks;
 
@@ -75,6 +80,8 @@ public class Barbarossa implements CommandLineRunner {
     private final ScreeningStocks screeningStocks;
     private final DailyRecordProcessor dailyRecordProcessor;
     private final AutomaticPlankTrading automaticPlankTrading;
+    private final StockInfoDao stockInfoDao;
+    private final DailyIndexMapper dailyIndexMapper;
     public static final ThreadPoolExecutor executorService = new ThreadPoolExecutor(availableProcessors * 2,
             availableProcessors * 2, 100L, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(5000), new NamedThreadFactory("Monitor-", false));
@@ -106,7 +113,8 @@ public class Barbarossa implements CommandLineRunner {
 
     public Barbarossa(StockMapper stockMapper, BkMapper bkMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
                       HoldSharesMapper holdSharesMapper, PlankConfig plankConfig, ScreeningStocks screeningStocks,
-                      DailyRecordProcessor dailyRecordProcessor, AnalyzeProcessor analyzePlank, AutomaticPlankTrading automaticPlankTrading) {
+                      DailyRecordProcessor dailyRecordProcessor, AnalyzeProcessor analyzePlank, AutomaticPlankTrading automaticPlankTrading,
+                      StockInfoDao stockInfoDao, DailyIndexMapper dailyIndexMapper) {
         this.stockMapper = stockMapper;
         this.bkMapper = bkMapper;
         this.stockProcessor = stockProcessor;
@@ -117,6 +125,8 @@ public class Barbarossa implements CommandLineRunner {
         this.dailyRecordProcessor = dailyRecordProcessor;
         this.analyzePlank = analyzePlank;
         this.automaticPlankTrading = automaticPlankTrading;
+        this.stockInfoDao = stockInfoDao;
+        this.dailyIndexMapper = dailyIndexMapper;
     }
 
     /**
@@ -139,9 +149,8 @@ public class Barbarossa implements CommandLineRunner {
                 TRACK_STOCK_MAP.put(e.getName(), e);
             }
             // 手动排除掉的股票不参与打板，havingBk()只打某些板块的票
-            if (!e.getAutomaticTradingType().equals(AutomaticTradingEnum.CANCEL_AUTO_PLANK.name()) &&
-                    plankConfig.getAutomaticPlankLevel().contains(e.getPlankNumber()) &&
-                    this.havingBk(e.getClassification(), BK)) {
+            if (e.getCurrentPrice().doubleValue() > 3 && !e.getAutomaticTradingType().equals(AutomaticTradingEnum.CANCEL_AUTO_PLANK.name()) &&
+                    plankConfig.getAutomaticPlankLevel().contains(e.getPlankNumber()) && this.havingBk(e.getClassification(), BK)) {
                 if (e.getCode().startsWith("SZ30")) {
                     if (e.getTransactionAmount().longValue() > 100000000L) {
                         SZ30_STOCK_MAP.put(e.getCode(), e);
@@ -157,6 +166,9 @@ public class Barbarossa implements CommandLineRunner {
     }
 
     private boolean havingBk(String bk, Set<String> BK) {
+        if (StringUtils.isBlank(bk)) {
+            return false;
+        }
         String[] split = bk.split(",");
         for (String s : split) {
             if (BK.contains(s)) {
@@ -322,6 +334,8 @@ public class Barbarossa implements CommandLineRunner {
                             collectionToString(buyStocks.stream().map(HoldShares::getName).collect(Collectors.toSet())));
                 }
                 if (plankConfig.getAutomaticPlankTrading() && automaticPlankTrading.openAutoPlank()) {
+                    log.warn("一级缓存:{}", collectionToString(AutomaticPlankTrading.PLANK_LEVEL1_CACHE.values().stream()
+                            .map(Stock::getName).collect(Collectors.toList())));
                     log.warn("打板监测:{}", collectionToString(AutomaticPlankTrading.PLANKING_CACHE.values().stream()
                             .map(Stock::getName).collect(Collectors.toList())));
                 }
@@ -380,6 +394,7 @@ public class Barbarossa implements CommandLineRunner {
     @Scheduled(cron = "0 1 15 * * ?")
     private void analyzeData() {
         try {
+            this.updateStockPool();
             this.resetStockData();
             CountDownLatch countDownLatch = new CountDownLatch(Barbarossa.ALL_STOCK_MAP.size());
             dailyRecordProcessor.run(Barbarossa.ALL_STOCK_MAP, countDownLatch);
@@ -407,6 +422,47 @@ public class Barbarossa implements CommandLineRunner {
             });
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * 更新股票池
+     */
+    private void updateStockPool() {
+        BigDecimal zero = new BigDecimal(0);
+        Date now = new Date();
+        boolean haveNext = true;
+        int page = 1;
+        while (haveNext) {
+            String url = plankConfig.getUpdateAllStockUrl().replace("{page}", page + "");
+            String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
+            JSONObject data = JSON.parseObject(body).getJSONObject("data");
+            Integer total = data.getInteger("count");
+            JSONArray list = data.getJSONArray("list");
+            for (Object o : list) {
+                try {
+                    JSONObject jsonObject = (JSONObject) o;
+                    Stock stock = stockMapper.selectOne(new LambdaQueryWrapper<Stock>().eq(Stock::getCode, jsonObject.getString("symbol")));
+                    if (Objects.isNull(stock)) {
+                        stock = Stock.builder().code(jsonObject.getString("symbol")).name(jsonObject.getString("name")).marketValue(jsonObject.getLongValue("mc")).currentPrice(jsonObject.getBigDecimal("current")).purchasePrice(zero).transactionAmount(zero).purchaseType(10).track(false).shareholding(false).abbreviation("").automaticTradingType(AutomaticTradingEnum.CANCEL.name()).buyAmount(0).suckTriggerPrice(zero).build();
+                        stockMapper.insert(stock);
+                        stockInfoDao.insert(StockInfo.builder().code(stock.getCode().substring(2, 8)).name(stock.getName()).exchange(stock.getCode().substring(0, 2).toLowerCase()).state(0).type(0).createTime(now).updateTime(now).abbreviation("").build());
+                        dailyIndexMapper.insert(DailyIndex.builder().code(stock.getCode().toLowerCase()).date(now).preClosingPrice(zero).openingPrice(zero).highestPrice(zero).lowestPrice(zero).tradingValue(zero)
+                                .closingPrice(zero).tradingVolume(jsonObject.getLongValue("volume")).rurnoverRate(zero).createTime(now).updateTime(now).build());
+                        log.info("股票池新增股票 {}", stock.getName());
+                    } else {
+                        stock.setName(jsonObject.getString("name"));
+                        stockMapper.updateById(stock);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            if (page * 30 < total) {
+                page++;
+            } else {
+                haveNext = false;
+            }
         }
     }
 

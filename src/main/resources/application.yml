@@ -51,15 +51,14 @@ plank:
   automaticPlankLevel:
     - 0
     - 1
-    - 2
   # 止损净值率
   stopLossRate: 0.965
   # 止盈净值率
-  takeProfitRate: 1.067
+  takeProfitRate: 1.065
   # 每日自动交易买入金额上限
-  automaticTradingMoneyLimitUp: 88000
+  automaticTradingMoneyLimitUp: 150000
   # 自动打板交易时间 10->10点之前上板的才打
-  automaticPlankTradingTimeLimit: 10
+  automaticPlankTradingTimeLimit: 11
   # 自动交易单笔交易金额上限
   singleTransactionLimitAmount: 22000
   stockTurnoverThreshold: 200000000
@@ -69,7 +68,7 @@ plank:
   # 日志打印股票的name或者code
   printName: true
   recentDayNumber: 1
-  xueQiuCookie: device_id=38716386265523ca55d5d31b752d3f85; s=dn11w6rslv; bid=9ea105651fb1563867b3225ba28c0f26_l8wpja7c; remember=1; xq_is_login=1; u=5733707261; xq_a_token=0213d9da51bff29cb0e573e175a75358bc38f65a; xqat=0213d9da51bff29cb0e573e175a75358bc38f65a; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjU3MzM3MDcyNjEsImlzcyI6InVjIiwiZXhwIjoxNjkxMTI1ODgzLCJjdG0iOjE2ODg1MzM4ODM3NTUsImNpZCI6ImQ5ZDBuNEFadXAifQ.WtlDyt_vElf3SvHLY6jcBtAh0EqFNfHBvk9X-wkMOhgDfh7ZhjPiXA07If4i_UzlF8TWaxNLybYZcClxH1txsleVm5h3nPwLIpAABn_z8oGxPnjzK8sDNGBlzZyFbYxsJSBITUuoO-KvDysJPgTVl8Mgmcm1XQJ7SX2EbaWw7o7wj0JePiI-tfvzbUiZoYcfCgCv2nsP6OiofUMeP20r5389iWKiff0Mo_nCyXlNDbEsha_IIfrbUtlNvBMKPgQmHK16B1Mnt5tNI5IxlI9uY2z1Obcq5HU_c8J3H7FFSlSlrCFSPYvmlH475K8GYxmuEuOYbSxwq65UbVeYjbVzkQ; xq_r_token=75768dbbf476cb45331820c9bef668c91c6222b7; Hm_lvt_1db88642e346389874251b5a1eded6e3=1688605615,1688692623,1688743483,1688951814; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1688952201; is_overseas=0
+  xueQiuCookie: __utmz=1.1658110866.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); bid=9ea105651fb1563867b3225ba28c0f26_l8wpja7c; __utma=1.17943439.1658110866.1681652240.1686839601.12; xq_is_login=1; u=5733707261; device_id=47ddadf89ac927880fb2a5c2fb7002f8; xq_a_token=9320ce87250fb58c8f292ced0b9491b7c8ce733b; xqat=9320ce87250fb58c8f292ced0b9491b7c8ce733b; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjU3MzM3MDcyNjEsImlzcyI6InVjIiwiZXhwIjoxNjkyNDU3MzA1LCJjdG0iOjE2ODk4NjUzMDUzMTAsImNpZCI6ImQ5ZDBuNEFadXAifQ.E3xNzQ1pDGYWoeZNQwF66bwNuxwdLPf6jzJ_cqia1PdFHO0hZPqp0FqZHHxskF7asNHmHgMTM-oT77GWFa9vMzIlJVFGMjb22t5hh5IJeZ5TsAMalbQUTlvZT3bqdbCaKqydL6M1bAPfIHQ5P-v00ExSdpWbXPbrBGFjO2PYSPR-wT5bzM9ErEhE6s6-ygpMO1he3TnyHQM2uG8hULejrXu2-0ESi8Z9mARf_YOrgDKuI_910TRLIarrxRse1bMhTlfybtt2WsqQcaHSn386KARCqT2itModiaxp9MLF7hZqOrN673DErmJ-ZX1F3JUtLF3zyLWElRvTZPsj4HMkzg; xq_r_token=d4651f93dbb1390953fb591687f15dbb1e747e4c; Hm_lvt_1db88642e346389874251b5a1eded6e3=1689722020,1689743223,1689815810,1689899237; acw_tc=2760827516899014844472038e24f495962f3952bc71331e0a43f01d0298ef; is_overseas=0; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1689903139
   mainFundUrl: https://push2.eastmoney.com/api/qt/clist/get?fid=f62&po=1&pz=6000&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m:0+t:6+f:!2,m:0+t:13+f:!2,m:0+t:80+f:!2,m:1+t:2+f:!2,m:1+t:23+f:!2&fields=f12,f14,f3,f62,f184,f267,f127,f268,f164,f109,f165,f174,f160,f175
   industryBKUrl: https://push2.eastmoney.com/api/qt/clist/get?cb=jQuery112306145005741278797_1676863228205&fid=f3&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A90+t%3A2&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124%2Cf1%2Cf13
   conceptBKUrl: https://push2.eastmoney.com/api/qt/clist/get?cb=jQuery112306145005741278797_1676863228203&fid=f3&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A90+t%3A3&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124%2Cf1%2Cf13
@@ -78,6 +77,7 @@ plank:
   xueQiuStockDetailUrl: http://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={code}&begin={time}&period=day&type=before&count=-{recentDayNumber}&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance
   foreignShareholdingUrl: https://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112304010956559881589_1675054117441&sortColumns=HOLD_MARKET_CAP&sortTypes=-1&pageSize=500&pageNumber=1&reportName=RPT_MUTUAL_STOCK_NORTHSTA&columns=ALL&source=WEB&client=WEB&filter=(TRADE_DATE%3D%272023-01-20%27)(INTERVAL_TYPE%3D%223%22)
   xueQiuStockLimitUpPriceUrl: https://stock.xueqiu.com/v5/stock/quote.json?symbol={code}&extend=detail
+  updateAllStockUrl: https://xueqiu.com/service/screener/screen?category=CN&exchange=sz_sh&areacode=&indcode=&order_by=symbol&order=desc&page={page}&size=30&only_count=0&current=&pct=&mc=&volume=&_=1690013194704
 
 logging:
   level:

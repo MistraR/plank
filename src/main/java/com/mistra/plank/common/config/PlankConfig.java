@@ -137,4 +137,9 @@ public class PlankConfig {
      */
     private String updateStockBkUrl;
 
+    /**
+     * 更新股票池
+     */
+    private String updateAllStockUrl;
+
 }
