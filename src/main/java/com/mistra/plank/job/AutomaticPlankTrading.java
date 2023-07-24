@@ -9,11 +9,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mistra.plank.common.config.PlankConfig;
+import com.mistra.plank.common.util.HttpUtil;
 import com.mistra.plank.dao.HoldSharesMapper;
 import com.mistra.plank.dao.StockMapper;
 import com.mistra.plank.model.dto.StockRealTimePrice;
@@ -38,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(prefix = "plank", name = "automaticPlankTrading", havingValue = "true")
 public class AutomaticPlankTrading implements CommandLineRunner {
 
     private static final int availableProcessors = Runtime.getRuntime().availableProcessors();
@@ -156,6 +157,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
             }
             log.warn("{} 新加入打板监测", stock.getName());
             boolean watch = true;
+            boolean orderCompleted = false;
             while (watch) {
                 PLANKING_CACHE.put(stock.getCode(), stock);
                 try {
@@ -181,8 +183,9 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                     if (amount >= 1) {
                                         double cost = amount * 100 * stockRealTimePriceByCode.getLimitUp();
                                         if (AutomaticTrading.TODAY_COST_MONEY.intValue() + cost < plankConfig.getAutomaticTradingMoneyLimitUp()) {
-                                            automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
+                                            orderCompleted = automaticTrading.buy(stock, amount * 100, stockRealTimePriceByCode.getLimitUp(),
                                                     AutomaticTradingEnum.AUTO_PLANK.name());
+                                            watch = false;
                                         }
                                     }
                                     PLANKING_CACHE.remove(stock.getCode());
@@ -204,6 +207,50 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                     e.printStackTrace();
                 }
             }
+            if (orderCompleted) {
+                // 下单成功,转入盯盘口,短时间内封单大幅减少则撤单
+                watch = true;
+                // 最近几次查询到的买一封单量
+                int[] pan = new int[6];
+                while (watch) {
+                    try {
+                        String url = plankConfig.getPanKouUrl().replace("{code}", stock.getCode());
+                        String body = HttpUtil.getHttpGetResponseString(url, plankConfig.getXueQiuCookie());
+                        JSONObject data = JSON.parseObject(body).getJSONObject("data");
+                        // bc1买一 sc1卖一
+                        int bc1 = data.getIntValue("bc1");
+                        if (pan[5] == 0) {
+                            for (int i = 0; i < pan.length; i++) {
+                                if (pan[i] == 0) {
+                                    pan[i] = bc1;
+                                    break;
+                                }
+                            }
+                        } else {
+                            int sum = 0;
+                            for (int j : pan) {
+                                sum += j;
+                            }
+                            int avg = sum / 6;
+                            if (bc1 < avg * 0.5) {
+                                // 撤单
+                                log.info("封单急剧减少 撤单 {}", stock.getName());
+
+                                watch = false;
+                            } else {
+                                for (int i = pan.length - 1; i >= 1; i--) {
+                                    pan[i] = pan[i - 1];
+                                }
+                                pan[0] = bc1;
+                            }
+                        }
+                        Thread.sleep(800);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        watch = false;
+                    }
+                }
+            }
         }
     }
 
@@ -213,7 +260,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
      * @return boolean
      */
     public boolean openAutoPlank() {
-        return AutomaticTrading.isTradeTime() &&
+        return AutomaticTrading.isTradeTime() && plankConfig.getAutomaticPlankTrading() &&
                 DateUtil.hour(new Date(), true) < plankConfig.getAutomaticPlankTradingTimeLimit() &&
                 AutomaticTrading.TODAY_COST_MONEY.intValue() < plankConfig.getAutomaticTradingMoneyLimitUp();
     }

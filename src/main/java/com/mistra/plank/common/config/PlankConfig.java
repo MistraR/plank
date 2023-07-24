@@ -142,4 +142,9 @@ public class PlankConfig {
      */
     private String updateAllStockUrl;
 
+    /**
+     * 盘口数据  买单量 卖单量
+     */
+    private String panKouUrl;
+
 }

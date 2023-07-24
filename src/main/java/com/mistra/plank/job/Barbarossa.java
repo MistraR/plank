@@ -113,8 +113,8 @@ public class Barbarossa implements CommandLineRunner {
 
     public Barbarossa(StockMapper stockMapper, BkMapper bkMapper, StockProcessor stockProcessor, DailyRecordMapper dailyRecordMapper,
                       HoldSharesMapper holdSharesMapper, PlankConfig plankConfig, ScreeningStocks screeningStocks,
-                      DailyRecordProcessor dailyRecordProcessor, AnalyzeProcessor analyzePlank, AutomaticPlankTrading automaticPlankTrading,
-                      StockInfoDao stockInfoDao, DailyIndexMapper dailyIndexMapper) {
+                      DailyRecordProcessor dailyRecordProcessor, AnalyzeProcessor analyzePlank,
+                      AutomaticPlankTrading automaticPlankTrading, StockInfoDao stockInfoDao, DailyIndexMapper dailyIndexMapper) {
         this.stockMapper = stockMapper;
         this.bkMapper = bkMapper;
         this.stockProcessor = stockProcessor;
@@ -138,7 +138,7 @@ public class Barbarossa implements CommandLineRunner {
     public void run(String... args) {
         List<Stock> stocks = stockMapper.selectList(new QueryWrapper<Stock>()
                 // 默认过滤掉了北交所,科创板,ST
-                .notLike("name", "%ST%").notLike("code", "%688%")
+                .notLike("name", "%ST%").notLike("code", "%688%").notLike("name", "%退%")
                 .notLike("name", "%st%").notLike("name", "%A%").notLike("name", "%N%")
                 .notLike("name", "%U%").notLike("name", "%W%").notLike("code", "%BJ%"));
         // 查询自动打板的板块,属于这些板块的股票才会盯盘
@@ -151,17 +151,19 @@ public class Barbarossa implements CommandLineRunner {
             // 手动排除掉的股票不参与打板，havingBk()只打某些板块的票
             if (e.getCurrentPrice().doubleValue() > 3 && !e.getAutomaticTradingType().equals(AutomaticTradingEnum.CANCEL_AUTO_PLANK.name()) &&
                     plankConfig.getAutomaticPlankLevel().contains(e.getPlankNumber()) && this.havingBk(e.getClassification(), BK)) {
-                if (e.getCode().startsWith("SZ30")) {
-                    if (e.getTransactionAmount().longValue() > 100000000L) {
+                if (e.getTransactionAmount().longValue() > 100000000L && e.getMarketValue() < 50000000000L && e.getMarketValue() > 1500000000L) {
+                    if (e.getCode().startsWith("SZ30")) {
                         SZ30_STOCK_MAP.put(e.getCode(), e);
+                    } else {
+                        SH10_STOCK_MAP.put(e.getCode(), e);
                     }
-                } else if (e.getTransactionAmount().longValue() > 100000000L && e.getMarketValue() < 50000000000L) {
-                    SH10_STOCK_MAP.put(e.getCode(), e);
                 }
             }
             ALL_STOCK_MAP.put(e.getCode(), e.getName());
         });
         log.info("盯板 20CM:{}支 10CM:{}支", SZ30_STOCK_MAP.size(), SH10_STOCK_MAP.size());
+        log.info("盯板 20CM:[{}]", collectionToString(SZ30_STOCK_MAP.values().stream().map(Stock::getName).collect(Collectors.toList())));
+        log.info("盯板 10CM:[{}]", collectionToString(SH10_STOCK_MAP.values().stream().map(Stock::getName).collect(Collectors.toList())));
         monitor();
     }
 

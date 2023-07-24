@@ -214,14 +214,6 @@ public class AutomaticTrading implements CommandLineRunner {
                             log.error("{} 触发止盈,自动卖出", holdShare.getName());
                             break;
                         }
-                        if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.AUTO_PLANK.name())) {
-                            // 自动打板买入的股票,11点前还未涨停,自动卖出
-                            if (DateUtil.hour(new Date(), true) > 11 && !stockRealTimePrice.isPlank()) {
-                                log.error("{} 11点前还未涨停,自动卖出", holdShare.getName());
-                                sale(holdShare, stockRealTimePrice, ClearanceReasonEnum.UN_PLANK);
-                                break;
-                            }
-                        }
                         // 当前盈利
                         holdShare.setProfit(BigDecimal.valueOf((stockRealTimePrice.getCurrentPrice() - holdShare.getBuyPrice().doubleValue())
                                 * holdShare.getAvailableVolume()));
@@ -230,9 +222,21 @@ public class AutomaticTrading implements CommandLineRunner {
                         if (holdShare.getHighestProfitRatio().doubleValue() < rate.doubleValue()) {
                             holdShare.setHighestProfitRatio(rate);
                         }
-                        if (holdShare.getHighestProfitRatio().doubleValue() > 0.04 && stockRealTimePrice.getCurrentPrice() < holdShare.getBuyPrice().doubleValue()) {
-                            // 动态调整止损位,由盈利4%到回撤到触及成本,自动卖出
-                            sale(holdShare, stockRealTimePrice, ClearanceReasonEnum.ROLLER_COASTER);
+                        if (holdShare.getAutomaticTradingType().equals(AutomaticTradingEnum.AUTO_PLANK.name())) {
+                            // 自动打板买入的股票,11点前还未涨停,自动卖出
+                            if (DateUtil.hour(new Date(), true) > 14 && !stockRealTimePrice.isPlank()) {
+                                log.error("{} 14点前还未涨停,自动卖出", holdShare.getName());
+                                sale(holdShare, stockRealTimePrice, ClearanceReasonEnum.UN_PLANK);
+                                break;
+                            }
+                            if (holdShare.getHighestProfitRatio().doubleValue() > 0.04 && stockRealTimePrice.getCurrentPrice() < holdShare.getBuyPrice().doubleValue() + 0.01) {
+                                // 动态调整止损位,由盈利4%以上到回撤到触及成本,自动卖出
+                                sale(holdShare, stockRealTimePrice, ClearanceReasonEnum.ROLLER_COASTER);
+                            }
+                            if (rate.doubleValue() > 0.02 && holdShare.getHighestProfitRatio().doubleValue() - rate.doubleValue() > 0.03) {
+                                // 从今日最高点回落3个点,清仓
+                                sale(holdShare, stockRealTimePrice, ClearanceReasonEnum.RETRACEMENT);
+                            }
                         }
                         holdSharesMapper.updateById(holdShare);
                         Thread.sleep(200);
@@ -323,7 +327,7 @@ public class AutomaticTrading implements CommandLineRunner {
      * @param price                买入价格
      * @param automaticTradingType 自动交易类型
      */
-    public void buy(Stock stock, int amount, double price, String automaticTradingType) {
+    public boolean buy(Stock stock, int amount, double price, String automaticTradingType) {
         if (!TODAY_BOUGHT_SUCCESS.contains(stock.getCode()) && this.buy(stock, amount, price)) {
             TODAY_BOUGHT_SUCCESS.add(stock.getCode());
             UNDER_MONITORING.remove(stock.getCode());
@@ -340,7 +344,9 @@ public class AutomaticTrading implements CommandLineRunner {
                     .takeProfitPrice(BigDecimal.valueOf(price * plankConfig.getTakeProfitRate()).setScale(2, RoundingMode.HALF_UP))
                     .automaticTradingType(automaticTradingType).buyPrice(BigDecimal.valueOf(price)).highestProfitRatio(new BigDecimal(0)).build();
             holdSharesMapper.insert(holdShare);
+            return true;
         }
+        return false;
     }
 
     /**
