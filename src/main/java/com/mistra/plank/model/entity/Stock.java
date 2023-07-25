@@ -31,7 +31,7 @@ public class Stock implements Comparable<Stock> {
     private String name;
 
     /**
-     * 市值
+     * 市值 流通值
      */
     @TableField(value = "market_value")
     private Long marketValue;

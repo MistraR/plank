@@ -8,8 +8,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -114,7 +112,7 @@ public class HttpUtil {
             request.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36");
         }
         DefaultHttpClient wrappedClient = WebClientDevWrapper.wrapClient(httpClient,request);
-        try (CloseableHttpResponse response = wrappedClient.execute(request)) {
+        try (CloseableHttpResponse response = httpClient.execute(request)) {
             return EntityUtils.toString(response.getEntity(), charset);
         } catch (IOException ex) {
             throw new ResourceAccessException("I/O error on " + request.getMethod() + " request for \""

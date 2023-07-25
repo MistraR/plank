@@ -50,17 +50,17 @@ plank:
   # 自动打板连板筛选 0->只打今日首板  1->今日1进2  2->今日2进3
   automaticPlankLevel:
     - 0
-    - 1
+#    - 1
   # 止损净值率
   stopLossRate: 0.965
   # 止盈净值率
   takeProfitRate: 1.065
   # 每日自动交易买入金额上限
-  automaticTradingMoneyLimitUp: 150000
+  automaticTradingMoneyLimitUp: 60000
   # 自动打板交易时间 10->10点之前上板的才打
   automaticPlankTradingTimeLimit: 11
   # 自动交易单笔交易金额上限
-  singleTransactionLimitAmount: 22000
+  singleTransactionLimitAmount: 12000
   stockTurnoverThreshold: 200000000
   mainFundThreshold: 300000000
   # 是否开启持仓监控
@@ -77,6 +77,7 @@ plank:
   xueQiuStockDetailUrl: http://stock.xueqiu.com/v5/stock/chart/kline.json?symbol={code}&begin={time}&period=day&type=before&count=-{recentDayNumber}&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance
   foreignShareholdingUrl: https://datacenter-web.eastmoney.com/api/data/v1/get?callback=jQuery112304010956559881589_1675054117441&sortColumns=HOLD_MARKET_CAP&sortTypes=-1&pageSize=500&pageNumber=1&reportName=RPT_MUTUAL_STOCK_NORTHSTA&columns=ALL&source=WEB&client=WEB&filter=(TRADE_DATE%3D%272023-01-20%27)(INTERVAL_TYPE%3D%223%22)
   xueQiuStockLimitUpPriceUrl: https://stock.xueqiu.com/v5/stock/quote.json?symbol={code}&extend=detail
+  panKouUrl: https://stock.xueqiu.com/v5/stock/realtime/pankou.json?symbol={code}
   updateAllStockUrl: https://xueqiu.com/service/screener/screen?category=CN&exchange=sz_sh&areacode=&indcode=&order_by=symbol&order=desc&page={page}&size=30&only_count=0&current=&pct=&mc=&volume=&_=1690013194704
 
 logging:
