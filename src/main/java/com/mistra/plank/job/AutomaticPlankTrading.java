@@ -8,6 +8,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,15 @@ import com.mistra.plank.model.dto.StockRealTimePrice;
 import com.mistra.plank.model.entity.HoldShares;
 import com.mistra.plank.model.entity.Stock;
 import com.mistra.plank.model.enums.AutomaticTradingEnum;
+import com.mistra.plank.model.vo.CommonResponse;
+import com.mistra.plank.model.vo.trade.OrderVo;
+import com.mistra.plank.service.TradeApiService;
+import com.mistra.plank.service.TradeService;
+import com.mistra.plank.tradeapi.TradeResultVo;
+import com.mistra.plank.tradeapi.request.GetOrdersDataRequest;
+import com.mistra.plank.tradeapi.request.RevokeRequest;
+import com.mistra.plank.tradeapi.response.GetOrdersDataResponse;
+import com.mistra.plank.tradeapi.response.RevokeResponse;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.thread.NamedThreadFactory;
@@ -48,10 +58,11 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     private final AutomaticTrading automaticTrading;
     private final StockMapper stockMapper;
     private final HoldSharesMapper holdSharesMapper;
+    private final TradeApiService tradeApiService;
+    private final TradeService tradeService;
 
     /**
-     * 正在盯板中的股票
-     * 创业板涨幅>17或主板涨幅>7.5的股票会新起一个线程盯板,低于这个涨幅的会暂时取消掉盯板
+     * 正在盯板中的股票 创业板涨幅>17或主板涨幅>7.5的股票会新起一个线程盯板,低于这个涨幅的会暂时取消掉盯板
      */
     public static final ConcurrentHashMap<String, Stock> PLANKING_CACHE = new ConcurrentHashMap<>();
 
@@ -64,12 +75,14 @@ public class AutomaticPlankTrading implements CommandLineRunner {
             TimeUnit.SECONDS, new SynchronousQueue<>(), new NamedThreadFactory("Plank-", false));
 
     public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor, AutomaticTrading automaticTrading, StockMapper stockMapper
-            , HoldSharesMapper holdSharesMapper) {
+            , HoldSharesMapper holdSharesMapper, TradeApiService tradeApiService, TradeService tradeService) {
         this.plankConfig = plankConfig;
         this.stockProcessor = stockProcessor;
         this.automaticTrading = automaticTrading;
         this.stockMapper = stockMapper;
         this.holdSharesMapper = holdSharesMapper;
+        this.tradeApiService = tradeApiService;
+        this.tradeService = tradeService;
     }
 
     @Override
@@ -235,7 +248,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                             if (bc1 < avg * 0.5) {
                                 // 撤单
                                 log.info("封单急剧减少 撤单 {}", stock.getName());
-
+                                log.info("撤单结果:{}", revoke(order(stock.getName())));
                                 watch = false;
                             } else {
                                 for (int i = pan.length - 1; i >= 1; i--) {
@@ -252,6 +265,31 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                 }
             }
         }
+    }
+
+    /**
+     * 撤单
+     */
+    public CommonResponse revoke(String entrustCode) {
+        RevokeRequest request = new RevokeRequest(1);
+        String revokes = String.format("%s_%s", DateFormatUtils.format(new Date(), "yyyyMMdd"), entrustCode);
+        request.setRevokes(revokes);
+        TradeResultVo<RevokeResponse> response = tradeApiService.revoke(request);
+        return CommonResponse.buildResponse(response.getMessage());
+    }
+
+    /**
+     * 查询某个委托股票的entrustCode
+     */
+    public String order(String name) {
+        GetOrdersDataRequest request = new GetOrdersDataRequest(1);
+        TradeResultVo<GetOrdersDataResponse> response = tradeApiService.getOrdersData(request);
+        if (response.success()) {
+            List<OrderVo> list = tradeService.getTradeOrderList(response.getData());
+            list = list.stream().filter(v -> v.getState().equals(GetOrdersDataResponse.YIBAO) && v.getStockName().equals("name")).collect(Collectors.toList());
+            return list.get(0).getEntrustCode();
+        }
+        return null;
     }
 
     /**
