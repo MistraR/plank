@@ -286,7 +286,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
         TradeResultVo<GetOrdersDataResponse> response = tradeApiService.getOrdersData(request);
         if (response.success()) {
             List<OrderVo> list = tradeService.getTradeOrderList(response.getData());
-            list = list.stream().filter(v -> v.getState().equals(GetOrdersDataResponse.YIBAO) && v.getStockName().equals("name")).collect(Collectors.toList());
+            list = list.stream().filter(v -> v.getState().equals(GetOrdersDataResponse.YIBAO) && v.getStockName().equals(name)).collect(Collectors.toList());
             return list.get(0).getEntrustCode();
         }
         return null;
