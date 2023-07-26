@@ -79,10 +79,3 @@ plank:
   xueQiuStockLimitUpPriceUrl: https://stock.xueqiu.com/v5/stock/quote.json?symbol={code}&extend=detail
   panKouUrl: https://stock.xueqiu.com/v5/stock/realtime/pankou.json?symbol={code}
   updateAllStockUrl: https://xueqiu.com/service/screener/screen?category=CN&exchange=sz_sh&areacode=&indcode=&order_by=symbol&order=desc&page={page}&size=30&only_count=0&current=&pct=&mc=&volume=&_=1690013194704
-
-logging:
-  level:
-    com:
-      mistra:
-        plank:
-          dao: info
