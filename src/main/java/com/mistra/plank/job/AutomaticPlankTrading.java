@@ -1,5 +1,7 @@
 package com.mistra.plank.job;
 
+import static com.mistra.plank.common.util.StockUtil.isSZ30;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -102,7 +104,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     private void filterStock(String e) {
         try {
             StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
-            if (e.startsWith("SZ30")) {
+            if (isSZ30(e)) {
                 if (stockRealTimePriceByCode.getIncreaseRate() > 17) {
                     this.plank(PLANK_LEVEL1_CACHE.get(e));
                 } else if (stockRealTimePriceByCode.getIncreaseRate() < 10) {
@@ -203,8 +205,8 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                     }
                                     PLANKING_CACHE.remove(stock.getCode());
                                 }
-                            } else if ((stock.getName().startsWith("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 17) ||
-                                    (!stock.getName().startsWith("SZ30") && stockRealTimePriceByCode.getIncreaseRate() < 7.5)) {
+                            } else if ((isSZ30(stock.getCode()) && stockRealTimePriceByCode.getIncreaseRate() < 17) ||
+                                    (!isSZ30(stock.getCode()) && stockRealTimePriceByCode.getIncreaseRate() < 7.5)) {
                                 log.warn("{} 取消打板监控,当前涨幅 {}%", stock.getName(), stockRealTimePriceByCode.getIncreaseRate());
                                 PLANKING_CACHE.remove(stock.getCode());
                                 watch = false;

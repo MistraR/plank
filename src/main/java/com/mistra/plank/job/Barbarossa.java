@@ -1,6 +1,7 @@
 package com.mistra.plank.job;
 
 import static com.mistra.plank.common.config.SystemConstant.W;
+import static com.mistra.plank.common.util.StockUtil.isSZ30;
 import static com.mistra.plank.common.util.StringUtil.collectionToString;
 
 import java.math.BigDecimal;
@@ -158,7 +159,7 @@ public class Barbarossa implements CommandLineRunner {
                     plankConfig.getAutomaticPlankLevel().contains(e.getPlankNumber()) &&
                     havingBk(e.getClassification(), BK)) {
                 if (e.getTransactionAmount().longValue() > 300000000L && e.getMarketValue() < 100000000000L && e.getMarketValue() > 1000000000L) {
-                    if (e.getCode().startsWith("SZ30")) {
+                    if (isSZ30(e.getCode())) {
                         SZ30_STOCK_MAP.put(e.getCode(), e);
                     } else {
                         SH10_STOCK_MAP.put(e.getCode(), e);

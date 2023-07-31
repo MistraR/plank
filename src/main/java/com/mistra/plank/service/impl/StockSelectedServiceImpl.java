@@ -1,5 +1,7 @@
 package com.mistra.plank.service.impl;
 
+import static com.mistra.plank.common.util.StockUtil.isSZ30;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
@@ -78,7 +80,7 @@ public class StockSelectedServiceImpl implements StockSelectedService {
         List<Stock> stockInfos = stockMapper.selectList(new LambdaQueryWrapper<Stock>().in(Stock::getName, selfSelectParam.getNames()));
         for (Stock stock : stockInfos) {
             stock.setAutomaticTradingType(AutomaticTradingEnum.AUTO_PLANK.name());
-            if (stock.getCode().startsWith("SZ30")) {
+            if (isSZ30(stock.getCode())) {
                 Barbarossa.SZ30_STOCK_MAP.put(stock.getCode(), stock);
             } else {
                 Barbarossa.SH10_STOCK_MAP.put(stock.getCode(), stock);

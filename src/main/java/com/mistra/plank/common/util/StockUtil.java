@@ -5,14 +5,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
-
+import org.springframework.util.StringUtils;
 
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
-import org.springframework.util.StringUtils;
 
 public class StockUtil {
 
@@ -146,6 +145,13 @@ public class StockUtil {
 
     private static boolean isCodeStart(String code, List<String> list01, List<String> list02, List<String> list03) {
         return isCodeStart(code, list01) || isCodeStart(code, list02) || isCodeStart(code, list03);
+    }
+
+    /**
+     * 是否是创业板股票
+     */
+    public static boolean isSZ30(String code) {
+        return code.toLowerCase().startsWith("sz30");
     }
 
 }
