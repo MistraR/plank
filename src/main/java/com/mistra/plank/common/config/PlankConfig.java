@@ -107,6 +107,11 @@ public class PlankConfig {
     private List<Integer> automaticPlankLevel;
 
     /**
+     * 自动打板只打当日涨幅top5的板块
+     */
+    private Boolean automaticPlankTopBk;
+
+    /**
      * 自动打板时间限制，一般只打早盘强势快速封板的 比如只打10点前封板的票
      */
     private Integer automaticPlankTradingTimeLimit;

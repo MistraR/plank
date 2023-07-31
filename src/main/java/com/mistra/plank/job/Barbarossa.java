@@ -94,11 +94,11 @@ public class Barbarossa implements CommandLineRunner {
      */
     public static final ConcurrentHashMap<String, Stock> TRACK_STOCK_MAP = new ConcurrentHashMap<>(32);
     /**
-     * 成交额>1亿的创业板股票
+     * 成交额>3亿的创业板股票
      */
     public static final ConcurrentHashMap<String, Stock> SZ30_STOCK_MAP = new ConcurrentHashMap<>(512);
     /**
-     * 市值600亿以内,成交额>2亿的10cm股票,自动盯板
+     * 市值1000亿以内,成交额>3亿的10cm股票
      */
     public static final ConcurrentHashMap<String, Stock> SH10_STOCK_MAP = new ConcurrentHashMap<>(1024);
     /**
@@ -106,6 +106,10 @@ public class Barbarossa implements CommandLineRunner {
      */
     public static final CopyOnWriteArrayList<StockMainFundSample> MAIN_FUND_DATA = new CopyOnWriteArrayList<>();
     public static final ConcurrentHashMap<String, StockMainFundSample> MAIN_FUND_DATA_MAP = new ConcurrentHashMap<>(4096);
+    /**
+     * 当日涨幅top5版块
+     */
+    public static final ConcurrentHashMap<String, Bk> TOP5_BK = new ConcurrentHashMap<>(8);
     /**
      * 是否开启监控中
      */
@@ -148,10 +152,12 @@ public class Barbarossa implements CommandLineRunner {
             if ((e.getShareholding() || e.getTrack())) {
                 TRACK_STOCK_MAP.put(e.getName(), e);
             }
-            // 手动排除掉的股票不参与打板，havingBk()只打某些板块的票
-            if (e.getCurrentPrice().doubleValue() > 3 && !e.getAutomaticTradingType().equals(AutomaticTradingEnum.CANCEL_AUTO_PLANK.name()) &&
-                    plankConfig.getAutomaticPlankLevel().contains(e.getPlankNumber()) && this.havingBk(e.getClassification(), BK)) {
-                if (e.getTransactionAmount().longValue() > 100000000L && e.getMarketValue() < 50000000000L && e.getMarketValue() > 1500000000L) {
+            // 手动排除掉(CANCEL_AUTO_PLANK)的股票不参与打板，havingBk()只打某些板块的票
+            if (plankConfig.getAutomaticPlankTrading() &&
+                    !e.getAutomaticTradingType().equals(AutomaticTradingEnum.CANCEL_AUTO_PLANK.name()) &&
+                    plankConfig.getAutomaticPlankLevel().contains(e.getPlankNumber()) &&
+                    havingBk(e.getClassification(), BK)) {
+                if (e.getTransactionAmount().longValue() > 300000000L && e.getMarketValue() < 100000000000L && e.getMarketValue() > 1000000000L) {
                     if (e.getCode().startsWith("SZ30")) {
                         SZ30_STOCK_MAP.put(e.getCode(), e);
                     } else {
@@ -164,6 +170,8 @@ public class Barbarossa implements CommandLineRunner {
         log.info("盯板 20CM:{}支 10CM:{}支", SZ30_STOCK_MAP.size(), SH10_STOCK_MAP.size());
         log.info("盯板 20CM:[{}]", collectionToString(SZ30_STOCK_MAP.values().stream().map(Stock::getName).collect(Collectors.toList())));
         log.info("盯板 10CM:[{}]", collectionToString(SH10_STOCK_MAP.values().stream().map(Stock::getName).collect(Collectors.toList())));
+        bkMapper.update(Bk.builder().increaseRate(new BigDecimal(0)).build(), new LambdaUpdateWrapper<Bk>());
+        updateBkCache();
         monitor();
     }
 
@@ -183,8 +191,11 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 更新盯板一级缓存
      */
-    @Scheduled(cron = "* 28 9 * * ?")
+    @Scheduled(cron = "0 */1 * * * ?")
     private void updatePlankStockCache() {
+        if (!automaticPlankTrading.openAutoPlank()) {
+            return;
+        }
         long begin = System.currentTimeMillis();
         Set<String> tradedStock = automaticPlankTrading.selectTodayTradedStock();
         Barbarossa.SZ30_STOCK_MAP.keySet().parallelStream().filter(code -> !AutomaticPlankTrading.PLANK_LEVEL1_CACHE.containsKey(code)
@@ -192,6 +203,10 @@ public class Barbarossa implements CommandLineRunner {
             try {
                 StockRealTimePrice stockRealTimePriceByCode = stockProcessor.getStockRealTimePriceByCode(e);
                 if (Objects.isNull(stockRealTimePriceByCode) || Objects.isNull(stockRealTimePriceByCode.getIncreaseRate())) {
+                    return;
+                }
+                // 自动打板是否开启只打当日涨幅top5的板块
+                if (plankConfig.getAutomaticPlankTopBk() && !havingBk(Barbarossa.SZ30_STOCK_MAP.get(e).getClassification(), TOP5_BK.keySet())) {
                     return;
                 }
                 if (stockRealTimePriceByCode.getIncreaseRate() > 17) {
@@ -212,6 +227,10 @@ public class Barbarossa implements CommandLineRunner {
                 if (Objects.isNull(stockRealTimePriceByCode) || Objects.isNull(stockRealTimePriceByCode.getIncreaseRate())) {
                     return;
                 }
+                // 自动打板是否开启只打当日涨幅top5的板块
+                if (plankConfig.getAutomaticPlankTopBk() && !havingBk(Barbarossa.SH10_STOCK_MAP.get(e).getClassification(), TOP5_BK.keySet())) {
+                    return;
+                }
                 if (stockRealTimePriceByCode.getIncreaseRate() > 7.5) {
                     // 涨幅>7.5直接新起线程盯板
                     automaticPlankTrading.plank(Barbarossa.SH10_STOCK_MAP.get(e));
@@ -230,12 +249,16 @@ public class Barbarossa implements CommandLineRunner {
     /**
      * 更新版块涨跌幅
      */
-    @Scheduled(cron = "0 */1 * * * ?")
+    @Scheduled(cron = "*/20 * * * * ?")
     private void updateBkCache() {
         if (AutomaticTrading.isTradeTime()) {
             // 更新行业版块，概念版块涨幅信息
             stockProcessor.updateBk();
-            stockProcessor.updateTop5IncreaseRateBk();
+            List<Bk> bks = bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false)
+                    .orderByDesc(Bk::getIncreaseRate).last("limit 0,5"));
+            TOP5_BK.clear();
+            // 查询涨幅前5的版块,并且板块涨幅要大于2,说明行情比较好,普跌行情就不参与了
+            bks.stream().filter(e -> e.getIncreaseRate().doubleValue() > 2).forEach(e -> TOP5_BK.put(e.getBk(), e));
         }
     }
 
@@ -249,9 +272,6 @@ public class Barbarossa implements CommandLineRunner {
             monitoring.set(true);
             executorService.submit(this::monitorStock);
             executorService.submit(this::queryMainFundData);
-        }
-        if (automaticPlankTrading.openAutoPlank()) {
-            updatePlankStockCache();
         }
     }
 
@@ -311,7 +331,7 @@ public class Barbarossa implements CommandLineRunner {
                     topTen.add(MAIN_FUND_DATA.get(i));
                 }
                 log.warn(collectionToString(topTen.stream().map(e -> e.getF14() + e.getF3()).collect(Collectors.toList())));
-                ArrayList<Bk> bks = Lists.newArrayList(StockProcessor.TOP5_BK.values());
+                ArrayList<Bk> bks = Lists.newArrayList(TOP5_BK.values());
                 Collections.sort(bks);
                 log.warn(collectionToString(bks.stream().map(e -> e.getName() + e.getIncreaseRate() + "%").collect(Collectors.toList())));
                 List<StockRealTimePrice> shareholding = realTimePrices.stream().filter(e -> TRACK_STOCK_MAP.containsKey(e.getName()) &&

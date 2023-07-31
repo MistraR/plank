@@ -7,20 +7,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mistra.plank.common.config.PlankConfig;
 import com.mistra.plank.common.util.HttpUtil;
@@ -59,11 +56,6 @@ public class StockProcessor {
     private final BkMapper bkMapper;
 
     private final ReentrantLock bkLock = new ReentrantLock();
-
-    /**
-     * 当日涨幅top5版块
-     */
-    public static final ConcurrentHashMap<String, Bk> TOP5_BK = new ConcurrentHashMap<>(8);
 
     public StockProcessor(StockMapper stockMapper, DailyRecordMapper dailyRecordMapper, PlankConfig plankConfig,
                           FundHoldingsTrackingMapper fundHoldingsTrackingMapper, DailyRecordProcessor dailyRecordProcessor,
@@ -141,11 +133,6 @@ public class StockProcessor {
         }
     }
 
-    @Scheduled(cron = "0 25 9 * * ?")
-    private void updateStockCache() {
-        bkMapper.update(Bk.builder().increaseRate(new BigDecimal(0)).build(), new LambdaUpdateWrapper<Bk>());
-    }
-
     /**
      * 实时更新版块涨幅信息
      */
@@ -177,16 +164,6 @@ public class StockProcessor {
                         .bk(bkCode).name(object.getString("f14")).classification(classification).build());
             }
         }
-    }
-
-    /**
-     * 查询涨幅前5的版块,并且板块涨幅要大于2,说明行情比较好,普跌行情就不参与了
-     */
-    public void updateTop5IncreaseRateBk() {
-        List<Bk> bks = bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false)
-                .orderByDesc(Bk::getIncreaseRate).last("limit 0,5"));
-        TOP5_BK.clear();
-        bks.stream().filter(e -> e.getIncreaseRate().doubleValue() > 2).forEach(e -> TOP5_BK.put(e.getBk(), e));
     }
 
     /**

@@ -47,6 +47,8 @@ plank:
   automaticTrading: true
   # 自动打板
   automaticPlankTrading: true
+  # 自动打板只打当日涨幅top5的板块
+  automaticPlankTopBk: true
   # 自动打板连板筛选 0->只打今日首板  1->今日1进2  2->今日2进3
   automaticPlankLevel:
     - 0
@@ -56,11 +58,11 @@ plank:
   # 止盈净值率
   takeProfitRate: 1.065
   # 每日自动交易买入金额上限
-  automaticTradingMoneyLimitUp: 60000
+  automaticTradingMoneyLimitUp: 30000
   # 自动打板交易时间 10->10点之前上板的才打
-  automaticPlankTradingTimeLimit: 11
+  automaticPlankTradingTimeLimit: 10
   # 自动交易单笔交易金额上限
-  singleTransactionLimitAmount: 12000
+  singleTransactionLimitAmount: 10000
   stockTurnoverThreshold: 200000000
   mainFundThreshold: 300000000
   # 是否开启持仓监控
@@ -68,7 +70,7 @@ plank:
   # 日志打印股票的name或者code
   printName: true
   recentDayNumber: 1
-  xueQiuCookie: __utmz=1.1658110866.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); bid=9ea105651fb1563867b3225ba28c0f26_l8wpja7c; __utma=1.17943439.1658110866.1681652240.1686839601.12; xq_is_login=1; u=5733707261; device_id=47ddadf89ac927880fb2a5c2fb7002f8; xq_a_token=9320ce87250fb58c8f292ced0b9491b7c8ce733b; xqat=9320ce87250fb58c8f292ced0b9491b7c8ce733b; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjU3MzM3MDcyNjEsImlzcyI6InVjIiwiZXhwIjoxNjkyNDU3MzA1LCJjdG0iOjE2ODk4NjUzMDUzMTAsImNpZCI6ImQ5ZDBuNEFadXAifQ.E3xNzQ1pDGYWoeZNQwF66bwNuxwdLPf6jzJ_cqia1PdFHO0hZPqp0FqZHHxskF7asNHmHgMTM-oT77GWFa9vMzIlJVFGMjb22t5hh5IJeZ5TsAMalbQUTlvZT3bqdbCaKqydL6M1bAPfIHQ5P-v00ExSdpWbXPbrBGFjO2PYSPR-wT5bzM9ErEhE6s6-ygpMO1he3TnyHQM2uG8hULejrXu2-0ESi8Z9mARf_YOrgDKuI_910TRLIarrxRse1bMhTlfybtt2WsqQcaHSn386KARCqT2itModiaxp9MLF7hZqOrN673DErmJ-ZX1F3JUtLF3zyLWElRvTZPsj4HMkzg; xq_r_token=d4651f93dbb1390953fb591687f15dbb1e747e4c; Hm_lvt_1db88642e346389874251b5a1eded6e3=1689722020,1689743223,1689815810,1689899237; acw_tc=2760827516899014844472038e24f495962f3952bc71331e0a43f01d0298ef; is_overseas=0; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1689903139
+  xueQiuCookie: bid=9ea105651fb1563867b3225ba28c0f26_l8wpja7c; xq_is_login=1; u=5733707261; device_id=47ddadf89ac927880fb2a5c2fb7002f8; xq_a_token=9320ce87250fb58c8f292ced0b9491b7c8ce733b; xqat=9320ce87250fb58c8f292ced0b9491b7c8ce733b; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjU3MzM3MDcyNjEsImlzcyI6InVjIiwiZXhwIjoxNjkyNDU3MzA1LCJjdG0iOjE2ODk4NjUzMDUzMTAsImNpZCI6ImQ5ZDBuNEFadXAifQ.E3xNzQ1pDGYWoeZNQwF66bwNuxwdLPf6jzJ_cqia1PdFHO0hZPqp0FqZHHxskF7asNHmHgMTM-oT77GWFa9vMzIlJVFGMjb22t5hh5IJeZ5TsAMalbQUTlvZT3bqdbCaKqydL6M1bAPfIHQ5P-v00ExSdpWbXPbrBGFjO2PYSPR-wT5bzM9ErEhE6s6-ygpMO1he3TnyHQM2uG8hULejrXu2-0ESi8Z9mARf_YOrgDKuI_910TRLIarrxRse1bMhTlfybtt2WsqQcaHSn386KARCqT2itModiaxp9MLF7hZqOrN673DErmJ-ZX1F3JUtLF3zyLWElRvTZPsj4HMkzg; xq_r_token=d4651f93dbb1390953fb591687f15dbb1e747e4c; s=cb12dgozgm; Hm_lvt_1db88642e346389874251b5a1eded6e3=1690075022,1690244902,1690347430,1690419195; is_overseas=0; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1690425341
   mainFundUrl: https://push2.eastmoney.com/api/qt/clist/get?fid=f62&po=1&pz=6000&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m:0+t:6+f:!2,m:0+t:13+f:!2,m:0+t:80+f:!2,m:1+t:2+f:!2,m:1+t:23+f:!2&fields=f12,f14,f3,f62,f184,f267,f127,f268,f164,f109,f165,f174,f160,f175
   industryBKUrl: https://push2.eastmoney.com/api/qt/clist/get?cb=jQuery112306145005741278797_1676863228205&fid=f3&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A90+t%3A2&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124%2Cf1%2Cf13
   conceptBKUrl: https://push2.eastmoney.com/api/qt/clist/get?cb=jQuery112306145005741278797_1676863228203&fid=f3&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A90+t%3A3&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124%2Cf1%2Cf13
