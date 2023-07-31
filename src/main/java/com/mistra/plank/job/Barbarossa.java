@@ -84,7 +84,7 @@ public class Barbarossa implements CommandLineRunner {
     private final DailyIndexMapper dailyIndexMapper;
     public static final ThreadPoolExecutor executorService = new ThreadPoolExecutor(availableProcessors * 2,
             availableProcessors * 2, 100L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(5000), new NamedThreadFactory("Monitor-", false));
+            new LinkedBlockingQueue<>(5000), new NamedThreadFactory("行情-", false));
     /**
      * 所有股票 key-code value-name
      */

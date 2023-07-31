@@ -87,7 +87,7 @@ public class AutomaticTrading implements CommandLineRunner {
     private final AtomicBoolean SELLING = new AtomicBoolean(false);
 
     private final ThreadPoolExecutor SALE_POOL = new ThreadPoolExecutor(10, 20, 100L, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), new NamedThreadFactory("Sale-", false));
+            new SynchronousQueue<>(), new NamedThreadFactory("止盈止损-", false));
 
     /**
      * 正在监控中的持仓,自动止盈止损

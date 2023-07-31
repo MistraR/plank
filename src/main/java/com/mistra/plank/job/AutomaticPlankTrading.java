@@ -72,7 +72,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
     public static final ConcurrentHashMap<String, Stock> PLANK_LEVEL1_CACHE = new ConcurrentHashMap<>();
 
     public static final ThreadPoolExecutor PLANK_POOL = new ThreadPoolExecutor(availableProcessors * 3, availableProcessors * 3, 100L,
-            TimeUnit.SECONDS, new SynchronousQueue<>(), new NamedThreadFactory("Plank-", false));
+            TimeUnit.SECONDS, new SynchronousQueue<>(), new NamedThreadFactory("盯板-", false));
 
     public AutomaticPlankTrading(PlankConfig plankConfig, StockProcessor stockProcessor, AutomaticTrading automaticTrading, StockMapper stockMapper
             , HoldSharesMapper holdSharesMapper, TradeApiService tradeApiService, TradeService tradeService) {
@@ -257,7 +257,7 @@ public class AutomaticPlankTrading implements CommandLineRunner {
                                 pan[0] = bc1;
                             }
                         }
-                        Thread.sleep(800);
+                        Thread.sleep(400);
                     } catch (Exception e) {
                         e.printStackTrace();
                         watch = false;
