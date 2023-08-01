@@ -255,11 +255,11 @@ public class Barbarossa implements CommandLineRunner {
         if (AutomaticTrading.isTradeTime()) {
             // 更新行业版块，概念版块涨幅信息
             stockProcessor.updateBk();
+            // 查询涨幅前5的版块
             List<Bk> bks = bkMapper.selectList(new LambdaQueryWrapper<Bk>().eq(Bk::getIgnoreUpdate, false)
                     .orderByDesc(Bk::getIncreaseRate).last("limit 0,5"));
             TOP5_BK.clear();
-            // 查询涨幅前5的版块,并且板块涨幅要大于2,说明行情比较好,普跌行情就不参与了
-            bks.stream().filter(e -> e.getIncreaseRate().doubleValue() > 2).forEach(e -> TOP5_BK.put(e.getBk(), e));
+            bks.forEach(e -> TOP5_BK.put(e.getBk(), e));
         }
     }
 

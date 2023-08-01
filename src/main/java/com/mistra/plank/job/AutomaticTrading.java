@@ -104,9 +104,9 @@ public class AutomaticTrading implements CommandLineRunner {
     }
 
     /**
-     * 每30秒更新一次需要低吸的股票,需要卖出的股票线程监控
+     * 每1秒更新一次需要低吸的股票,需要卖出的股票线程监控
      */
-    @Scheduled(cron = "*/30 * * * * ?")
+    @Scheduled(cron = "*/1 * * * * ?")
     private void autoBuy() {
         if (plankConfig.getAutomaticTrading() && isTradeTime()) {
             List<Stock> stocks = stockMapper.selectList(new LambdaQueryWrapper<Stock>().eq(Stock::getAutomaticTradingType,
